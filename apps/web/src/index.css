@@ -382,12 +382,20 @@ body {
 .input {
   font: inherit;
   padding: 8px 12px;
+  height: 44px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text-h);
   min-width: 200px;
   flex: 1;
+  box-sizing: border-box;
+}
+
+select.input {
+  min-height: 44px;
+  height: 44px;
+  line-height: normal;
 }
 
 .button {
@@ -554,6 +562,7 @@ a.button {
 }
 
 .input.textarea {
+  height: auto;
   min-height: 100px;
   resize: vertical;
   font: inherit;
@@ -963,6 +972,199 @@ a.button {
   margin: 20px 0;
 }
 
+.meetup-create-page {
+  max-width: 980px;
+}
+
+.meetup-create-form {
+  gap: 18px;
+}
+
+.meetup-create-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+  align-items: start;
+}
+
+.meetup-create-grid .field {
+  min-width: 0;
+}
+
+.meetup-create-full {
+  grid-column: 1 / -1;
+}
+
+.field-hint {
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.meetup-game-picker {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.meetup-game-input {
+  width: 100%;
+  max-width: 100%;
+  padding-right: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meetup-game-clear-icon {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 18px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.meetup-game-clear-icon:hover {
+  background: var(--accent-bg);
+}
+
+.meetup-game-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 25;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.meetup-game-section-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.meetup-game-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meetup-game-option {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  padding: 8px 10px;
+  text-align: left;
+  font: inherit;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.meetup-game-option:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+.meetup-game-title {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.base-multi-select {
+  width: 100%;
+}
+
+.base-multi-select-dropdown {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.base-multi-select-option {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.base-multi-select-option:hover {
+  border-color: var(--accent-border);
+  background: color-mix(in oklab, var(--accent-bg) 70%, transparent);
+}
+
+.base-multi-select-option.is-selected {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+.base-multi-select-option-main {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.base-multi-select-badges {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.base-multi-select-badge {
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
 @media (max-width: 1320px) {
   .app-body {
     grid-template-columns: 220px minmax(0, 1fr);
@@ -984,6 +1186,10 @@ a.button {
 
   .app-main {
     padding-inline: 18px;
+  }
+
+  .meetup-create-grid {
+    grid-template-columns: 1fr;
   }
 }
 

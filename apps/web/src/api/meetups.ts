@@ -1,6 +1,8 @@
 import { apiFetch } from "../lib/api";
 import type { PaginatedMeta, PublicUserCard } from "./types";
 
+export type PlaySessionVisibility = "PUBLIC" | "FRIENDS" | "INVITE_ONLY";
+
 export type MeetupListItem = {
   id: string;
   title: string;
@@ -8,6 +10,7 @@ export type MeetupListItem = {
   location: string | null;
   maxPlayers: number | null;
   status: string;
+  visibility: PlaySessionVisibility;
   host: PublicUserCard;
   game: { id: string; slug: string; title: string } | null;
   joinedParticipantCount: number;
@@ -57,6 +60,7 @@ export function createMeetup(body: {
   location?: string;
   maxPlayers?: number;
   description?: string;
+  visibility?: PlaySessionVisibility;
 }): Promise<MeetupDetail> {
   return apiFetch<MeetupDetail>("/meetups", {
     method: "POST",
@@ -97,4 +101,17 @@ export function leaveMeetup(id: string): Promise<MeetupDetail> {
   return apiFetch<MeetupDetail>(`/meetups/${encodeURIComponent(id)}/leave`, {
     method: "POST",
   });
+}
+
+export function createMeetupInvitation(
+  meetupId: string,
+  userId: string,
+): Promise<{ ok: boolean }> {
+  return apiFetch<{ ok: boolean }>(
+    `/meetups/${encodeURIComponent(meetupId)}/invitations`,
+    {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    },
+  );
 }
