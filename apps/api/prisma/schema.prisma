@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CollectionStatus {
+  OWNED
+  WISHLIST
+  PREVIOUSLY_OWNED
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+  SESSION
+}
+
+enum PlaySessionStatus {
+  SCHEDULED
+  CANCELLED
+  DONE
+}
+
+enum PlaySessionVisibility {
+  PUBLIC
+  FRIENDS
+  INVITE_ONLY
+}
+
+enum ParticipantStatus {
+  INVITED
+  JOINED
+  DECLINED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  avatarUrl    String?
+  bio          String?
+  city         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  reviews   Review[]
+  ratings   Rating[]
+  userGames UserGame[]
+
+  friendshipsRequested Friendship[] @relation("FriendshipRequester")
+  friendshipsReceived  Friendship[] @relation("FriendshipAddressee")
+
+  conversationMembers ConversationMember[]
+  messagesSent        Message[]
+
+  meetupsHosted        PlaySession[]            @relation("MeetupHost")
+  meetupParticipations PlaySessionParticipant[]
+  meetupInvitations    PlaySessionInvitation[]
+}
+
+model BoardGame {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  description   String?
+  yearPublished Int?
+  minPlayers    Int?
+  maxPlayers    Int?
+  playTimeMin   Int?
+  imageUrl      String?
+  externalId    String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviews      Review[]
+  ratings      Rating[]
+  userGames    UserGame[]
+  playSessions PlaySession[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  gameId    String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game BoardGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+  @@index([gameId])
+}
+
+model Rating {
+  id     String @id @default(cuid())
+  userId String
+  gameId String
+  score  Int
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game BoardGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+  @@index([gameId])
+}
+
+model UserGame {
+  id         String           @id @default(cuid())
+  userId     String
+  gameId     String
+  status     CollectionStatus @default(OWNED)
+  notes      String?
+  acquiredAt DateTime?
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game BoardGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+  @@index([userId])
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@index([requesterId, status])
+}
+
+model Conversation {
+  id            String           @id @default(cuid())
+  type          ConversationType @default(DIRECT)
+  /// Set for play-session chats; members should mirror PlaySessionParticipant for this session.
+  playSessionId String?          @unique
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  playSession PlaySession?         @relation(fields: [playSessionId], references: [id], onDelete: Cascade)
+  members     ConversationMember[]
+  messages    Message[]
+}
+
+model ConversationMember {
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model PlaySession {
+  id          String                @id @default(cuid())
+  hostId      String
+  title       String
+  gameId      String?
+  scheduledAt DateTime
+  location    String?
+  maxPlayers  Int?
+  description String?
+  status      PlaySessionStatus     @default(SCHEDULED)
+  visibility  PlaySessionVisibility @default(PUBLIC)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  host         User                     @relation("MeetupHost", fields: [hostId], references: [id], onDelete: Cascade)
+  game         BoardGame?               @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  participants PlaySessionParticipant[]
+  invitations  PlaySessionInvitation[]
+  conversation Conversation?
+
+  @@index([scheduledAt])
+  @@index([hostId])
+}
+
+model PlaySessionParticipant {
+  id        String            @id @default(cuid())
+  sessionId String
+  userId    String
+  status    ParticipantStatus @default(JOINED)
+  createdAt DateTime          @default(now())
+
+  session PlaySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+}
+
+model PlaySessionInvitation {
+  id            String   @id @default(cuid())
+  sessionId     String
+  invitedUserId String
+  createdAt     DateTime @default(now())
+
+  session     PlaySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  invitedUser User        @relation(fields: [invitedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, invitedUserId])
+  @@index([invitedUserId])
+}

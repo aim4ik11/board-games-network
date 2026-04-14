@@ -1,0 +1,14 @@
+{
+  "name": "boardgame-social",
+  "private": true,
+  "scripts": {
+    "dev:api": "pnpm --filter api start:dev",
+    "dev:web": "pnpm --filter web dev",
+    "build": "pnpm -r run build",
+    "prepare": "pnpm --filter @boardgame/shared run build"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  }
+}
