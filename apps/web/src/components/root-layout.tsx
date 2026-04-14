@@ -1,8 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Outlet } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { fetchConversations } from "../api/chat";
 import { fetchMeetups } from "../api/meetups";
+import { AuthCard } from "./auth-card";
 import { useAuthMe } from "../hooks/use-auth-me";
+import {
+  consumePendingAuthModal,
+  OPEN_AUTH_MODAL_EVENT,
+  type AuthModalMode,
+} from "../lib/auth-modal-intent";
 import { useAuth } from "../lib/use-auth";
 import { friendsSearchDefault } from "../lib/friends-route-defaults";
 import { meetupsSearchDefault } from "../lib/meetups-route-defaults";
@@ -13,6 +21,9 @@ const collectionSearchDefault = { status: "OWNED" as const };
 
 export function RootLayout() {
   const { token, signOut } = useAuth();
+  const [authModalMode, setAuthModalMode] = useState<AuthModalMode | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
   const me = useAuthMe();
   const sidebarMeetups = useQuery({
     queryKey: [...queryKeys.meetups.all, "sidebar-upcoming"],
@@ -24,6 +35,64 @@ export function RootLayout() {
     queryFn: fetchConversations,
     enabled: Boolean(token),
   });
+
+  useEffect(() => {
+    if (!authModalMode) {
+      return;
+    }
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [authModalMode]);
+
+  useEffect(() => {
+    const pendingMode = consumePendingAuthModal();
+    if (pendingMode) {
+      setAuthModalMode(pendingMode);
+    }
+
+    const onOpenAuthModal = (event: Event) => {
+      const mode = (event as CustomEvent<AuthModalMode>).detail;
+      if (mode === "register" || mode === "login") {
+        setAuthModalMode(mode);
+      }
+    };
+
+    window.addEventListener(OPEN_AUTH_MODAL_EVENT, onOpenAuthModal);
+    return () => {
+      window.removeEventListener(OPEN_AUTH_MODAL_EVENT, onOpenAuthModal);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) {
+      return;
+    }
+    const onPointerDown = (event: MouseEvent) => {
+      if (!userMenuRef.current?.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsUserMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isUserMenuOpen]);
+
+  const userName = me.data?.displayName ?? "Player";
+  const avatarInitial = userName.trim().charAt(0).toUpperCase() || "P";
 
   return (
     <div className="app-shell">
@@ -39,24 +108,14 @@ export function RootLayout() {
           >
             Catalog
           </Link>
-          <Link
-            to="/meetups"
-            search={meetupsSearchDefault}
-            activeProps={{ className: "active" }}
-          >
-            Meetups
-          </Link>
           {token ? (
             <>
               <Link
-                to="/collection"
-                search={collectionSearchDefault}
+                to="/meetups"
+                search={meetupsSearchDefault}
                 activeProps={{ className: "active" }}
               >
-                Collection
-              </Link>
-              <Link to="/profile" activeProps={{ className: "active" }}>
-                Profile
+                Meetups
               </Link>
               <Link
                 to="/friends"
@@ -65,30 +124,80 @@ export function RootLayout() {
               >
                 Friends
               </Link>
-              <Link to="/messages" activeProps={{ className: "active" }}>
-                Messages
-              </Link>
-              <span className="app-user">
-                {me.isLoading ? "…" : (me.data?.displayName ?? "Signed in")}
-              </span>
-              <button
-                type="button"
-                className="link-button"
-                onClick={() => signOut()}
-              >
-                Sign out
-              </button>
+              <div className="user-menu" ref={userMenuRef}>
+                <button
+                  type="button"
+                  className="user-menu-trigger"
+                  aria-haspopup="menu"
+                  aria-expanded={isUserMenuOpen}
+                  aria-label="Open user menu"
+                  onClick={() => setIsUserMenuOpen((current) => !current)}
+                >
+                  {me.data?.avatarUrl ? (
+                    <img
+                      src={me.data.avatarUrl}
+                      alt={userName}
+                      className="user-avatar"
+                    />
+                  ) : (
+                    <span className="user-avatar user-avatar-placeholder">
+                      {avatarInitial}
+                    </span>
+                  )}
+                </button>
+                {isUserMenuOpen && (
+                  <div className="user-menu-panel" role="menu">
+                    <div className="user-menu-head">
+                      <span className="user-menu-name">
+                        {me.isLoading ? "Loading…" : userName}
+                      </span>
+                      <span className="muted">{me.data?.email}</span>
+                    </div>
+                    <Link
+                      to="/profile"
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      to="/collection"
+                      search={collectionSearchDefault}
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Collection
+                    </Link>
+                    <Link
+                      to="/messages"
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Messages
+                    </Link>
+                    <button
+                      type="button"
+                      className="user-menu-signout"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        signOut();
+                      }}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
-            <>
-              <Link
-                to="/login"
-                search={{ mode: "login" }}
-                activeProps={{ className: "active" }}
-              >
-                Sign in
-              </Link>
-            </>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setAuthModalMode("login")}
+            >
+              Sign in
+            </button>
           )}
         </nav>
       </header>
@@ -100,20 +209,24 @@ export function RootLayout() {
               <Link to="/games" search={gamesListSearchDefault}>
                 Browse catalog
               </Link>
-              <Link to="/meetups" search={meetupsSearchDefault}>
-                Find meetups
-              </Link>
               {token ? (
                 <>
+                  <Link to="/meetups" search={meetupsSearchDefault}>
+                    Find meetups
+                  </Link>
                   <Link to="/friends" search={friendsSearchDefault}>
                     Discover players
                   </Link>
                   <Link to="/messages">Open inbox</Link>
                 </>
               ) : (
-                <Link to="/login" search={{ mode: "register" }}>
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => setAuthModalMode("register")}
+                >
                   Create account
-                </Link>
+                </button>
               )}
             </nav>
           </section>
@@ -203,6 +316,37 @@ export function RootLayout() {
           )}
         </aside>
       </div>
+      {authModalMode &&
+        createPortal(
+          <div
+            className="auth-modal-backdrop"
+            role="presentation"
+            onClick={() => setAuthModalMode(null)}
+          >
+            <div
+              className="auth-modal-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Authentication"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="auth-modal-close"
+                onClick={() => setAuthModalMode(null)}
+                aria-label="Close authentication modal"
+              >
+                ×
+              </button>
+              <AuthCard
+                mode={authModalMode}
+                onModeChange={setAuthModalMode}
+                onSuccess={() => setAuthModalMode(null)}
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

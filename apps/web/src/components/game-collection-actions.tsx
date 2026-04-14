@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import {
   addToCollection,
   fetchCollectionEntry,
   removeFromCollection,
 } from "../api/collection";
 import type { CollectionStatus } from "../api/types";
+import { requestAuthModal } from "../lib/auth-modal-intent";
 import { queryKeys } from "../lib/query-keys";
 import { useAuth } from "../lib/use-auth";
 
@@ -42,9 +42,13 @@ export function GameCollectionActions({ slug }: { slug: string }) {
   if (!token) {
     return (
       <p className="muted">
-        <Link to="/login" search={{ mode: "login" }} className="text-link">
+        <button
+          type="button"
+          className="link-button text-link"
+          onClick={() => requestAuthModal("login")}
+        >
           Sign in
-        </Link>{" "}
+        </button>{" "}
         to add this game to your collection.
       </p>
     );

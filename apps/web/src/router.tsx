@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { RootLayout } from "./components/root-layout";
 import { getStoredAccessToken } from "./lib/auth-storage";
+import { setPendingAuthModal } from "./lib/auth-modal-intent";
 import { gamesListSearchDefault } from "./lib/games-route-defaults";
 import { CollectionPage } from "./pages/collection-page";
 import { FriendsPage } from "./pages/friends-page";
@@ -13,7 +14,6 @@ import { MessagesListPage } from "./pages/messages-list-page";
 import { MessagesThreadPage } from "./pages/messages-thread-page";
 import { GameDetailPage } from "./pages/game-detail-page";
 import { GamesListPage } from "./pages/games-list-page";
-import { LoginPage } from "./pages/login-page";
 import { MeetupDetailPage } from "./pages/meetup-detail-page";
 import { MeetupNewPage } from "./pages/meetup-new-page";
 import { MeetupsListPage } from "./pages/meetups-list-page";
@@ -42,6 +42,11 @@ function parseFriendsTab(raw: unknown): FriendsTabRoute {
 
 function parseMeetupsUpcoming(raw: unknown): "true" | "false" {
   return raw === "false" ? "false" : "true";
+}
+
+function redirectToLoginModal(): never {
+  setPendingAuthModal("login");
+  throw redirect({ to: "/games", search: gamesListSearchDefault });
 }
 
 const rootRoute = createRootRoute({
@@ -77,23 +82,6 @@ const gameDetailRoute = createRoute({
   component: GameDetailPage,
 });
 
-const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/login",
-  validateSearch: (raw: Record<string, unknown>) => ({
-    mode: raw.mode === "register" ? "register" : "login",
-  }),
-  component: LoginPage,
-});
-
-const registerRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/register",
-  beforeLoad: () => {
-    throw redirect({ to: "/login", search: { mode: "register" as const } });
-  },
-});
-
 const collectionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/collection",
@@ -102,7 +90,7 @@ const collectionRoute = createRoute({
   }),
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
-      throw redirect({ to: "/login", search: { mode: "login" } });
+      redirectToLoginModal();
     }
   },
   component: CollectionPage,
@@ -113,7 +101,7 @@ const profileRoute = createRoute({
   path: "/profile",
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
-      throw redirect({ to: "/login", search: { mode: "login" } });
+      redirectToLoginModal();
     }
   },
   component: ProfilePage,
@@ -130,7 +118,7 @@ const messagesListRoute = createRoute({
   path: "/messages",
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
-      throw redirect({ to: "/login", search: { mode: "login" } });
+      redirectToLoginModal();
     }
   },
   component: MessagesListPage,
@@ -141,7 +129,7 @@ const messagesThreadRoute = createRoute({
   path: "/messages/$conversationId",
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
-      throw redirect({ to: "/login", search: { mode: "login" } });
+      redirectToLoginModal();
     }
   },
   component: MessagesThreadPage,
@@ -159,6 +147,11 @@ const meetupsListRoute = createRoute({
           : 1,
     upcoming: parseMeetupsUpcoming(raw.upcoming),
   }),
+  beforeLoad: () => {
+    if (!getStoredAccessToken()) {
+      redirectToLoginModal();
+    }
+  },
   component: MeetupsListPage,
 });
 
@@ -167,7 +160,7 @@ const meetupsNewRoute = createRoute({
   path: "/meetups/new",
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
-      throw redirect({ to: "/login", search: { mode: "login" } });
+      redirectToLoginModal();
     }
   },
   component: MeetupNewPage,
@@ -176,6 +169,11 @@ const meetupsNewRoute = createRoute({
 const meetupsDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/meetups/$meetupId",
+  beforeLoad: () => {
+    if (!getStoredAccessToken()) {
+      redirectToLoginModal();
+    }
+  },
   component: MeetupDetailPage,
 });
 
@@ -194,7 +192,7 @@ const friendsRoute = createRoute({
   }),
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
-      throw redirect({ to: "/login", search: { mode: "login" } });
+      redirectToLoginModal();
     }
   },
   component: FriendsPage,
@@ -213,8 +211,6 @@ const routeTree = rootRoute.addChildren([
   meetupsDetailRoute,
   messagesListRoute,
   messagesThreadRoute,
-  loginRoute,
-  registerRoute,
 ]);
 
 export const router = createRouter({ routeTree });

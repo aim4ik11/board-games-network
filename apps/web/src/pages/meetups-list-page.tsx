@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import { fetchMeetups } from "../api/meetups";
+import { requestAuthModal } from "../lib/auth-modal-intent";
 import { queryKeys } from "../lib/query-keys";
 import { useAuth } from "../lib/use-auth";
 
@@ -43,9 +44,13 @@ export function MeetupsListPage() {
         Scheduled play sessions.{" "}
         {!token && (
           <>
-            <Link to="/login" search={{ mode: "login" }} className="text-link">
+            <button
+              type="button"
+              className="link-button text-link"
+              onClick={() => requestAuthModal("login")}
+            >
               Sign in
-            </Link>{" "}
+            </button>{" "}
             to host or join.
           </>
         )}

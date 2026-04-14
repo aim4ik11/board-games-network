@@ -8,6 +8,7 @@ import {
   patchMeetup,
 } from "../api/meetups";
 import { useAuthMe } from "../hooks/use-auth-me";
+import { requestAuthModal } from "../lib/auth-modal-intent";
 import { toDatetimeLocalValue } from "../lib/datetime-local";
 import { queryKeys } from "../lib/query-keys";
 import { useAuth } from "../lib/use-auth";
@@ -296,9 +297,13 @@ export function MeetupDetailPage() {
 
       {!token && isScheduled && (
         <p className="muted">
-          <Link to="/login" search={{ mode: "login" }} className="text-link">
+          <button
+            type="button"
+            className="link-button text-link"
+            onClick={() => requestAuthModal("login")}
+          >
             Sign in
-          </Link>{" "}
+          </button>{" "}
           to join.
         </p>
       )}
