@@ -4,6 +4,7 @@ export type MultiSelectOption = {
   id: string;
   label: string;
   description?: string | null;
+  avatarUrl?: string | null;
 };
 
 type MultiSelectPickerProps = {
@@ -102,6 +103,7 @@ export function MultiSelectPicker({
           {!loading &&
             filteredOptions.map((option) => {
               const selected = selectedSet.has(option.id);
+              const initial = option.label.trim().charAt(0).toUpperCase() || "?";
               return (
                 <button
                   key={option.id}
@@ -109,12 +111,23 @@ export function MultiSelectPicker({
                   className={`base-multi-select-option${selected ? " is-selected" : ""}`}
                   onClick={() => toggle(option.id)}
                 >
-                  <span className="base-multi-select-option-main">
-                    {option.label}
+                  <span className="base-multi-select-option-user">
+                    {option.avatarUrl ? (
+                      <img
+                        className="base-multi-select-option-avatar"
+                        src={option.avatarUrl}
+                        alt={option.label}
+                      />
+                    ) : (
+                      <span className="base-multi-select-option-avatar base-multi-select-option-avatar-placeholder">
+                        {initial}
+                      </span>
+                    )}
+                    <span className="base-multi-select-option-main">
+                      {option.label}
+                    </span>
                   </span>
-                  {option.description && (
-                    <span className="muted">{option.description}</span>
-                  )}
+                  {option.description && <span className="muted">{option.description}</span>}
                 </button>
               );
             })}

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
-import { createDirectConversation } from '../api/chat';
+import { getRouteApi } from '@tanstack/react-router';
+import { UserPlus, X } from 'lucide-react';
+import type { ReactNode } from 'react';
 import {
   acceptFriendRequest,
   cancelOutgoingRequest,
@@ -10,9 +11,11 @@ import {
   fetchIncomingRequests,
   fetchOutgoingRequests,
   sendFriendRequest,
-  unfriend,
 } from '../api/friends';
-import type { DiscoverUserRow, FriendshipRelationship } from '../api/types';
+import type { DiscoverUserRow } from '../api/types';
+import { Button } from '../components/ui';
+import { UserIdentity } from '../components/user-identity';
+import { useAuthMe } from '../hooks/use-auth-me';
 import type { FriendsTab } from '../lib/friends-route-defaults';
 import { queryKeys } from '../lib/query-keys';
 
@@ -24,34 +27,27 @@ const TABS: { value: FriendsTab; label: string }[] = [
   { value: 'requests', label: 'Requests' },
 ];
 
-function relationshipLabel(r: FriendshipRelationship): string {
-  switch (r) {
-    case 'friend':
-      return 'Friends';
-    case 'outgoing_pending':
-      return 'Request sent';
-    case 'incoming_pending':
-      return 'Wants to connect';
-    case 'blocked':
-      return 'Blocked';
-    default:
-      return '';
-  }
-}
-
 function invalidateFriends(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: queryKeys.friends.all });
 }
 
 export function FriendsPage() {
-  const { tab, q, page } = routeApi.useSearch();
+  const { tab, q, city, page } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const routerNavigate = useNavigate();
   const queryClient = useQueryClient();
+  const me = useAuthMe();
+  const meCity = me.data?.city?.trim() ?? '';
+  const effectiveCity = city.trim() || meCity;
 
   const discoverQuery = useQuery({
-    queryKey: queryKeys.friends.discover({ q, page }),
-    queryFn: () => fetchFriendsDiscover({ q, page, limit: 20 }),
+    queryKey: queryKeys.friends.discover({ q, city: effectiveCity, page }),
+    queryFn: () =>
+      fetchFriendsDiscover({
+        q,
+        city: effectiveCity,
+        page,
+        limit: 20,
+      }),
     enabled: tab === 'discover',
   });
 
@@ -89,21 +85,6 @@ export function FriendsPage() {
     mutationFn: cancelOutgoingRequest,
     onSuccess: () => invalidateFriends(queryClient),
   });
-  const unfriendMut = useMutation({
-    mutationFn: unfriend,
-    onSuccess: () => invalidateFriends(queryClient),
-  });
-
-  const openChat = useMutation({
-    mutationFn: createDirectConversation,
-    onSuccess: (data) => {
-      void routerNavigate({
-        to: '/messages/$conversationId',
-        params: { conversationId: data.conversationId },
-      });
-    },
-  });
-
   const totalDiscoverPages =
     discoverQuery.data != null
       ? Math.max(
@@ -123,10 +104,12 @@ export function FriendsPage() {
             className={t.value === tab ? 'active' : ''}
             onClick={() => {
               if (t.value === 'discover') {
-                void navigate({ search: { tab: 'discover', q, page: 1 } });
+                void navigate({
+                  search: { tab: 'discover', q, city, page: 1 },
+                });
               } else {
                 void navigate({
-                  search: { tab: t.value, q: '', page: 1 },
+                  search: { tab: t.value, q: '', city: '', page: 1 },
                 });
               }
             }}
@@ -144,7 +127,15 @@ export function FriendsPage() {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
               const nextQ = String(fd.get('q') ?? '');
-              void navigate({ search: { tab: 'discover', q: nextQ, page: 1 } });
+              const nextCityRaw = String(fd.get('city') ?? '').trim();
+              void navigate({
+                search: {
+                  tab: 'discover',
+                  q: nextQ,
+                  city: nextCityRaw,
+                  page: 1,
+                },
+              });
             }}
           >
             <input
@@ -155,10 +146,24 @@ export function FriendsPage() {
               className="input"
               aria-label="Search people"
             />
-            <button type="submit" className="button">
+            <input
+              key={`discover-city-${city || meCity}`}
+              name="city"
+              type="search"
+              placeholder={meCity || 'Filter by city'}
+              defaultValue={city || meCity}
+              className="input discover-city-input"
+              aria-label="Filter by city"
+            />
+            <Button type="submit">
               Search
-            </button>
+            </Button>
           </form>
+          <p className="muted discover-city-hint">
+            {effectiveCity
+              ? `Filtering by city: ${effectiveCity}.`
+              : 'Showing people from all cities.'}
+          </p>
 
           {discoverQuery.isLoading && <p>Loading…</p>}
           {discoverQuery.isError && (
@@ -170,51 +175,56 @@ export function FriendsPage() {
           )}
           {discoverQuery.data && (
             <>
-              <ul className="friend-rows">
+              <ul className="user-card-grid discover-user-grid">
                 {discoverQuery.data.data.map((row: DiscoverUserRow) => (
-                  <li key={row.id} className="friend-row">
-                    <div className="friend-row-main">
-                      <Link to="/u/$userId" params={{ userId: row.id }} className="text-link">
-                        <strong>{row.displayName}</strong>
-                      </Link>
-                      {row.city && <span className="muted"> · {row.city}</span>}
-                      {row.relationship !== 'none' && (
-                        <span className="muted"> · {relationshipLabel(row.relationship)}</span>
-                      )}
-                    </div>
-                    <DiscoverActions
-                      row={row}
-                      sendPending={sendReq.isPending}
-                      onSend={() => sendReq.mutate(row.id)}
-                    />
-                  </li>
+                  <UserActionCard
+                    key={row.id}
+                    userId={row.id}
+                    displayName={row.displayName}
+                    avatarUrl={row.avatarUrl}
+                    subtitle={row.city}
+                    isCurrentUser={row.id === me.data?.id}
+                    action={discoverActionFromRow({
+                      row,
+                      sendPending: sendReq.isPending,
+                      onSend: () => sendReq.mutate(row.id),
+                    })}
+                  />
                 ))}
               </ul>
               {discoverQuery.data.data.length === 0 && (
                 <p className="muted">
-                  {q.trim() ? 'No users match that search.' : 'Try searching by name.'}
+                  {q.trim() || effectiveCity.trim()
+                    ? 'No users match these filters.'
+                    : 'Try searching by name.'}
                 </p>
               )}
               <div className="pagination">
-                <button
-                  type="button"
-                  className="button ghost"
+                <Button
+                  variant="ghost"
                   disabled={page <= 1}
-                  onClick={() => void navigate({ search: { tab, q, page: page - 1 } })}
+                  onClick={() =>
+                    void navigate({
+                      search: { tab, q, city, page: page - 1 },
+                    })
+                  }
                 >
                   Previous
-                </button>
+                </Button>
                 <span className="muted">
                   Page {page} of {totalDiscoverPages}
                 </span>
-                <button
-                  type="button"
-                  className="button ghost"
+                <Button
+                  variant="ghost"
                   disabled={page >= totalDiscoverPages}
-                  onClick={() => void navigate({ search: { tab, q, page: page + 1 } })}
+                  onClick={() =>
+                    void navigate({
+                      search: { tab, q, city, page: page + 1 },
+                    })
+                  }
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -232,40 +242,25 @@ export function FriendsPage() {
             </p>
           )}
           {friendsQuery.data && (
-            <ul className="friend-rows">
+            <>
               {friendsQuery.data.length === 0 ? (
                 <p className="muted">You have no friends yet — try Discover.</p>
               ) : (
-                friendsQuery.data.map((f) => (
-                  <li key={f.friendshipId} className="friend-row">
-                    <div className="friend-row-main">
-                      <Link to="/u/$userId" params={{ userId: f.user.id }} className="text-link">
-                        <strong>{f.user.displayName}</strong>
-                      </Link>
-                      {f.user.city && <span className="muted"> · {f.user.city}</span>}
-                    </div>
-                    <div className="button-row">
-                      <button
-                        type="button"
-                        className="button small"
-                        disabled={openChat.isPending}
-                        onClick={() => openChat.mutate(f.user.id)}
-                      >
-                        Message
-                      </button>
-                      <button
-                        type="button"
-                        className="button small danger"
-                        disabled={unfriendMut.isPending}
-                        onClick={() => unfriendMut.mutate(f.user.id)}
-                      >
-                        Unfriend
-                      </button>
-                    </div>
-                  </li>
-                ))
+                <ul className="user-card-grid">
+                  {friendsQuery.data.map((f) => (
+                    <li key={f.friendshipId} className="user-card">
+                      <UserIdentity
+                        userId={f.user.id}
+                        displayName={f.user.displayName}
+                        avatarUrl={f.user.avatarUrl}
+                        subtitle={f.user.city}
+                        isCurrentUser={f.user.id === me.data?.id}
+                      />
+                    </li>
+                  ))}
+                </ul>
               )}
-            </ul>
+            </>
           )}
         </>
       )}
@@ -278,33 +273,38 @@ export function FriendsPage() {
             {incomingQuery.data?.length === 0 && (
               <p className="muted">No incoming requests.</p>
             )}
-            <ul className="friend-rows">
+            <ul className="user-card-grid requests-user-grid">
               {incomingQuery.data?.map((r) => (
-                <li key={r.friendshipId} className="friend-row">
-                  <div className="friend-row-main">
-                    <Link to="/u/$userId" params={{ userId: r.user.id }} className="text-link">
-                      <strong>{r.user.displayName}</strong>
-                    </Link>
-                  </div>
-                  <div className="button-row">
-                    <button
-                      type="button"
-                      className="button small"
-                      disabled={acceptReq.isPending}
-                      onClick={() => acceptReq.mutate(r.user.id)}
-                    >
-                      Accept
-                    </button>
-                    <button
-                      type="button"
-                      className="button small ghost"
-                      disabled={declineReq.isPending}
-                      onClick={() => declineReq.mutate(r.user.id)}
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </li>
+                <UserActionCard
+                  key={r.friendshipId}
+                  userId={r.user.id}
+                  displayName={r.user.displayName}
+                  avatarUrl={r.user.avatarUrl}
+                  cardClassName="requests-user-card"
+                  isCurrentUser={r.user.id === me.data?.id}
+                  action={{
+                    kind: 'custom',
+                    content: (
+                      <div className="button-row requests-actions requests-actions-floating">
+                        <Button
+                          size="sm"
+                          disabled={acceptReq.isPending}
+                          onClick={() => acceptReq.mutate(r.user.id)}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={declineReq.isPending}
+                          onClick={() => declineReq.mutate(r.user.id)}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    ),
+                  }}
+                />
               ))}
             </ul>
           </div>
@@ -314,23 +314,22 @@ export function FriendsPage() {
             {outgoingQuery.data?.length === 0 && (
               <p className="muted">No outgoing requests.</p>
             )}
-            <ul className="friend-rows">
+            <ul className="user-card-grid requests-user-grid">
               {outgoingQuery.data?.map((r) => (
-                <li key={r.friendshipId} className="friend-row">
-                  <div className="friend-row-main">
-                    <Link to="/u/$userId" params={{ userId: r.user.id }} className="text-link">
-                      <strong>{r.user.displayName}</strong>
-                    </Link>
-                  </div>
-                  <button
-                    type="button"
-                    className="button small ghost"
-                    disabled={cancelOut.isPending}
-                    onClick={() => cancelOut.mutate(r.user.id)}
-                  >
-                    Cancel
-                  </button>
-                </li>
+                <UserActionCard
+                  key={r.friendshipId}
+                  userId={r.user.id}
+                  displayName={r.user.displayName}
+                  avatarUrl={r.user.avatarUrl}
+                  cardClassName="requests-user-card"
+                  isCurrentUser={r.user.id === me.data?.id}
+                  action={{
+                    kind: 'cancel',
+                    disabled: cancelOut.isPending,
+                    onClick: () => cancelOut.mutate(r.user.id),
+                    label: `Cancel request to ${r.user.displayName}`,
+                  }}
+                />
               ))}
             </ul>
           </div>
@@ -340,30 +339,119 @@ export function FriendsPage() {
   );
 }
 
-function DiscoverActions({
-  row,
-  sendPending,
-  onSend,
-}: {
+type DiscoverActionContext = {
   row: DiscoverUserRow;
   sendPending: boolean;
   onSend: () => void;
-}) {
+};
+
+type UserCardAction =
+  | { kind: 'add'; onClick: () => void; disabled?: boolean; label: string }
+  | { kind: 'cancel'; onClick: () => void; disabled?: boolean; label: string }
+  | { kind: 'status'; text: string }
+  | { kind: 'custom'; content: ReactNode };
+
+function discoverActionFromRow({
+  row,
+  sendPending,
+  onSend,
+}: DiscoverActionContext): UserCardAction {
   if (row.relationship === 'friend') {
-    return <span className="muted">Friends</span>;
+    return { kind: 'status', text: 'Friends' };
   }
   if (row.relationship === 'outgoing_pending') {
-    return <span className="muted">Pending</span>;
+    return { kind: 'status', text: 'Pending' };
   }
   if (row.relationship === 'incoming_pending') {
-    return <span className="muted">They invited you — check Requests</span>;
+    return { kind: 'status', text: 'Check Requests' };
   }
   if (row.relationship === 'blocked') {
-    return <span className="muted">Unavailable</span>;
+    return { kind: 'status', text: 'Unavailable' };
+  }
+  return {
+    kind: 'add',
+    disabled: sendPending,
+    onClick: onSend,
+    label: `Send friend request to ${row.displayName}`,
+  };
+}
+
+function UserActionCard({
+  userId,
+  displayName,
+  avatarUrl,
+  subtitle,
+  isCurrentUser,
+  size = 'md',
+  layout = 'stacked',
+  cardClassName,
+  identityClassName,
+  action,
+}: {
+  userId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  subtitle?: string | null;
+  isCurrentUser: boolean;
+  size?: 'sm' | 'md';
+  layout?: 'stacked' | 'inline';
+  cardClassName?: string;
+  identityClassName?: string;
+  action: UserCardAction;
+}) {
+  return (
+    <li className={`user-card discover-user-card ${cardClassName ?? ''}`.trim()}>
+      <div className="discover-user-card-main">
+        <UserIdentity
+          userId={userId}
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          subtitle={subtitle}
+          size={size}
+          layout={layout}
+          className={identityClassName}
+          isCurrentUser={isCurrentUser}
+        />
+      </div>
+      <UserCardActionView action={action} />
+    </li>
+  );
+}
+
+function UserCardActionView({ action }: { action: UserCardAction }) {
+  if (action.kind === 'status') {
+    return <span className="discover-user-card-tag muted">{action.text}</span>;
+  }
+  if (action.kind === 'custom') {
+    return action.content;
+  }
+  if (action.kind === 'cancel') {
+    return (
+      <div className="button-row requests-actions requests-actions-floating">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="requests-icon-action"
+          disabled={action.disabled}
+          onClick={action.onClick}
+          title={action.label}
+          aria-label={action.label}
+        >
+          <X size={16} aria-hidden="true" />
+        </Button>
+      </div>
+    );
   }
   return (
-    <button type="button" className="button small" disabled={sendPending} onClick={onSend}>
-      Add friend
-    </button>
+    <Button
+      size="sm"
+      className="discover-user-card-add"
+      disabled={action.disabled}
+      onClick={action.onClick}
+      title={action.label}
+      aria-label={action.label}
+    >
+      <UserPlus size={16} aria-hidden="true" />
+    </Button>
   );
 }

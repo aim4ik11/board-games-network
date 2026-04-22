@@ -5,11 +5,12 @@ import {
   fetchMeetup,
   joinMeetup,
   leaveMeetup,
-  patchMeetup,
 } from "../api/meetups";
+import { MeetupGamePreview } from "../components/meetup-game-preview";
+import { UserIdentity } from "../components/user-identity";
+import { Button, buttonClassName } from "../components/ui";
 import { useAuthMe } from "../hooks/use-auth-me";
 import { requestAuthModal } from "../lib/auth-modal-intent";
-import { toDatetimeLocalValue } from "../lib/datetime-local";
 import { queryKeys } from "../lib/query-keys";
 import { useAuth } from "../lib/use-auth";
 
@@ -42,12 +43,6 @@ export function MeetupDetailPage() {
     mutationFn: () => cancelMeetup(meetupId),
     onSuccess: invalidate,
   });
-  const save = useMutation({
-    mutationFn: (body: Parameters<typeof patchMeetup>[1]) =>
-      patchMeetup(meetupId, body),
-    onSuccess: invalidate,
-  });
-
   if (detailQuery.isLoading) {
     return (
       <section className="page">
@@ -100,27 +95,8 @@ export function MeetupDetailPage() {
         {new Date(m.scheduledAt).toLocaleString()}
         {m.location && ` · ${m.location}`}
       </p>
-      <p>
-        Host:{" "}
-        <Link
-          to="/u/$userId"
-          params={{ userId: m.host.id }}
-          className="text-link"
-        >
-          {m.host.displayName}
-        </Link>
-      </p>
       {m.game && (
-        <p>
-          Game:{" "}
-          <Link
-            to="/games/$slug"
-            params={{ slug: m.game.slug }}
-            className="text-link"
-          >
-            {m.game.title}
-          </Link>
-        </p>
+        <MeetupGamePreview game={m.game} />
       )}
       {m.maxPlayers != null && (
         <p className="muted">
@@ -138,22 +114,26 @@ export function MeetupDetailPage() {
       )}
 
       <h2 className="h-aside">Participants</h2>
-      <ul className="friend-rows">
-        <li className="friend-row">
-          <strong>{m.host.displayName}</strong>
-          <span className="muted"> (host)</span>
+      <ul className="user-card-grid">
+        <li className="user-card">
+          <UserIdentity
+            userId={m.host.id}
+            displayName={m.host.displayName}
+            avatarUrl={m.host.avatarUrl}
+            subtitle="Host"
+            isCurrentUser={m.host.id === myId}
+          />
         </li>
         {m.participants
           .filter((p) => p.status === "JOINED")
           .map((p) => (
-            <li key={p.userId} className="friend-row">
-              <Link
-                to="/u/$userId"
-                params={{ userId: p.userId }}
-                className="text-link"
-              >
-                {p.displayName}
-              </Link>
+            <li key={p.userId} className="user-card">
+              <UserIdentity
+                userId={p.userId}
+                displayName={p.displayName}
+                avatarUrl={p.avatarUrl}
+                isCurrentUser={p.userId === myId}
+              />
             </li>
           ))}
       </ul>
@@ -161,34 +141,46 @@ export function MeetupDetailPage() {
       {token && isScheduled && (
         <div className="meetup-actions">
           {!isHost && !isParticipant && (
-            <button
-              type="button"
-              className="button"
+            <Button
               disabled={full || join.isPending}
               onClick={() => join.mutate()}
             >
               {full ? "Full" : join.isPending ? "Joining…" : "Join"}
-            </button>
+            </Button>
           )}
           {!isHost && isParticipant && (
-            <button
-              type="button"
-              className="button ghost"
+            <Button
+              variant="ghost"
               disabled={leave.isPending}
               onClick={() => leave.mutate()}
             >
               {leave.isPending ? "Leaving…" : "Leave"}
-            </button>
+            </Button>
           )}
           {isHost && (
-            <button
-              type="button"
-              className="button danger"
-              disabled={cancel.isPending}
-              onClick={() => cancel.mutate()}
-            >
-              {cancel.isPending ? "Cancelling…" : "Cancel meetup"}
-            </button>
+            <>
+              <Link
+                to="/meetups/$meetupId/edit"
+                params={{ meetupId }}
+                className={buttonClassName({ variant: "ghost" })}
+              >
+                Edit meetup
+              </Link>
+              <Link
+                to="/meetups/$meetupId/invite"
+                params={{ meetupId }}
+                className={buttonClassName({ variant: "ghost" })}
+              >
+                Invite players
+              </Link>
+              <Button
+                variant="danger"
+                disabled={cancel.isPending}
+                onClick={() => cancel.mutate()}
+              >
+                {cancel.isPending ? "Cancelling…" : "Cancel meetup"}
+              </Button>
+            </>
           )}
         </div>
       )}
@@ -198,101 +190,6 @@ export function MeetupDetailPage() {
             ? (join.error ?? leave.error ?? cancel.error)!.message
             : "Action failed"}
         </p>
-      )}
-
-      {token && isHost && isScheduled && (
-        <>
-          <h2 className="h-aside">Edit details</h2>
-          <form
-            className="stack-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              const gameId = String(fd.get("gameId") ?? "");
-              const mp = fd.get("maxPlayers");
-              save.mutate({
-                title: String(fd.get("title") ?? "").trim(),
-                scheduledAt: new Date(
-                  String(fd.get("scheduledAt") ?? ""),
-                ).toISOString(),
-                gameId,
-                location: String(fd.get("location") ?? ""),
-                ...(mp !== "" && mp != null ? { maxPlayers: Number(mp) } : {}),
-                description: String(fd.get("description") ?? ""),
-              });
-            }}
-          >
-            <label className="field">
-              <span>Title</span>
-              <input
-                name="title"
-                required
-                className="input"
-                defaultValue={m.title}
-                maxLength={200}
-              />
-            </label>
-            <label className="field">
-              <span>When</span>
-              <input
-                name="scheduledAt"
-                type="datetime-local"
-                required
-                className="input"
-                defaultValue={toDatetimeLocalValue(m.scheduledAt)}
-              />
-            </label>
-            <label className="field">
-              <span>
-                Game ID (paste from catalog URL or leave empty to clear)
-              </span>
-              <input
-                name="gameId"
-                className="input"
-                placeholder="clear field to remove game"
-                defaultValue={m.game?.id ?? ""}
-              />
-            </label>
-            <label className="field">
-              <span>Location</span>
-              <input
-                name="location"
-                className="input"
-                defaultValue={m.location ?? ""}
-              />
-            </label>
-            <label className="field">
-              <span>Max players</span>
-              <input
-                name="maxPlayers"
-                type="number"
-                min={2}
-                max={500}
-                className="input"
-                defaultValue={m.maxPlayers ?? ""}
-              />
-            </label>
-            <label className="field">
-              <span>Description</span>
-              <textarea
-                name="description"
-                rows={3}
-                className="input textarea"
-                defaultValue={m.description ?? ""}
-              />
-            </label>
-            {save.isError && (
-              <p className="error" role="alert">
-                {save.error instanceof Error
-                  ? save.error.message
-                  : "Save failed"}
-              </p>
-            )}
-            <button type="submit" className="button" disabled={save.isPending}>
-              {save.isPending ? "Saving…" : "Save changes"}
-            </button>
-          </form>
-        </>
       )}
 
       {!token && isScheduled && (

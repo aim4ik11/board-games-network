@@ -77,6 +77,7 @@ export function patchMeetup(
     location?: string;
     maxPlayers?: number;
     description?: string;
+    visibility?: PlaySessionVisibility;
   },
 ): Promise<MeetupDetail> {
   return apiFetch<MeetupDetail>(`/meetups/${encodeURIComponent(id)}`, {

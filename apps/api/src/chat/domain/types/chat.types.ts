@@ -1,5 +1,10 @@
 import type { PublicUserCard } from '../../../auth/domain/types/auth-user.types';
 
+export type ConversationMemberView = Pick<
+  PublicUserCard,
+  'id' | 'displayName' | 'avatarUrl'
+>;
+
 export type MessageView = {
   id: string;
   conversationId: string;
@@ -18,4 +23,10 @@ export type ConversationListItemView = {
     createdAt: string;
     senderDisplayName: string;
   } | null;
+};
+
+export type ConversationMessagesView = {
+  data: MessageView[];
+  members: ConversationMemberView[];
+  meta: { total: number; page: number; limit: number };
 };

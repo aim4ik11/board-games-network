@@ -8,6 +8,7 @@ import { FriendsApplicationService } from '../../friends/application/friends.app
 import { ChatBroadcastService } from '../infrastructure/realtime/chat-broadcast.service';
 import { ChatRepositoryPort } from '../domain/ports/chat.repository.port';
 import type {
+  ConversationMessagesView,
   ConversationListItemView,
   MessageView,
 } from '../domain/types/chat.types';
@@ -56,22 +57,23 @@ export class ChatApplicationService {
     conversationId: string,
     page: number,
     limit: number,
-  ): Promise<{
-    data: MessageView[];
-    meta: { total: number; page: number; limit: number };
-  }> {
+  ): Promise<ConversationMessagesView> {
     const member = await this.chatRepository.isMember(userId, conversationId);
     if (!member) {
       throw new NotFoundException('Conversation not found');
     }
     const skip = (page - 1) * limit;
-    const { items, total } = await this.chatRepository.listMessages({
-      conversationId,
-      skip,
-      take: limit,
-    });
+    const [{ items, total }, members] = await Promise.all([
+      this.chatRepository.listMessages({
+        conversationId,
+        skip,
+        take: limit,
+      }),
+      this.chatRepository.listConversationMembers(conversationId),
+    ]);
     return {
       data: items,
+      members,
       meta: { total, page, limit },
     };
   }

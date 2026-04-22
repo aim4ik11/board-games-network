@@ -4,6 +4,7 @@ import type { PublicUserCard } from '../../../auth/domain/types/auth-user.types'
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ChatRepositoryPort } from '../../domain/ports/chat.repository.port';
 import type {
+  ConversationMemberView,
   ConversationListItemView,
   MessageView,
 } from '../../domain/types/chat.types';
@@ -137,6 +138,21 @@ export class PrismaChatRepository extends ChatRepositoryPort {
       return msg;
     });
     return this.toMessageView(row);
+  }
+
+  async listConversationMembers(
+    conversationId: string,
+  ): Promise<ConversationMemberView[]> {
+    const rows = await this.prismaService.conversationMember.findMany({
+      where: { conversationId },
+      select: { user: { select: cardSelect } },
+      orderBy: { joinedAt: 'asc' },
+    });
+    return rows.map((row) => ({
+      id: row.user.id,
+      displayName: row.user.displayName,
+      avatarUrl: row.user.avatarUrl,
+    }));
   }
 
   private toMessageView(

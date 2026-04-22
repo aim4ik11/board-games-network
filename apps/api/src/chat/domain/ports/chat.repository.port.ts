@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  ConversationMemberView,
   ConversationListItemView,
   MessageView,
 } from '../types/chat.types';
@@ -33,4 +34,8 @@ export abstract class ChatRepositoryPort {
     senderId: string;
     body: string;
   }): Promise<MessageView>;
+
+  abstract listConversationMembers(
+    conversationId: string,
+  ): Promise<ConversationMemberView[]>;
 }

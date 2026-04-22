@@ -4,12 +4,15 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { parse } from 'csv-parse/sync';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 const DEFAULT_DATASET_ZIP = 'games.csv.zip';
 const DEFAULT_DATASET_CSV = 'games.csv';
 const DEFAULT_TOP_LIMIT = 400;
 const DEFAULT_MIN_USER_RATINGS = 500;
+const DEFAULT_SEED_PLAYERS_COUNT = 24;
+const DEFAULT_SEED_PLAYER_PASSWORD = 'password123';
 
 type DatasetRow = {
   BGGId?: string;
@@ -281,7 +284,104 @@ async function upsertImportedGames(
   return written;
 }
 
+const playerFirstNames = [
+  'Alex',
+  'Jordan',
+  'Taylor',
+  'Morgan',
+  'Casey',
+  'Riley',
+  'Jamie',
+  'Drew',
+  'Sam',
+  'Cameron',
+  'Avery',
+  'Quinn',
+];
+
+const playerLastNames = [
+  'Smith',
+  'Johnson',
+  'Brown',
+  'Lee',
+  'Patel',
+  'Miller',
+  'Garcia',
+  'Davis',
+  'Anderson',
+  'Wilson',
+  'Martin',
+  'Clark',
+];
+
+function shouldSeedPlayers(): boolean {
+  const value = process.env.SEED_PLAYERS?.trim().toLowerCase();
+  return value === '1' || value === 'true' || value === 'yes';
+}
+
+function getPlayerSeedCount(): number {
+  const parsed = Number.parseInt(
+    process.env.SEED_PLAYERS_COUNT ?? `${DEFAULT_SEED_PLAYERS_COUNT}`,
+    10,
+  );
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_SEED_PLAYERS_COUNT;
+  }
+  return parsed;
+}
+
+function buildPlayerSeedRows(count: number) {
+  return Array.from({ length: count }, (_, idx) => {
+    const first = playerFirstNames[idx % playerFirstNames.length];
+    const last =
+      playerLastNames[Math.floor(idx / playerFirstNames.length) %
+        playerLastNames.length];
+    const sequence = idx + 1;
+    const email = `player${sequence}@seed.local`;
+    return {
+      email,
+      displayName: `${first} ${last}`,
+      city: `City ${((idx % 10) + 1).toString()}`,
+      bio: `Board game fan #${sequence}.`,
+    };
+  });
+}
+
+async function seedPlayers() {
+  if (!shouldSeedPlayers()) {
+    return;
+  }
+
+  const count = getPlayerSeedCount();
+  const plainPassword =
+    process.env.SEED_PLAYERS_PASSWORD ?? DEFAULT_SEED_PLAYER_PASSWORD;
+  const passwordHash = await bcrypt.hash(plainPassword, 10);
+  const players = buildPlayerSeedRows(count);
+
+  for (const player of players) {
+    await prisma.user.upsert({
+      where: { email: player.email },
+      create: {
+        email: player.email,
+        displayName: player.displayName,
+        passwordHash,
+        city: player.city,
+        bio: player.bio,
+      },
+      update: {
+        displayName: player.displayName,
+        passwordHash,
+        city: player.city,
+        bio: player.bio,
+      },
+    });
+  }
+
+  console.log(`Seeded ${players.length} players.`);
+}
+
 async function main() {
+  await seedPlayers();
   const strict = process.env.BOARDGAMES_DATASET_STRICT === '1';
   try {
     const csvText = await readDatasetCsvText();

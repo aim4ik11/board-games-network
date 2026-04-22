@@ -20,7 +20,7 @@ export const queryKeys = {
   },
   friends: {
     all: ['friends'] as const,
-    discover: (q: { q: string; page: number }) =>
+    discover: (q: { q: string; city: string; page: number }) =>
       [...queryKeys.friends.all, 'discover', q] as const,
     list: () => [...queryKeys.friends.all, 'list'] as const,
     incoming: () => [...queryKeys.friends.all, 'incoming'] as const,

@@ -8,12 +8,16 @@ import type {
 
 export function fetchFriendsDiscover(params: {
   q?: string;
+  city?: string;
   page?: number;
   limit?: number;
 }): Promise<{ data: DiscoverUserRow[]; meta: PaginatedMeta }> {
   const sp = new URLSearchParams();
   if (params.q?.trim()) {
     sp.set('q', params.q.trim());
+  }
+  if (params.city?.trim()) {
+    sp.set('city', params.city.trim());
   }
   if (params.page != null) {
     sp.set('page', String(params.page));

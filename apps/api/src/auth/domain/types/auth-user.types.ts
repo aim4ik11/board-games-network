@@ -10,3 +10,28 @@ export type AuthUser = {
 
 /** Public profile card (no email) for user discovery / profiles. */
 export type PublicUserCard = Omit<AuthUser, 'email'>;
+
+export type PublicProfileGamePreview = {
+  id: string;
+  slug: string;
+  title: string;
+  imageUrl: string | null;
+};
+
+export type PublicProfileSummary = {
+  user: PublicUserCard;
+  stats: {
+    collectionTotal: number;
+    ownedCount: number;
+    wishlistCount: number;
+    previouslyOwnedCount: number;
+    friendsCount: number;
+    ratingsCount: number;
+    reviewsCount: number;
+  };
+  collectionPreview: {
+    owned: PublicProfileGamePreview[];
+    wishlist: PublicProfileGamePreview[];
+    previouslyOwned: PublicProfileGamePreview[];
+  };
+};

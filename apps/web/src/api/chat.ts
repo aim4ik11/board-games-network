@@ -31,6 +31,7 @@ export function fetchConversationMessages(
   params?: { page?: number; limit?: number },
 ): Promise<{
   data: MessageView[];
+  members: Array<Pick<PublicUserCard, 'id' | 'displayName' | 'avatarUrl'>>;
   meta: { total: number; page: number; limit: number };
 }> {
   const sp = new URLSearchParams();

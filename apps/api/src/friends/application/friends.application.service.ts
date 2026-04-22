@@ -40,6 +40,7 @@ export class FriendsApplicationService {
   async discover(
     meId: string,
     q: string,
+    city: string | undefined,
     page: number,
     limit: number,
   ): Promise<{
@@ -47,9 +48,12 @@ export class FriendsApplicationService {
     meta: { total: number; page: number; limit: number };
   }> {
     const skip = (page - 1) * limit;
+    const me = await this.authUsersRepository.findPublicProfileById(meId);
+    const effectiveCity = city?.trim() || me?.city?.trim() || undefined;
     const { items, total } =
       await this.authUsersRepository.searchPublicUserCards({
         q,
+        city: effectiveCity,
         excludeUserId: meId,
         skip,
         take: limit,

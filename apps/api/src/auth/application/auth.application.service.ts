@@ -4,7 +4,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { AuthUser, PublicUserCard } from '../domain/types/auth-user.types';
+import type {
+  AuthUser,
+  PublicProfileSummary,
+  PublicUserCard,
+} from '../domain/types/auth-user.types';
 import { AccessTokenIssuerPort } from '../domain/ports/access-token-issuer.port';
 import { AuthUsersRepositoryPort } from '../domain/ports/auth-users.repository.port';
 import { PasswordHasherPort } from '../domain/ports/password-hasher.port';
@@ -83,6 +87,15 @@ export class AuthApplicationService {
       throw new NotFoundException('User not found');
     }
     return card;
+  }
+
+  async getPublicProfileSummary(userId: string): Promise<PublicProfileSummary> {
+    const summary =
+      await this.authUsersRepository.findPublicProfileSummaryById(userId);
+    if (!summary) {
+      throw new NotFoundException('User not found');
+    }
+    return summary;
   }
 
   async updateMyProfile(

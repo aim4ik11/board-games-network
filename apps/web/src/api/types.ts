@@ -30,7 +30,7 @@ export type GameDetail = GameListItem & {
   reviewCount: number;
 };
 
-export type CollectionStatus = 'OWNED' | 'WISHLIST' | 'PREVIOUSLY_OWNED';
+export type CollectionStatus = "OWNED" | "WISHLIST" | "PREVIOUSLY_OWNED";
 
 export type CollectionEntry = {
   id: string;
@@ -49,14 +49,39 @@ export type AuthUser = {
   avatarUrl: string | null;
 };
 
-export type PublicUserCard = Omit<AuthUser, 'email'>;
+export type PublicUserCard = Omit<AuthUser, "email">;
+
+export type PublicProfileGamePreview = {
+  id: string;
+  slug: string;
+  title: string;
+  imageUrl: string | null;
+};
+
+export type PublicProfileSummary = {
+  user: PublicUserCard;
+  stats: {
+    collectionTotal: number;
+    ownedCount: number;
+    wishlistCount: number;
+    previouslyOwnedCount: number;
+    friendsCount: number;
+    ratingsCount: number;
+    reviewsCount: number;
+  };
+  collectionPreview: {
+    owned: PublicProfileGamePreview[];
+    wishlist: PublicProfileGamePreview[];
+    previouslyOwned: PublicProfileGamePreview[];
+  };
+};
 
 export type FriendshipRelationship =
-  | 'none'
-  | 'friend'
-  | 'outgoing_pending'
-  | 'incoming_pending'
-  | 'blocked';
+  | "none"
+  | "friend"
+  | "outgoing_pending"
+  | "incoming_pending"
+  | "blocked";
 
 export type DiscoverUserRow = PublicUserCard & {
   relationship: FriendshipRelationship;

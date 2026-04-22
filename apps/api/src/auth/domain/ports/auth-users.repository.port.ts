@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { AuthUser, PublicUserCard } from '../types/auth-user.types';
+import type {
+  AuthUser,
+  PublicProfileSummary,
+  PublicUserCard,
+} from '../types/auth-user.types';
 
 export type UserCredentialsRecord = AuthUser & {
   passwordHash: string;
@@ -23,6 +27,10 @@ export abstract class AuthUsersRepositoryPort {
 
   abstract findUserCardById(id: string): Promise<PublicUserCard | null>;
 
+  abstract findPublicProfileSummaryById(
+    id: string,
+  ): Promise<PublicProfileSummary | null>;
+
   abstract updateProfile(
     userId: string,
     patch: {
@@ -35,6 +43,7 @@ export abstract class AuthUsersRepositoryPort {
 
   abstract searchPublicUserCards(params: {
     q: string;
+    city?: string;
     excludeUserId: string;
     skip: number;
     take: number;

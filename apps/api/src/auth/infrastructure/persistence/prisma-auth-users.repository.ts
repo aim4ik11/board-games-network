@@ -6,8 +6,10 @@ import {
 } from '../../domain/ports/auth-users.repository.port';
 import type {
   AuthUser,
+  PublicProfileSummary,
   PublicUserCard,
 } from '../../domain/types/auth-user.types';
+import { CollectionStatus, FriendshipStatus } from '@prisma/client';
 
 const publicSelect = {
   id: true,
@@ -80,6 +82,89 @@ export class PrismaAuthUsersRepository extends AuthUsersRepositoryPort {
     return user as PublicUserCard | null;
   }
 
+  async findPublicProfileSummaryById(
+    id: string,
+  ): Promise<PublicProfileSummary | null> {
+    const user = await this.prismaService.user.findUnique({
+      where: { id },
+      select: cardSelect,
+    });
+    if (!user) {
+      return null;
+    }
+
+    const gameSelect = {
+      id: true,
+      slug: true,
+      title: true,
+      imageUrl: true,
+    } as const;
+
+    const [byStatus, friendsCount, ratingsCount, reviewsCount, owned, wishlist, previous] =
+      await Promise.all([
+        this.prismaService.userGame.groupBy({
+          by: ['status'],
+          where: { userId: id },
+          _count: { _all: true },
+        }),
+        this.prismaService.friendship.count({
+          where: {
+            status: FriendshipStatus.ACCEPTED,
+            OR: [{ requesterId: id }, { addresseeId: id }],
+          },
+        }),
+        this.prismaService.rating.count({ where: { userId: id } }),
+        this.prismaService.review.count({ where: { userId: id } }),
+        this.prismaService.userGame.findMany({
+          where: { userId: id, status: CollectionStatus.OWNED },
+          orderBy: { id: 'desc' },
+          take: 6,
+          select: { game: { select: gameSelect } },
+        }),
+        this.prismaService.userGame.findMany({
+          where: { userId: id, status: CollectionStatus.WISHLIST },
+          orderBy: { id: 'desc' },
+          take: 6,
+          select: { game: { select: gameSelect } },
+        }),
+        this.prismaService.userGame.findMany({
+          where: { userId: id, status: CollectionStatus.PREVIOUSLY_OWNED },
+          orderBy: { id: 'desc' },
+          take: 6,
+          select: { game: { select: gameSelect } },
+        }),
+      ]);
+
+    const statusCount = new Map<CollectionStatus, number>();
+    for (const row of byStatus) {
+      statusCount.set(row.status, row._count._all);
+    }
+
+    const ownedCount = statusCount.get(CollectionStatus.OWNED) ?? 0;
+    const wishlistCount = statusCount.get(CollectionStatus.WISHLIST) ?? 0;
+    const previouslyOwnedCount =
+      statusCount.get(CollectionStatus.PREVIOUSLY_OWNED) ?? 0;
+    const collectionTotal = ownedCount + wishlistCount + previouslyOwnedCount;
+
+    return {
+      user: user as PublicUserCard,
+      stats: {
+        collectionTotal,
+        ownedCount,
+        wishlistCount,
+        previouslyOwnedCount,
+        friendsCount,
+        ratingsCount,
+        reviewsCount,
+      },
+      collectionPreview: {
+        owned: owned.map((row) => row.game),
+        wishlist: wishlist.map((row) => row.game),
+        previouslyOwned: previous.map((row) => row.game),
+      },
+    };
+  }
+
   async updateProfile(
     userId: string,
     patch: {
@@ -106,17 +191,24 @@ export class PrismaAuthUsersRepository extends AuthUsersRepositoryPort {
 
   async searchPublicUserCards(params: {
     q: string;
+    city?: string;
     excludeUserId: string;
     skip: number;
     take: number;
   }): Promise<{ items: PublicUserCard[]; total: number }> {
     const term = params.q.trim();
-    if (!term) {
+    const cityTerm = params.city?.trim();
+    if (!term && !cityTerm) {
       return { items: [], total: 0 };
     }
     const where = {
       id: { not: params.excludeUserId },
-      displayName: { contains: term, mode: 'insensitive' as const },
+      ...(term
+        ? { displayName: { contains: term, mode: 'insensitive' as const } }
+        : {}),
+      ...(cityTerm
+        ? { city: { equals: cityTerm, mode: 'insensitive' as const } }
+        : {}),
     };
     const [rows, total] = await Promise.all([
       this.prismaService.user.findMany({

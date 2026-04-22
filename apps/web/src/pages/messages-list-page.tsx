@@ -58,8 +58,32 @@ export function MessagesListPage() {
                   params={{ conversationId: c.id }}
                   className="conversation-row"
                 >
-                  <div className="conversation-row-title">
-                    {c.otherUser?.displayName ?? "Conversation"}
+                  <div className="conversation-row-head">
+                    <span className="conversation-row-avatar" aria-hidden>
+                      {c.otherUser?.avatarUrl ? (
+                        <img
+                          src={c.otherUser.avatarUrl}
+                          alt=""
+                          className="conversation-row-avatar-image"
+                        />
+                      ) : (
+                        (c.otherUser?.displayName ?? "Conversation")
+                          .trim()
+                          .charAt(0)
+                          .toUpperCase() || "C"
+                      )}
+                    </span>
+                    <div className="conversation-row-title">
+                      {c.otherUser?.displayName ?? "Conversation"}
+                    </div>
+                    <span className="conversation-row-time muted">
+                      {c.lastMessage?.createdAt
+                        ? new Date(c.lastMessage.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}
+                    </span>
                   </div>
                   {c.lastMessage && (
                     <div className="conversation-row-preview muted">

@@ -123,7 +123,20 @@ export function MessagesThreadPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesQuery.data?.data.length]);
 
+  useEffect(() => {
+    document.body.classList.add("chat-route-active");
+    return () => {
+      document.body.classList.remove("chat-route-active");
+    };
+  }, []);
+
   const myId = me.data?.id;
+  const myDisplayName = me.data?.displayName ?? "You";
+  const initialFromName = (name: string) =>
+    name.trim().charAt(0).toUpperCase() || "?";
+  const memberById = new Map(
+    (messagesQuery.data?.members ?? []).map((member) => [member.id, member]),
+  );
 
   return (
     <section className="page chat-thread-page">
@@ -143,21 +156,48 @@ export function MessagesThreadPage() {
       {messagesQuery.data && (
         <>
           <div className="chat-messages">
-            {messagesQuery.data.data.map((m) => {
+            {messagesQuery.data.data.map((m, index, all) => {
               const mine = myId != null && m.sender.id === myId;
+              const next = all[index + 1];
+              const isLastInSenderRun = !next || next.sender.id !== m.sender.id;
+              const senderName = mine ? myDisplayName : m.sender.displayName;
+              const senderMember = memberById.get(m.sender.id);
               return (
                 <div
                   key={m.id}
                   className={`chat-bubble-wrap ${mine ? "mine" : "theirs"}`}
                 >
-                  <div className="chat-bubble">
-                    {!mine && (
-                      <div className="chat-sender">{m.sender.displayName}</div>
-                    )}
-                    <div className="chat-body">{m.body}</div>
-                    <div className="chat-time muted">
-                      {new Date(m.createdAt).toLocaleString()}
+                  {!mine && (
+                    <div
+                      className={`chat-avatar ${isLastInSenderRun ? "" : "chat-avatar--ghost"}`.trim()}
+                      aria-hidden
+                    >
+                      {senderMember?.avatarUrl ? (
+                        <img
+                          src={senderMember.avatarUrl}
+                          alt=""
+                          className="chat-avatar-image"
+                        />
+                      ) : (
+                        initialFromName(senderName)
+                      )}
                     </div>
+                  )}
+                  <div className="chat-bubble">
+                    <div className="chat-body">{m.body}</div>
+                    {isLastInSenderRun && (
+                      <div className="chat-meta muted">
+                        <span className="chat-sender">
+                          {mine ? "You" : senderName}
+                        </span>
+                        <span className="chat-time">
+                          {new Date(m.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

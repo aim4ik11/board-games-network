@@ -37,6 +37,7 @@ export class FriendsController {
     return this.friendsApplicationService.discover(
       user.id,
       query.q ?? '',
+      query.city,
       query.page ?? 1,
       query.limit ?? 20,
     );

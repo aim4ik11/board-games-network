@@ -15,6 +15,8 @@ import { MessagesThreadPage } from "./pages/messages-thread-page";
 import { GameDetailPage } from "./pages/game-detail-page";
 import { GamesListPage } from "./pages/games-list-page";
 import { MeetupDetailPage } from "./pages/meetup-detail-page";
+import { MeetupEditPage } from "./pages/meetup-edit-page";
+import { MeetupInvitePage } from "./pages/meetup-invite-page";
 import { MeetupNewPage } from "./pages/meetup-new-page";
 import { MeetupsListPage } from "./pages/meetups-list-page";
 import { ProfilePage } from "./pages/profile-page";
@@ -177,12 +179,35 @@ const meetupsDetailRoute = createRoute({
   component: MeetupDetailPage,
 });
 
+const meetupsInviteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/meetups/$meetupId/invite",
+  beforeLoad: () => {
+    if (!getStoredAccessToken()) {
+      redirectToLoginModal();
+    }
+  },
+  component: MeetupInvitePage,
+});
+
+const meetupsEditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/meetups/$meetupId/edit",
+  beforeLoad: () => {
+    if (!getStoredAccessToken()) {
+      redirectToLoginModal();
+    }
+  },
+  component: MeetupEditPage,
+});
+
 const friendsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/friends",
   validateSearch: (raw: Record<string, unknown>) => ({
     tab: parseFriendsTab(raw.tab),
     q: typeof raw.q === "string" ? raw.q : "",
+    city: typeof raw.city === "string" ? raw.city : "",
     page:
       typeof raw.page === "string"
         ? Math.max(1, Number.parseInt(raw.page, 10) || 1)
@@ -209,6 +234,8 @@ const routeTree = rootRoute.addChildren([
   meetupsListRoute,
   meetupsNewRoute,
   meetupsDetailRoute,
+  meetupsInviteRoute,
+  meetupsEditRoute,
   messagesListRoute,
   messagesThreadRoute,
 ]);
