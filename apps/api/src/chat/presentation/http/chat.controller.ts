@@ -11,6 +11,8 @@ import {
 } from '../../../auth/presentation/http/decorators/current-user.decorator';
 import { ChatApplicationService } from '../../application/chat.application.service';
 import { CreateDirectConversationDto } from './dto/create-direct-conversation.dto';
+import { CreateGroupConversationDto } from './dto/create-group-conversation.dto';
+import { InviteToConversationDto } from './dto/invite-to-conversation.dto';
 import { PostMessageDto } from './dto/post-message.dto';
 import { QueryMessagesDto } from './dto/query-messages.dto';
 
@@ -37,6 +39,34 @@ export class ChatController {
     return this.chatApplicationService.getOrCreateDirectConversation(
       user.id,
       dto.otherUserId.trim(),
+    );
+  }
+
+  @Post('group')
+  @ApiOperation({ summary: 'Create a group chat with invited friends' })
+  createGroup(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateGroupConversationDto,
+  ) {
+    return this.chatApplicationService.createGroupConversation(
+      user.id,
+      dto.memberIds,
+      dto.title,
+    );
+  }
+
+  @Post(':conversationId/members')
+  @ApiOperation({ summary: 'Invite a friend to an existing group chat' })
+  @ApiParam({ name: 'conversationId' })
+  inviteMember(
+    @CurrentUser() user: AuthUser,
+    @Param('conversationId') conversationId: string,
+    @Body() dto: InviteToConversationDto,
+  ) {
+    return this.chatApplicationService.inviteToConversation(
+      user.id,
+      conversationId,
+      dto.userId,
     );
   }
 

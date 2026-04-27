@@ -444,6 +444,12 @@ select.input {
     filter 0.12s ease,
     border-color 0.12s ease,
     background 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1;
+  text-align: center;
 }
 
 a.button {
@@ -493,6 +499,15 @@ a.button {
 .ui-button--sm {
   padding: 6px 12px;
   font-size: 0.9rem;
+}
+
+.ui-button--icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  padding: 0;
+  background: transparent;
+  border-color: var(--border);
 }
 
 .game-grid {
@@ -771,6 +786,48 @@ a.button {
   border-color: var(--accent-border);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 10, 18, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 80;
+}
+
+.modal-panel {
+  width: min(560px, 100%);
+  max-height: min(82svh, 820px);
+  overflow: visible;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.modal-close {
+  margin-left: auto;
+}
+
+.modal-close:hover {
+  border-color: var(--accent-border);
+}
+
 .button-row {
   display: flex;
   flex-wrap: wrap;
@@ -780,6 +837,10 @@ a.button {
 
 .button-row.wrap {
   margin-top: 8px;
+}
+
+.modal-actions {
+  justify-content: flex-end;
 }
 
 .button.small {
@@ -1690,10 +1751,49 @@ a.button {
 
 .base-multi-select {
   width: 100%;
+  position: relative;
+}
+
+.base-multi-select-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.base-multi-select-input {
+  width: 100%;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.base-multi-select-chevron {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.base-multi-select-input-wrap:hover .base-multi-select-input,
+.base-multi-select-input-wrap:focus-within .base-multi-select-input {
+  border-color: var(--accent-border);
+  background: color-mix(in oklab, var(--accent-bg) 30%, var(--bg));
 }
 
 .base-multi-select-dropdown {
-  margin-top: 8px;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 120;
   border: 1px solid var(--border);
   background: var(--bg);
   border-radius: 10px;
@@ -1715,7 +1815,7 @@ a.button {
   text-align: left;
   width: 100%;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   cursor: pointer;
@@ -1757,9 +1857,19 @@ a.button {
   background: var(--accent-bg);
 }
 
+.base-multi-select-option.is-highlighted {
+  border-color: var(--accent-border);
+  background: color-mix(in oklab, var(--accent-bg) 65%, transparent);
+}
+
 .base-multi-select-option-main {
   color: var(--text-h);
   font-weight: 500;
+  line-height: 1;
+}
+
+.base-multi-select-option-meta {
+  line-height: 1;
 }
 
 .base-multi-select-badges {
@@ -1779,7 +1889,46 @@ a.button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.base-multi-select-badge-remove {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  padding: 0;
+}
+
+.base-multi-select-badge-remove:hover {
+  background: color-mix(in oklab, var(--accent-bg) 55%, transparent);
+}
+
+.messages-page-head {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.messages-page-head h1 {
+  margin-bottom: 0;
+}
+
+.messages-create-trigger {
+  padding-inline: 12px;
+}
+
+.chat-thread-head {
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.chat-thread-head h1 {
+  margin-bottom: 0;
 }
 
 @media (max-width: 1320px) {

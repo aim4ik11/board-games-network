@@ -16,6 +16,8 @@ export type MessageView = {
 export type ConversationListItemView = {
   id: string;
   type: string;
+  title: string | null;
+  playSessionId: string | null;
   updatedAt: string;
   otherUser: PublicUserCard | null;
   lastMessage: {
@@ -26,6 +28,12 @@ export type ConversationListItemView = {
 };
 
 export type ConversationMessagesView = {
+  conversation: {
+    id: string;
+    type: string;
+    title: string | null;
+    playSessionId: string | null;
+  };
   data: MessageView[];
   members: ConversationMemberView[];
   meta: { total: number; page: number; limit: number };

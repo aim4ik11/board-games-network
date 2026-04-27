@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  ConversationType,
   FriendshipStatus,
   ParticipantStatus,
   PlaySessionStatus,
@@ -168,6 +169,15 @@ export class PrismaPlaySessionsRepository extends PlaySessionsRepositoryPort {
         description: props.description ?? undefined,
         status: PlaySessionStatus.SCHEDULED,
         visibility: props.visibility ?? PlaySessionVisibility.PUBLIC,
+        conversation: {
+          create: {
+            type: ConversationType.SESSION,
+            title: props.title,
+            members: {
+              create: [{ userId: props.hostId }],
+            },
+          },
+        },
       },
       select: { id: true },
     });
@@ -184,27 +194,35 @@ export class PrismaPlaySessionsRepository extends PlaySessionsRepositoryPort {
     if (!existing) {
       return null;
     }
-    await this.prismaService.playSession.update({
-      where: { id },
-      data: {
-        ...(patch.title !== undefined && { title: patch.title }),
-        ...(patch.scheduledAt !== undefined && {
-          scheduledAt: patch.scheduledAt,
-        }),
-        ...(patch.gameId !== undefined && {
-          gameId: patch.gameId,
-        }),
-        ...(patch.location !== undefined && { location: patch.location }),
-        ...(patch.maxPlayers !== undefined && {
-          maxPlayers: patch.maxPlayers,
-        }),
-        ...(patch.description !== undefined && {
-          description: patch.description,
-        }),
-        ...(patch.visibility !== undefined && {
-          visibility: patch.visibility,
-        }),
-      },
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.playSession.update({
+        where: { id },
+        data: {
+          ...(patch.title !== undefined && { title: patch.title }),
+          ...(patch.scheduledAt !== undefined && {
+            scheduledAt: patch.scheduledAt,
+          }),
+          ...(patch.gameId !== undefined && {
+            gameId: patch.gameId,
+          }),
+          ...(patch.location !== undefined && { location: patch.location }),
+          ...(patch.maxPlayers !== undefined && {
+            maxPlayers: patch.maxPlayers,
+          }),
+          ...(patch.description !== undefined && {
+            description: patch.description,
+          }),
+          ...(patch.visibility !== undefined && {
+            visibility: patch.visibility,
+          }),
+        },
+      });
+      if (patch.title !== undefined) {
+        await tx.conversation.updateMany({
+          where: { playSessionId: id },
+          data: { title: patch.title },
+        });
+      }
     });
     return this.findDetailById(id);
   }
@@ -286,21 +304,45 @@ export class PrismaPlaySessionsRepository extends PlaySessionsRepositoryPort {
   }
 
   async addParticipant(sessionId: string, userId: string): Promise<void> {
-    await this.prismaService.playSessionParticipant.create({
-      data: {
-        sessionId,
-        userId,
-        status: ParticipantStatus.JOINED,
-      },
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.playSessionParticipant.create({
+        data: {
+          sessionId,
+          userId,
+          status: ParticipantStatus.JOINED,
+        },
+      });
+      const conversation = await tx.conversation.findUnique({
+        where: { playSessionId: sessionId },
+        select: { id: true },
+      });
+      if (conversation) {
+        await tx.conversationMember.create({
+          data: { conversationId: conversation.id, userId },
+        });
+      }
     });
   }
 
   async removeParticipant(sessionId: string, userId: string): Promise<boolean> {
     try {
-      await this.prismaService.playSessionParticipant.delete({
-        where: {
-          sessionId_userId: { sessionId, userId },
-        },
+      await this.prismaService.$transaction(async (tx) => {
+        await tx.playSessionParticipant.delete({
+          where: {
+            sessionId_userId: { sessionId, userId },
+          },
+        });
+        const conversation = await tx.conversation.findUnique({
+          where: { playSessionId: sessionId },
+          select: { id: true },
+        });
+        if (conversation) {
+          await tx.conversationMember.delete({
+            where: {
+              conversationId_userId: { conversationId: conversation.id, userId },
+            },
+          });
+        }
       });
       return true;
     } catch {

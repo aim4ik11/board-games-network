@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -52,6 +53,39 @@ export class ChatApplicationService {
     return { conversationId: id };
   }
 
+  async createGroupConversation(
+    creatorId: string,
+    memberIds: string[],
+    title?: string,
+  ): Promise<{ conversationId: string }> {
+    const normalizedMemberIds = Array.from(
+      new Set(memberIds.map((id) => id.trim()).filter(Boolean)),
+    ).filter((id) => id !== creatorId);
+    if (normalizedMemberIds.length === 0) {
+      throw new BadRequestException('At least one other member is required');
+    }
+    const normalizedTitle = title?.trim();
+    if (!normalizedTitle) {
+      throw new BadRequestException('Group chat title is required');
+    }
+    const areFriends = await Promise.all(
+      normalizedMemberIds.map((id) =>
+        this.friendsApplicationService.areAcceptedFriends(creatorId, id),
+      ),
+    );
+    if (areFriends.some((ok) => !ok)) {
+      throw new ForbiddenException(
+        'You can only add accepted friends to group chats',
+      );
+    }
+    const conversationId = await this.chatRepository.createGroupConversation({
+      creatorId,
+      memberIds: normalizedMemberIds,
+      title: normalizedTitle,
+    });
+    return { conversationId };
+  }
+
   async listMessages(
     userId: string,
     conversationId: string,
@@ -63,15 +97,20 @@ export class ChatApplicationService {
       throw new NotFoundException('Conversation not found');
     }
     const skip = (page - 1) * limit;
-    const [{ items, total }, members] = await Promise.all([
+    const [{ items, total }, members, conversation] = await Promise.all([
       this.chatRepository.listMessages({
         conversationId,
         skip,
         take: limit,
       }),
       this.chatRepository.listConversationMembers(conversationId),
+      this.chatRepository.getConversationSummary(conversationId),
     ]);
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
     return {
+      conversation,
       data: items,
       members,
       meta: { total, page, limit },
@@ -98,6 +137,44 @@ export class ChatApplicationService {
     });
     this.chatBroadcastService.emitNewMessage(conversationId, message);
     return message;
+  }
+
+  async inviteToConversation(
+    inviterId: string,
+    conversationId: string,
+    invitedUserId: string,
+  ): Promise<void> {
+    const userId = invitedUserId.trim();
+    if (!userId) {
+      throw new BadRequestException('Invalid user');
+    }
+    if (userId === inviterId) {
+      throw new BadRequestException('Cannot invite yourself');
+    }
+    const member = await this.chatRepository.isMember(inviterId, conversationId);
+    if (!member) {
+      throw new NotFoundException('Conversation not found');
+    }
+    const conversation =
+      await this.chatRepository.getConversationSummary(conversationId);
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+    if (conversation.type !== 'GROUP') {
+      throw new BadRequestException('Members can be invited only to group chats');
+    }
+    const alreadyMember = await this.chatRepository.isMember(userId, conversationId);
+    if (alreadyMember) {
+      throw new ConflictException('User is already in this conversation');
+    }
+    const areFriends = await this.friendsApplicationService.areAcceptedFriends(
+      inviterId,
+      userId,
+    );
+    if (!areFriends) {
+      throw new ForbiddenException('You can only invite accepted friends');
+    }
+    await this.chatRepository.addConversationMember(conversationId, userId);
   }
 
   async assertMember(userId: string, conversationId: string): Promise<boolean> {

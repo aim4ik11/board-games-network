@@ -150,6 +150,7 @@ model Friendship {
 model Conversation {
   id            String           @id @default(cuid())
   type          ConversationType @default(DIRECT)
+  title         String?
   /// Set for play-session chats; members should mirror PlaySessionParticipant for this session.
   playSessionId String?          @unique
   createdAt     DateTime         @default(now())

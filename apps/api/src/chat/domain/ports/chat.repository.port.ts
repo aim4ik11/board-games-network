@@ -17,6 +17,12 @@ export abstract class ChatRepositoryPort {
     userIdB: string,
   ): Promise<string>;
 
+  abstract createGroupConversation(params: {
+    creatorId: string;
+    memberIds: string[];
+    title?: string | null;
+  }): Promise<string>;
+
   abstract listConversationsForUser(
     userId: string,
   ): Promise<ConversationListItemView[]>;
@@ -38,4 +44,18 @@ export abstract class ChatRepositoryPort {
   abstract listConversationMembers(
     conversationId: string,
   ): Promise<ConversationMemberView[]>;
+
+  abstract addConversationMember(
+    conversationId: string,
+    userId: string,
+  ): Promise<void>;
+
+  abstract getConversationSummary(
+    conversationId: string,
+  ): Promise<{
+    id: string;
+    type: string;
+    title: string | null;
+    playSessionId: string | null;
+  } | null>;
 }

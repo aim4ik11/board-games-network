@@ -62,12 +62,36 @@ export class PrismaChatRepository extends ChatRepositoryPort {
     return created.id;
   }
 
+  async createGroupConversation(params: {
+    creatorId: string;
+    memberIds: string[];
+    title?: string | null;
+  }): Promise<string> {
+    const created = await this.prismaService.conversation.create({
+      data: {
+        type: ConversationType.GROUP,
+        title: params.title ?? null,
+        members: {
+          create: [
+            { userId: params.creatorId },
+            ...params.memberIds.map((userId) => ({ userId })),
+          ],
+        },
+      },
+      select: { id: true },
+    });
+    return created.id;
+  }
+
   async listConversationsForUser(
     userId: string,
   ): Promise<ConversationListItemView[]> {
     const rows = await this.prismaService.conversation.findMany({
       where: { members: { some: { userId } } },
       include: {
+        playSession: {
+          select: { title: true },
+        },
         members: {
           include: { user: { select: cardSelect } },
         },
@@ -155,6 +179,46 @@ export class PrismaChatRepository extends ChatRepositoryPort {
     }));
   }
 
+  async addConversationMember(conversationId: string, userId: string): Promise<void> {
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.conversationMember.create({
+        data: { conversationId, userId },
+      });
+      await tx.conversation.update({
+        where: { id: conversationId },
+        data: { updatedAt: new Date() },
+      });
+    });
+  }
+
+  async getConversationSummary(
+    conversationId: string,
+  ): Promise<{
+    id: string;
+    type: string;
+    title: string | null;
+    playSessionId: string | null;
+  } | null> {
+    const row = await this.prismaService.conversation.findUnique({
+      where: { id: conversationId },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        playSessionId: true,
+        playSession: { select: { title: true } },
+      },
+    });
+    return row
+      ? {
+          id: row.id,
+          type: row.type,
+          title: row.title ?? row.playSession?.title ?? null,
+          playSessionId: row.playSessionId,
+        }
+      : null;
+  }
+
   private toMessageView(
     row: Prisma.MessageGetPayload<{ include: typeof messageInclude }>,
   ): MessageView {
@@ -175,6 +239,7 @@ export class PrismaChatRepository extends ChatRepositoryPort {
       include: {
         members: { include: { user: { select: typeof cardSelect } } };
         messages: { include: typeof messageInclude };
+        playSession: { select: { title: true } };
       };
     }>,
     meId: string,
@@ -188,6 +253,8 @@ export class PrismaChatRepository extends ChatRepositoryPort {
     return {
       id: row.id,
       type: row.type,
+      title: row.title ?? row.playSession?.title ?? null,
+      playSessionId: row.playSessionId,
       updatedAt: row.updatedAt.toISOString(),
       otherUser,
       lastMessage: last

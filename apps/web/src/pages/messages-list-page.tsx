@@ -1,17 +1,50 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { fetchConversations } from "../api/chat";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  createGroupConversation,
+  fetchConversations,
+  type ConversationListItem,
+} from '../api/chat';
+import { fetchFriendsList } from '../api/friends';
+import {
+  Button,
+  Modal,
+  SuggestionMultiSelect,
+  type SuggestionMultiSelectOption,
+} from '../components/ui';
 import { getSharedChatSocket } from "../lib/chat-socket";
 import { getStoredAccessToken } from "../lib/auth-storage";
 import { queryKeys } from "../lib/query-keys";
-import { useQueryClient } from "@tanstack/react-query";
 
 export function MessagesListPage() {
   const queryClient = useQueryClient();
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [groupTitle, setGroupTitle] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const listQuery = useQuery({
     queryKey: queryKeys.chat.conversations(),
     queryFn: fetchConversations,
+  });
+  const friendsQuery = useQuery({
+    queryKey: queryKeys.friends.list(),
+    queryFn: fetchFriendsList,
+  });
+  const createGroup = useMutation({
+    mutationFn: () =>
+      createGroupConversation({
+        memberIds: selectedMemberIds,
+        title: groupTitle.trim(),
+      }),
+    onSuccess: (result) => {
+      setSelectedMemberIds([]);
+      setGroupTitle('');
+      setIsCreateModalOpen(false);
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.conversations(),
+      });
+      window.location.assign(`/messages/${encodeURIComponent(result.conversationId)}`);
+    },
   });
 
   useEffect(() => {
@@ -27,15 +60,115 @@ export function MessagesListPage() {
       });
     };
 
-    socket.on("message:new", onNew);
+    socket.on('message:new', onNew);
     return () => {
-      socket.off("message:new", onNew);
+      socket.off('message:new', onNew);
     };
   }, [queryClient]);
 
+  const conversationTitle = (c: ConversationListItem) => {
+    if (c.type === 'DIRECT') {
+      return c.otherUser?.displayName ?? 'Direct chat';
+    }
+    if (c.type === 'SESSION') {
+      return c.title?.trim() || 'Meetup chat';
+    }
+    if (c.title?.trim()) {
+      return c.title;
+    }
+    return 'Group chat';
+  };
+
+  const friendOptions: SuggestionMultiSelectOption[] = (friendsQuery.data ?? []).map(
+    (friend) => ({
+      id: friend.user.id,
+      label: friend.user.displayName,
+      description: friend.user.city,
+      avatarUrl: friend.user.avatarUrl,
+    }),
+  );
+
+  const avatarLabel = (c: ConversationListItem) => conversationTitle(c).trim().charAt(0).toUpperCase() || 'C';
+
   return (
     <section className="page">
-      <h1>Messages</h1>
+      <div className="button-row messages-page-head">
+        <h1>Messages</h1>
+        <Button
+          size="sm"
+          className="messages-create-trigger"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
+          <Plus size={14} aria-hidden="true" />
+          Create chat
+        </Button>
+      </div>
+      <Modal
+        isOpen={isCreateModalOpen}
+        title="Create Group Chat"
+        onClose={() => setIsCreateModalOpen(false)}
+      >
+        <form
+          className="stack-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (
+              !groupTitle.trim() ||
+              selectedMemberIds.length === 0 ||
+              createGroup.isPending
+            ) {
+              return;
+            }
+            createGroup.mutate();
+          }}
+        >
+          <label className="field">
+            <span>Title</span>
+            <input
+              className="input"
+              value={groupTitle}
+              onChange={(e) => setGroupTitle(e.target.value)}
+              placeholder="Set group title"
+              maxLength={80}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Members</span>
+            <SuggestionMultiSelect
+              options={friendOptions}
+              selectedIds={selectedMemberIds}
+              onChange={setSelectedMemberIds}
+              searchPlaceholder="Find friends..."
+              selectedEmptyText="Select at least one friend."
+              emptyText="No friends match this search."
+              loading={friendsQuery.isLoading}
+            />
+          </label>
+          <div className="button-row modal-actions">
+            <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                !groupTitle.trim() ||
+                selectedMemberIds.length === 0 ||
+                createGroup.isPending
+              }
+            >
+              {createGroup.isPending ? 'Creating...' : 'Create chat'}
+            </Button>
+          </div>
+          {createGroup.isError && (
+            <p className="error" role="alert">
+              {createGroup.error instanceof Error
+                ? createGroup.error.message
+                : 'Failed to create group chat'}
+            </p>
+          )}
+        </form>
+      </Modal>
       {listQuery.isLoading && <p>Loading…</p>}
       {listQuery.isError && (
         <p className="error" role="alert">
@@ -53,9 +186,8 @@ export function MessagesListPage() {
           ) : (
             listQuery.data.map((c) => (
               <li key={c.id}>
-                <Link
-                  to="/messages/$conversationId"
-                  params={{ conversationId: c.id }}
+                <a
+                  href={`/messages/${encodeURIComponent(c.id)}`}
                   className="conversation-row"
                 >
                   <div className="conversation-row-head">
@@ -67,14 +199,11 @@ export function MessagesListPage() {
                           className="conversation-row-avatar-image"
                         />
                       ) : (
-                        (c.otherUser?.displayName ?? "Conversation")
-                          .trim()
-                          .charAt(0)
-                          .toUpperCase() || "C"
+                        avatarLabel(c)
                       )}
                     </span>
                     <div className="conversation-row-title">
-                      {c.otherUser?.displayName ?? "Conversation"}
+                      {conversationTitle(c)}
                     </div>
                     <span className="conversation-row-time muted">
                       {c.lastMessage?.createdAt
@@ -93,7 +222,7 @@ export function MessagesListPage() {
                         : c.lastMessage.body}
                     </div>
                   )}
-                </Link>
+                </a>
               </li>
             ))
           )}

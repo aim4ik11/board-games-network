@@ -19,6 +19,16 @@ import { queryKeys } from "../lib/query-keys";
 
 const collectionSearchDefault = { status: "OWNED" as const };
 
+function conversationTitle(c: Awaited<ReturnType<typeof fetchConversations>>[number]) {
+  if (c.type === "DIRECT") {
+    return c.otherUser?.displayName ?? "Direct chat";
+  }
+  if (c.type === "SESSION") {
+    return c.title?.trim() || "Meetup chat";
+  }
+  return c.title?.trim() || "Group chat";
+}
+
 export function RootLayout() {
   const { token, signOut } = useAuth();
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode | null>(null);
@@ -293,7 +303,7 @@ export function RootLayout() {
                         params={{ conversationId: c.id }}
                       >
                         <span className="side-feed-title">
-                          {c.otherUser?.displayName ?? "Conversation"}
+                          {conversationTitle(c)}
                         </span>
                         <span className="muted">
                           {c.lastMessage?.body
