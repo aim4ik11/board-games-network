@@ -6,8 +6,8 @@ export function HomePage() {
     <section className="page">
       <h1>Board game social</h1>
       <p className="lede">
-        Browse the catalog, sign in to rate and review games, and (soon) organize meetups with
-        friends.
+        Browse the catalog, sign in to rate and review games, and (soon)
+        organize meetups with friends.
       </p>
       <p>
         <Link to="/games" search={gamesListSearchDefault} className="text-link">

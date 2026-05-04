@@ -7,16 +7,16 @@ import {
 } from '@nestjs/common';
 import { PlaySessionStatus, PlaySessionVisibility } from '@prisma/client';
 import { FriendsApplicationService } from '../../friends/application/friends.application.service';
-import { PlaySessionsRepositoryPort } from '../domain/ports/play-sessions.repository.port';
 import type {
   MeetupDetailView,
   MeetupListItemView,
 } from '../domain/types/meetup.types';
+import { PrismaPlaySessionsRepository } from '../infrastructure/persistence/prisma-play-sessions.repository';
 
 @Injectable()
 export class MeetupsApplicationService {
   constructor(
-    private readonly playSessionsRepository: PlaySessionsRepositoryPort,
+    private readonly playSessionsRepository: PrismaPlaySessionsRepository,
     private readonly friendsApplicationService: FriendsApplicationService,
   ) {}
 

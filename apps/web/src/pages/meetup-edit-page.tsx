@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
-import { fetchMeetup, patchMeetup } from "../api/meetups";
-import { MeetupForm } from "../components/meetup-form";
-import { toDatetimeLocalValue } from "../lib/datetime-local";
-import { queryKeys } from "../lib/query-keys";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
+import { fetchMeetup, patchMeetup } from '../api/meetups';
+import { MeetupForm } from '../components/meetup-form';
+import { toDatetimeLocalValue } from '../lib/datetime-local';
+import { queryKeys } from '../lib/query-keys';
 
-const routeApi = getRouteApi("/meetups/$meetupId/edit");
+const routeApi = getRouteApi('/meetups/$meetupId/edit');
 
 export function MeetupEditPage() {
   const { meetupId } = routeApi.useParams();
@@ -22,9 +22,11 @@ export function MeetupEditPage() {
       patchMeetup(meetupId, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meetups.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.meetups.detail(meetupId) });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.meetups.detail(meetupId),
+      });
       void navigate({
-        to: "/meetups/$meetupId",
+        to: '/meetups/$meetupId',
         params: { meetupId },
       });
     },
@@ -44,7 +46,7 @@ export function MeetupEditPage() {
         <p className="error" role="alert">
           {detailQuery.error instanceof Error
             ? detailQuery.error.message
-            : "Meetup not found"}
+            : 'Meetup not found'}
         </p>
       </section>
     );
@@ -65,14 +67,16 @@ export function MeetupEditPage() {
       </p>
       <h1>Edit meetup</h1>
       <MeetupForm
-        formKey={`${meetup.id}:${meetup.scheduledAt}:${meetup.maxPlayers ?? "na"}`}
+        key={`${meetup.id}:${meetup.scheduledAt}:${meetup.maxPlayers ?? 'na'}`}
         initialValues={{
           title: meetup.title,
           scheduledAtLocal: toDatetimeLocalValue(meetup.scheduledAt),
-          game: meetup.game ? { id: meetup.game.id, title: meetup.game.title } : null,
-          location: meetup.location ?? "",
+          game: meetup.game
+            ? { id: meetup.game.id, title: meetup.game.title }
+            : null,
+          location: meetup.location ?? '',
           maxPlayers: meetup.maxPlayers,
-          description: meetup.description ?? "",
+          description: meetup.description ?? '',
           visibility: meetup.visibility,
         }}
         onSubmit={(payload) => save.mutate(payload)}
@@ -81,7 +85,7 @@ export function MeetupEditPage() {
       />
       {save.isError && (
         <p className="error" role="alert">
-          {save.error instanceof Error ? save.error.message : "Save failed"}
+          {save.error instanceof Error ? save.error.message : 'Save failed'}
         </p>
       )}
     </section>

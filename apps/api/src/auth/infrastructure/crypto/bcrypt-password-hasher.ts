@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PasswordHasherPort } from '../../domain/ports/password-hasher.port';
 
 const BCRYPT_ROUNDS = 12;
 
 @Injectable()
-export class BcryptPasswordHasher extends PasswordHasherPort {
+export class BcryptPasswordHasher {
   hash(plain: string): Promise<string> {
     return bcrypt.hash(plain, BCRYPT_ROUNDS);
   }

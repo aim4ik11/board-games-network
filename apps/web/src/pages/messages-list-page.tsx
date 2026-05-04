@@ -13,9 +13,9 @@ import {
   SuggestionMultiSelect,
   type SuggestionMultiSelectOption,
 } from '../components/ui';
-import { getSharedChatSocket } from "../lib/chat-socket";
-import { getStoredAccessToken } from "../lib/auth-storage";
-import { queryKeys } from "../lib/query-keys";
+import { getSharedChatSocket } from '../lib/chat-socket';
+import { getStoredAccessToken } from '../lib/auth-storage';
+import { queryKeys } from '../lib/query-keys';
 
 export function MessagesListPage() {
   const queryClient = useQueryClient();
@@ -43,7 +43,9 @@ export function MessagesListPage() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.chat.conversations(),
       });
-      window.location.assign(`/messages/${encodeURIComponent(result.conversationId)}`);
+      window.location.assign(
+        `/messages/${encodeURIComponent(result.conversationId)}`,
+      );
     },
   });
 
@@ -79,16 +81,17 @@ export function MessagesListPage() {
     return 'Group chat';
   };
 
-  const friendOptions: SuggestionMultiSelectOption[] = (friendsQuery.data ?? []).map(
-    (friend) => ({
-      id: friend.user.id,
-      label: friend.user.displayName,
-      description: friend.user.city,
-      avatarUrl: friend.user.avatarUrl,
-    }),
-  );
+  const friendOptions: SuggestionMultiSelectOption[] = (
+    friendsQuery.data ?? []
+  ).map((friend) => ({
+    id: friend.user.id,
+    label: friend.user.displayName,
+    description: friend.user.city,
+    avatarUrl: friend.user.avatarUrl,
+  }));
 
-  const avatarLabel = (c: ConversationListItem) => conversationTitle(c).trim().charAt(0).toUpperCase() || 'C';
+  const avatarLabel = (c: ConversationListItem) =>
+    conversationTitle(c).trim().charAt(0).toUpperCase() || 'C';
 
   return (
     <section className="page">
@@ -174,7 +177,7 @@ export function MessagesListPage() {
         <p className="error" role="alert">
           {listQuery.error instanceof Error
             ? listQuery.error.message
-            : "Failed to load conversations"}
+            : 'Failed to load conversations'}
         </p>
       )}
       {listQuery.data && (
@@ -207,11 +210,14 @@ export function MessagesListPage() {
                     </div>
                     <span className="conversation-row-time muted">
                       {c.lastMessage?.createdAt
-                        ? new Date(c.lastMessage.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : ""}
+                        ? new Date(c.lastMessage.createdAt).toLocaleTimeString(
+                            [],
+                            {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            },
+                          )
+                        : ''}
                     </span>
                   </div>
                   {c.lastMessage && (

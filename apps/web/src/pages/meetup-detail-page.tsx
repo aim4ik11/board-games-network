@@ -1,20 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getRouteApi, Link } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getRouteApi, Link } from '@tanstack/react-router';
 import {
   cancelMeetup,
   fetchMeetup,
   joinMeetup,
   leaveMeetup,
-} from "../api/meetups";
-import { MeetupGamePreview } from "../components/meetup-game-preview";
-import { UserIdentity } from "../components/user-identity";
-import { Button, buttonClassName } from "../components/ui";
-import { useAuthMe } from "../hooks/use-auth-me";
-import { requestAuthModal } from "../lib/auth-modal-intent";
-import { queryKeys } from "../lib/query-keys";
-import { useAuth } from "../lib/use-auth";
+} from '../api/meetups';
+import { MeetupGamePreview } from '../components/meetup-game-preview';
+import { UserIdentity } from '../components/user-identity';
+import { Button, buttonClassName } from '../components/ui';
+import { useAuthMe } from '../hooks/use-auth-me';
+import { requestAuthModal } from '../lib/auth-modal-intent';
+import { queryKeys } from '../lib/query-keys';
+import { useAuth } from '../lib/use-auth';
 
-const routeApi = getRouteApi("/meetups/$meetupId");
+const routeApi = getRouteApi('/meetups/$meetupId');
 
 export function MeetupDetailPage() {
   const { meetupId } = routeApi.useParams();
@@ -57,11 +57,11 @@ export function MeetupDetailPage() {
         <p className="error" role="alert">
           {detailQuery.error instanceof Error
             ? detailQuery.error.message
-            : "Meetup not found"}
+            : 'Meetup not found'}
         </p>
         <Link
           to="/meetups"
-          search={{ page: 1, upcoming: "true" }}
+          search={{ page: 1, upcoming: 'true' }}
           className="text-link"
         >
           ← Meetups
@@ -75,7 +75,7 @@ export function MeetupDetailPage() {
   const isHost = myId != null && m.host.id === myId;
   const isParticipant =
     myId != null && m.participants.some((p) => p.userId === myId);
-  const isScheduled = m.status === "SCHEDULED";
+  const isScheduled = m.status === 'SCHEDULED';
   const full =
     m.maxPlayers != null && 1 + m.joinedParticipantCount >= m.maxPlayers;
 
@@ -84,7 +84,7 @@ export function MeetupDetailPage() {
       <p className="back">
         <Link
           to="/meetups"
-          search={{ page: 1, upcoming: "true" }}
+          search={{ page: 1, upcoming: 'true' }}
           className="text-link"
         >
           ← Meetups
@@ -95,9 +95,7 @@ export function MeetupDetailPage() {
         {new Date(m.scheduledAt).toLocaleString()}
         {m.location && ` · ${m.location}`}
       </p>
-      {m.game && (
-        <MeetupGamePreview game={m.game} />
-      )}
+      {m.game && <MeetupGamePreview game={m.game} />}
       {m.maxPlayers != null && (
         <p className="muted">
           Spots: {1 + m.joinedParticipantCount} / {m.maxPlayers} (host counts as
@@ -107,7 +105,7 @@ export function MeetupDetailPage() {
       <p className="meetup-status-badge">{m.status}</p>
       {m.description && (
         <div className="prose">
-          {m.description.split("\n").map((line, i) => (
+          {m.description.split('\n').map((line, i) => (
             <p key={i}>{line}</p>
           ))}
         </div>
@@ -125,7 +123,7 @@ export function MeetupDetailPage() {
           />
         </li>
         {m.participants
-          .filter((p) => p.status === "JOINED")
+          .filter((p) => p.status === 'JOINED')
           .map((p) => (
             <li key={p.userId} className="user-card">
               <UserIdentity
@@ -145,7 +143,7 @@ export function MeetupDetailPage() {
               disabled={full || join.isPending}
               onClick={() => join.mutate()}
             >
-              {full ? "Full" : join.isPending ? "Joining…" : "Join"}
+              {full ? 'Full' : join.isPending ? 'Joining…' : 'Join'}
             </Button>
           )}
           {!isHost && isParticipant && (
@@ -154,7 +152,7 @@ export function MeetupDetailPage() {
               disabled={leave.isPending}
               onClick={() => leave.mutate()}
             >
-              {leave.isPending ? "Leaving…" : "Leave"}
+              {leave.isPending ? 'Leaving…' : 'Leave'}
             </Button>
           )}
           {isHost && (
@@ -162,14 +160,14 @@ export function MeetupDetailPage() {
               <Link
                 to="/meetups/$meetupId/edit"
                 params={{ meetupId }}
-                className={buttonClassName({ variant: "ghost" })}
+                className={buttonClassName({ variant: 'ghost' })}
               >
                 Edit meetup
               </Link>
               <Link
                 to="/meetups/$meetupId/invite"
                 params={{ meetupId }}
-                className={buttonClassName({ variant: "ghost" })}
+                className={buttonClassName({ variant: 'ghost' })}
               >
                 Invite players
               </Link>
@@ -178,7 +176,7 @@ export function MeetupDetailPage() {
                 disabled={cancel.isPending}
                 onClick={() => cancel.mutate()}
               >
-                {cancel.isPending ? "Cancelling…" : "Cancel meetup"}
+                {cancel.isPending ? 'Cancelling…' : 'Cancel meetup'}
               </Button>
             </>
           )}
@@ -188,7 +186,7 @@ export function MeetupDetailPage() {
         <p className="error" role="alert">
           {(join.error ?? leave.error ?? cancel.error) instanceof Error
             ? (join.error ?? leave.error ?? cancel.error)!.message
-            : "Action failed"}
+            : 'Action failed'}
         </p>
       )}
 
@@ -197,10 +195,10 @@ export function MeetupDetailPage() {
           <button
             type="button"
             className="link-button text-link"
-            onClick={() => requestAuthModal("login")}
+            onClick={() => requestAuthModal('login')}
           >
             Sign in
-          </button>{" "}
+          </button>{' '}
           to join.
         </p>
       )}

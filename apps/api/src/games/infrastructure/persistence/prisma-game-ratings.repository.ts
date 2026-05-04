@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { GameRatingsRepositoryPort } from '../../domain/ports/game-ratings.repository.port';
 import type {
   DeleteRatingResult,
   RatingUpsertResult,
@@ -15,10 +14,8 @@ const upsertSelect = {
 } as const;
 
 @Injectable()
-export class PrismaGameRatingsRepository extends GameRatingsRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaGameRatingsRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async upsertRatingByGameSlug(params: {
     slug: string;

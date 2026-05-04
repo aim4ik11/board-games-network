@@ -1,10 +1,10 @@
-import { io, type Socket } from "socket.io-client";
-import { getApiBaseUrl } from "./api";
+import { io, type Socket } from 'socket.io-client';
+import { getApiBaseUrl } from './api';
 
 export function createChatSocket(accessToken: string): Socket {
   return io(`${getApiBaseUrl()}/chat`, {
     auth: { token: accessToken },
-    transports: ["websocket", "polling"],
+    transports: ['websocket', 'polling'],
     autoConnect: false,
   });
 }

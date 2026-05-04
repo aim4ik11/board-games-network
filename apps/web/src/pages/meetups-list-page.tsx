@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { getRouteApi, Link } from "@tanstack/react-router";
-import { fetchMeetups } from "../api/meetups";
-import { requestAuthModal } from "../lib/auth-modal-intent";
-import { queryKeys } from "../lib/query-keys";
-import { useAuth } from "../lib/use-auth";
+import { useQuery } from '@tanstack/react-query';
+import { getRouteApi, Link } from '@tanstack/react-router';
+import { fetchMeetups } from '../api/meetups';
+import { requestAuthModal } from '../lib/auth-modal-intent';
+import { queryKeys } from '../lib/query-keys';
+import { useAuth } from '../lib/use-auth';
 
-const routeApi = getRouteApi("/meetups");
+const routeApi = getRouteApi('/meetups');
 
 export function MeetupsListPage() {
   const { page, upcoming } = routeApi.useSearch();
@@ -41,16 +41,16 @@ export function MeetupsListPage() {
         )}
       </div>
       <p className="muted">
-        Scheduled play sessions.{" "}
+        Scheduled play sessions.{' '}
         {!token && (
           <>
             <button
               type="button"
               className="link-button text-link"
-              onClick={() => requestAuthModal("login")}
+              onClick={() => requestAuthModal('login')}
             >
               Sign in
-            </button>{" "}
+            </button>{' '}
             to host or join.
           </>
         )}
@@ -58,18 +58,18 @@ export function MeetupsListPage() {
       <div className="segmented" role="group" aria-label="Time filter">
         <button
           type="button"
-          className={upcoming === "true" ? "active" : ""}
+          className={upcoming === 'true' ? 'active' : ''}
           onClick={() =>
-            void navigate({ search: { page: 1, upcoming: "true" } })
+            void navigate({ search: { page: 1, upcoming: 'true' } })
           }
         >
           Upcoming
         </button>
         <button
           type="button"
-          className={upcoming === "false" ? "active" : ""}
+          className={upcoming === 'false' ? 'active' : ''}
           onClick={() =>
-            void navigate({ search: { page: 1, upcoming: "false" } })
+            void navigate({ search: { page: 1, upcoming: 'false' } })
           }
         >
           All times
@@ -81,7 +81,7 @@ export function MeetupsListPage() {
         <p className="error" role="alert">
           {listQuery.error instanceof Error
             ? listQuery.error.message
-            : "Failed to load meetups"}
+            : 'Failed to load meetups'}
         </p>
       )}
       {listQuery.data && (

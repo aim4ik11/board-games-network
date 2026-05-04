@@ -2,10 +2,9 @@ import { apiFetch } from '../lib/api';
 import type { PublicProfileSummary, PublicUserCard } from './types';
 
 export function fetchPublicUser(userId: string): Promise<PublicUserCard> {
-  return apiFetch<PublicUserCard>(
-    `/users/${encodeURIComponent(userId)}`,
-    { skipAuth: true },
-  );
+  return apiFetch<PublicUserCard>(`/users/${encodeURIComponent(userId)}`, {
+    skipAuth: true,
+  });
 }
 
 export function fetchPublicProfileSummary(

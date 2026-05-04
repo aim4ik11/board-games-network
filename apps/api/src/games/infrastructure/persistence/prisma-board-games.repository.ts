@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { BoardGamesRepositoryPort } from '../../domain/ports/board-games.repository.port';
 import { slugifyTitle } from '../../domain/utils/slug.util';
 import type {
   BoardGameListItem,
@@ -23,10 +22,8 @@ const listSelect = {
 } as const;
 
 @Injectable()
-export class PrismaBoardGamesRepository extends BoardGamesRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaBoardGamesRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findPaginatedForList(params: {
     titleSearch?: string;

@@ -21,7 +21,10 @@ export function GamesListPage() {
 
   const totalPages =
     listQuery.data != null
-      ? Math.max(1, Math.ceil(listQuery.data.meta.total / listQuery.data.meta.limit))
+      ? Math.max(
+          1,
+          Math.ceil(listQuery.data.meta.total / listQuery.data.meta.limit),
+        )
       : 1;
 
   return (
@@ -52,7 +55,9 @@ export function GamesListPage() {
       {listQuery.isLoading && <p>Loading…</p>}
       {listQuery.isError && (
         <p className="error" role="alert">
-          {listQuery.error instanceof Error ? listQuery.error.message : 'Failed to load games'}
+          {listQuery.error instanceof Error
+            ? listQuery.error.message
+            : 'Failed to load games'}
         </p>
       )}
       {listQuery.data && (
@@ -80,7 +85,9 @@ export function GamesListPage() {
               </li>
             ))}
           </ul>
-          {listQuery.data.data.length === 0 && <p className="muted">No games match your search.</p>}
+          {listQuery.data.data.length === 0 && (
+            <p className="muted">No games match your search.</p>
+          )}
           <div className="pagination">
             <button
               type="button"

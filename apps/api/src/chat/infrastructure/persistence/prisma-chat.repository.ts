@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ConversationType, Prisma } from '@prisma/client';
 import type { PublicUserCard } from '../../../auth/domain/types/auth-user.types';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { ChatRepositoryPort } from '../../domain/ports/chat.repository.port';
 import type {
   ConversationMemberView,
   ConversationListItemView,
@@ -22,10 +21,8 @@ const messageInclude = {
 } as const;
 
 @Injectable()
-export class PrismaChatRepository extends ChatRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaChatRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findDirectConversationIdBetween(
     userIdA: string,
@@ -179,7 +176,10 @@ export class PrismaChatRepository extends ChatRepositoryPort {
     }));
   }
 
-  async addConversationMember(conversationId: string, userId: string): Promise<void> {
+  async addConversationMember(
+    conversationId: string,
+    userId: string,
+  ): Promise<void> {
     await this.prismaService.$transaction(async (tx) => {
       await tx.conversationMember.create({
         data: { conversationId, userId },
@@ -191,9 +191,7 @@ export class PrismaChatRepository extends ChatRepositoryPort {
     });
   }
 
-  async getConversationSummary(
-    conversationId: string,
-  ): Promise<{
+  async getConversationSummary(conversationId: string): Promise<{
     id: string;
     type: string;
     title: string | null;

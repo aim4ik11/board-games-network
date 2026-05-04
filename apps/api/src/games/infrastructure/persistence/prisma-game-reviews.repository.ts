@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { GameReviewsRepositoryPort } from '../../domain/ports/game-reviews.repository.port';
 import type { ReviewWithAuthorView } from '../../domain/types/game.types';
 
 const reviewWithAuthorSelect = {
@@ -14,10 +13,8 @@ const reviewWithAuthorSelect = {
 } as const;
 
 @Injectable()
-export class PrismaGameReviewsRepository extends GameReviewsRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaGameReviewsRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findPaginatedByGameSlug(params: {
     slug: string;

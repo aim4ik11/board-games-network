@@ -3,52 +3,52 @@ import {
   createRoute,
   createRouter,
   redirect,
-} from "@tanstack/react-router";
-import { RootLayout } from "./components/root-layout";
-import { getStoredAccessToken } from "./lib/auth-storage";
-import { setPendingAuthModal } from "./lib/auth-modal-intent";
-import { gamesListSearchDefault } from "./lib/games-route-defaults";
-import { CollectionPage } from "./pages/collection-page";
-import { FriendsPage } from "./pages/friends-page";
-import { MessagesListPage } from "./pages/messages-list-page";
-import { MessagesThreadPage } from "./pages/messages-thread-page";
-import { GameDetailPage } from "./pages/game-detail-page";
-import { GamesListPage } from "./pages/games-list-page";
-import { MeetupDetailPage } from "./pages/meetup-detail-page";
-import { MeetupEditPage } from "./pages/meetup-edit-page";
-import { MeetupInvitePage } from "./pages/meetup-invite-page";
-import { MeetupNewPage } from "./pages/meetup-new-page";
-import { MeetupsListPage } from "./pages/meetups-list-page";
-import { ProfilePage } from "./pages/profile-page";
-import { PublicUserPage } from "./pages/public-user-page";
+} from '@tanstack/react-router';
+import { RootLayout } from './components/root-layout';
+import { getStoredAccessToken } from './lib/auth-storage';
+import { setPendingAuthModal } from './lib/auth-modal-intent';
+import { gamesListSearchDefault } from './lib/games-route-defaults';
+import { CollectionPage } from './pages/collection-page';
+import { FriendsPage } from './pages/friends-page';
+import { MessagesListPage } from './pages/messages-list-page';
+import { MessagesThreadPage } from './pages/messages-thread-page';
+import { GameDetailPage } from './pages/game-detail-page';
+import { GamesListPage } from './pages/games-list-page';
+import { MeetupDetailPage } from './pages/meetup-detail-page';
+import { MeetupEditPage } from './pages/meetup-edit-page';
+import { MeetupInvitePage } from './pages/meetup-invite-page';
+import { MeetupNewPage } from './pages/meetup-new-page';
+import { MeetupsListPage } from './pages/meetups-list-page';
+import { ProfilePage } from './pages/profile-page';
+import { PublicUserPage } from './pages/public-user-page';
 
-const COLLECTION_STATUSES = ["OWNED", "WISHLIST", "PREVIOUSLY_OWNED"] as const;
+const COLLECTION_STATUSES = ['OWNED', 'WISHLIST', 'PREVIOUSLY_OWNED'] as const;
 type CollectionTab = (typeof COLLECTION_STATUSES)[number];
 
 function parseCollectionStatus(raw: unknown): CollectionTab {
-  return typeof raw === "string" &&
+  return typeof raw === 'string' &&
     COLLECTION_STATUSES.includes(raw as CollectionTab)
     ? (raw as CollectionTab)
-    : "OWNED";
+    : 'OWNED';
 }
 
-const FRIENDS_TABS = ["discover", "friends", "requests"] as const;
+const FRIENDS_TABS = ['discover', 'friends', 'requests'] as const;
 type FriendsTabRoute = (typeof FRIENDS_TABS)[number];
 
 function parseFriendsTab(raw: unknown): FriendsTabRoute {
-  return typeof raw === "string" &&
+  return typeof raw === 'string' &&
     FRIENDS_TABS.includes(raw as FriendsTabRoute)
     ? (raw as FriendsTabRoute)
-    : "discover";
+    : 'discover';
 }
 
-function parseMeetupsUpcoming(raw: unknown): "true" | "false" {
-  return raw === "false" ? "false" : "true";
+function parseMeetupsUpcoming(raw: unknown): 'true' | 'false' {
+  return raw === 'false' ? 'false' : 'true';
 }
 
 function redirectToLoginModal(): never {
-  setPendingAuthModal("login");
-  throw redirect({ to: "/games", search: gamesListSearchDefault });
+  setPendingAuthModal('login');
+  throw redirect({ to: '/games', search: gamesListSearchDefault });
 }
 
 const rootRoute = createRootRoute({
@@ -57,21 +57,21 @@ const rootRoute = createRootRoute({
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  path: '/',
   beforeLoad: () => {
-    throw redirect({ to: "/games", search: gamesListSearchDefault });
+    throw redirect({ to: '/games', search: gamesListSearchDefault });
   },
 });
 
 const gamesListRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/games",
+  path: '/games',
   validateSearch: (raw: Record<string, unknown>) => ({
-    q: typeof raw.q === "string" ? raw.q : "",
+    q: typeof raw.q === 'string' ? raw.q : '',
     page:
-      typeof raw.page === "string"
+      typeof raw.page === 'string'
         ? Math.max(1, Number.parseInt(raw.page, 10) || 1)
-        : typeof raw.page === "number" && Number.isFinite(raw.page)
+        : typeof raw.page === 'number' && Number.isFinite(raw.page)
           ? Math.max(1, raw.page)
           : 1,
   }),
@@ -80,13 +80,13 @@ const gamesListRoute = createRoute({
 
 const gameDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/games/$slug",
+  path: '/games/$slug',
   component: GameDetailPage,
 });
 
 const collectionRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/collection",
+  path: '/collection',
   validateSearch: (raw: Record<string, unknown>) => ({
     status: parseCollectionStatus(raw.status),
   }),
@@ -100,7 +100,7 @@ const collectionRoute = createRoute({
 
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/profile",
+  path: '/profile',
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
       redirectToLoginModal();
@@ -111,13 +111,13 @@ const profileRoute = createRoute({
 
 const publicUserRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/u/$userId",
+  path: '/u/$userId',
   component: PublicUserPage,
 });
 
 const messagesListRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/messages",
+  path: '/messages',
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
       redirectToLoginModal();
@@ -128,7 +128,7 @@ const messagesListRoute = createRoute({
 
 const messagesThreadRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/messages/$conversationId",
+  path: '/messages/$conversationId',
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
       redirectToLoginModal();
@@ -139,12 +139,12 @@ const messagesThreadRoute = createRoute({
 
 const meetupsListRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/meetups",
+  path: '/meetups',
   validateSearch: (raw: Record<string, unknown>) => ({
     page:
-      typeof raw.page === "string"
+      typeof raw.page === 'string'
         ? Math.max(1, Number.parseInt(raw.page, 10) || 1)
-        : typeof raw.page === "number" && Number.isFinite(raw.page)
+        : typeof raw.page === 'number' && Number.isFinite(raw.page)
           ? Math.max(1, raw.page)
           : 1,
     upcoming: parseMeetupsUpcoming(raw.upcoming),
@@ -159,7 +159,7 @@ const meetupsListRoute = createRoute({
 
 const meetupsNewRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/meetups/new",
+  path: '/meetups/new',
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
       redirectToLoginModal();
@@ -170,7 +170,7 @@ const meetupsNewRoute = createRoute({
 
 const meetupsDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/meetups/$meetupId",
+  path: '/meetups/$meetupId',
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
       redirectToLoginModal();
@@ -181,7 +181,7 @@ const meetupsDetailRoute = createRoute({
 
 const meetupsInviteRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/meetups/$meetupId/invite",
+  path: '/meetups/$meetupId/invite',
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
       redirectToLoginModal();
@@ -192,7 +192,7 @@ const meetupsInviteRoute = createRoute({
 
 const meetupsEditRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/meetups/$meetupId/edit",
+  path: '/meetups/$meetupId/edit',
   beforeLoad: () => {
     if (!getStoredAccessToken()) {
       redirectToLoginModal();
@@ -203,15 +203,15 @@ const meetupsEditRoute = createRoute({
 
 const friendsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/friends",
+  path: '/friends',
   validateSearch: (raw: Record<string, unknown>) => ({
     tab: parseFriendsTab(raw.tab),
-    q: typeof raw.q === "string" ? raw.q : "",
-    city: typeof raw.city === "string" ? raw.city : "",
+    q: typeof raw.q === 'string' ? raw.q : '',
+    city: typeof raw.city === 'string' ? raw.city : '',
     page:
-      typeof raw.page === "string"
+      typeof raw.page === 'string'
         ? Math.max(1, Number.parseInt(raw.page, 10) || 1)
-        : typeof raw.page === "number" && Number.isFinite(raw.page)
+        : typeof raw.page === 'number' && Number.isFinite(raw.page)
           ? Math.max(1, raw.page)
           : 1,
   }),
@@ -242,7 +242,7 @@ const routeTree = rootRoute.addChildren([
 
 export const router = createRouter({ routeTree });
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }

@@ -8,7 +8,6 @@ import {
   Prisma,
 } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { PlaySessionsRepositoryPort } from '../../domain/ports/play-sessions.repository.port';
 import type {
   CreateMeetupProps,
   MeetupDetailView,
@@ -39,10 +38,8 @@ const participantUserSelect = {
 } as const;
 
 @Injectable()
-export class PrismaPlaySessionsRepository extends PlaySessionsRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaPlaySessionsRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findManyForList(params: {
     status?: string;
@@ -339,7 +336,10 @@ export class PrismaPlaySessionsRepository extends PlaySessionsRepositoryPort {
         if (conversation) {
           await tx.conversationMember.delete({
             where: {
-              conversationId_userId: { conversationId: conversation.id, userId },
+              conversationId_userId: {
+                conversationId: conversation.id,
+                userId,
+              },
             },
           });
         }

@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import {
-  AuthUsersRepositoryPort,
-  type UserCredentialsRecord,
-} from '../../domain/ports/auth-users.repository.port';
 import type {
   AuthUser,
   PublicProfileSummary,
   PublicUserCard,
 } from '../../domain/types/auth-user.types';
 import { CollectionStatus, FriendshipStatus } from '@prisma/client';
+
+type UserCredentialsRecord = AuthUser & {
+  passwordHash: string;
+};
 
 const publicSelect = {
   id: true,
@@ -29,10 +29,8 @@ const cardSelect = {
 } as const;
 
 @Injectable()
-export class PrismaAuthUsersRepository extends AuthUsersRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaAuthUsersRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findWithCredentialsByEmail(
     email: string,
@@ -100,40 +98,47 @@ export class PrismaAuthUsersRepository extends AuthUsersRepositoryPort {
       imageUrl: true,
     } as const;
 
-    const [byStatus, friendsCount, ratingsCount, reviewsCount, owned, wishlist, previous] =
-      await Promise.all([
-        this.prismaService.userGame.groupBy({
-          by: ['status'],
-          where: { userId: id },
-          _count: { _all: true },
-        }),
-        this.prismaService.friendship.count({
-          where: {
-            status: FriendshipStatus.ACCEPTED,
-            OR: [{ requesterId: id }, { addresseeId: id }],
-          },
-        }),
-        this.prismaService.rating.count({ where: { userId: id } }),
-        this.prismaService.review.count({ where: { userId: id } }),
-        this.prismaService.userGame.findMany({
-          where: { userId: id, status: CollectionStatus.OWNED },
-          orderBy: { id: 'desc' },
-          take: 6,
-          select: { game: { select: gameSelect } },
-        }),
-        this.prismaService.userGame.findMany({
-          where: { userId: id, status: CollectionStatus.WISHLIST },
-          orderBy: { id: 'desc' },
-          take: 6,
-          select: { game: { select: gameSelect } },
-        }),
-        this.prismaService.userGame.findMany({
-          where: { userId: id, status: CollectionStatus.PREVIOUSLY_OWNED },
-          orderBy: { id: 'desc' },
-          take: 6,
-          select: { game: { select: gameSelect } },
-        }),
-      ]);
+    const [
+      byStatus,
+      friendsCount,
+      ratingsCount,
+      reviewsCount,
+      owned,
+      wishlist,
+      previous,
+    ] = await Promise.all([
+      this.prismaService.userGame.groupBy({
+        by: ['status'],
+        where: { userId: id },
+        _count: { _all: true },
+      }),
+      this.prismaService.friendship.count({
+        where: {
+          status: FriendshipStatus.ACCEPTED,
+          OR: [{ requesterId: id }, { addresseeId: id }],
+        },
+      }),
+      this.prismaService.rating.count({ where: { userId: id } }),
+      this.prismaService.review.count({ where: { userId: id } }),
+      this.prismaService.userGame.findMany({
+        where: { userId: id, status: CollectionStatus.OWNED },
+        orderBy: { id: 'desc' },
+        take: 6,
+        select: { game: { select: gameSelect } },
+      }),
+      this.prismaService.userGame.findMany({
+        where: { userId: id, status: CollectionStatus.WISHLIST },
+        orderBy: { id: 'desc' },
+        take: 6,
+        select: { game: { select: gameSelect } },
+      }),
+      this.prismaService.userGame.findMany({
+        where: { userId: id, status: CollectionStatus.PREVIOUSLY_OWNED },
+        orderBy: { id: 'desc' },
+        take: 6,
+        select: { game: { select: gameSelect } },
+      }),
+    ]);
 
     const statusCount = new Map<CollectionStatus, number>();
     for (const row of byStatus) {

@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { createMeetup, type PlaySessionVisibility } from "../api/meetups";
-import { MeetupForm } from "../components/meetup-form";
-import { toDatetimeLocalValue } from "../lib/datetime-local";
-import { queryKeys } from "../lib/query-keys";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { createMeetup, type PlaySessionVisibility } from '../api/meetups';
+import { MeetupForm } from '../components/meetup-form';
+import { toDatetimeLocalValue } from '../lib/datetime-local';
+import { queryKeys } from '../lib/query-keys';
 
 const defaultWhen = () => {
   const d = new Date();
@@ -20,7 +20,7 @@ export function MeetupNewPage() {
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meetups.all });
       void navigate({
-        to: "/meetups/$meetupId",
+        to: '/meetups/$meetupId',
         params: { meetupId: data.id },
       });
     },
@@ -31,7 +31,7 @@ export function MeetupNewPage() {
       <p className="back">
         <Link
           to="/meetups"
-          search={{ page: 1, upcoming: "true" }}
+          search={{ page: 1, upcoming: 'true' }}
           className="text-link"
         >
           ← Meetups
@@ -41,7 +41,7 @@ export function MeetupNewPage() {
       <MeetupForm
         initialValues={{
           scheduledAtLocal: defaultWhen(),
-          visibility: "PUBLIC" as PlaySessionVisibility,
+          visibility: 'PUBLIC' as PlaySessionVisibility,
         }}
         onSubmit={(payload) => create.mutate(payload)}
         isSubmitting={create.isPending}
@@ -49,7 +49,9 @@ export function MeetupNewPage() {
       />
       {create.isError && (
         <p className="error" role="alert">
-          {create.error instanceof Error ? create.error.message : "Could not create"}
+          {create.error instanceof Error
+            ? create.error.message
+            : 'Could not create'}
         </p>
       )}
     </section>

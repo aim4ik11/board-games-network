@@ -6,8 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { FriendsApplicationService } from '../../friends/application/friends.application.service';
+import { PrismaChatRepository } from '../infrastructure/persistence/prisma-chat.repository';
 import { ChatBroadcastService } from '../infrastructure/realtime/chat-broadcast.service';
-import { ChatRepositoryPort } from '../domain/ports/chat.repository.port';
 import type {
   ConversationMessagesView,
   ConversationListItemView,
@@ -17,7 +17,7 @@ import type {
 @Injectable()
 export class ChatApplicationService {
   constructor(
-    private readonly chatRepository: ChatRepositoryPort,
+    private readonly chatRepository: PrismaChatRepository,
     private readonly friendsApplicationService: FriendsApplicationService,
     private readonly chatBroadcastService: ChatBroadcastService,
   ) {}
@@ -151,7 +151,10 @@ export class ChatApplicationService {
     if (userId === inviterId) {
       throw new BadRequestException('Cannot invite yourself');
     }
-    const member = await this.chatRepository.isMember(inviterId, conversationId);
+    const member = await this.chatRepository.isMember(
+      inviterId,
+      conversationId,
+    );
     if (!member) {
       throw new NotFoundException('Conversation not found');
     }
@@ -161,9 +164,14 @@ export class ChatApplicationService {
       throw new NotFoundException('Conversation not found');
     }
     if (conversation.type !== 'GROUP') {
-      throw new BadRequestException('Members can be invited only to group chats');
+      throw new BadRequestException(
+        'Members can be invited only to group chats',
+      );
     }
-    const alreadyMember = await this.chatRepository.isMember(userId, conversationId);
+    const alreadyMember = await this.chatRepository.isMember(
+      userId,
+      conversationId,
+    );
     if (alreadyMember) {
       throw new ConflictException('User is already in this conversation');
     }

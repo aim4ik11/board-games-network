@@ -27,10 +27,16 @@ export function GameDetailPage() {
     return (
       <section className="page">
         <p className="error" role="alert">
-          {gameQuery.error instanceof Error ? gameQuery.error.message : 'Game not found'}
+          {gameQuery.error instanceof Error
+            ? gameQuery.error.message
+            : 'Game not found'}
         </p>
         <p>
-          <Link to="/games" search={gamesListSearchDefault} className="text-link">
+          <Link
+            to="/games"
+            search={gamesListSearchDefault}
+            className="text-link"
+          >
             ← Back to catalog
           </Link>
         </p>
@@ -84,15 +90,15 @@ export function GameDetailPage() {
           <p className="muted">
             {game.ratingCount > 0 && game.averageRating != null ? (
               <>
-                Avg rating <strong>{game.averageRating.toFixed(1)}</strong> / 10 ({game.ratingCount}{' '}
+                Avg rating <strong>{game.averageRating.toFixed(1)}</strong> / 10
+                ({game.ratingCount}{' '}
                 {game.ratingCount === 1 ? 'rating' : 'ratings'})
               </>
             ) : (
               <>No ratings yet</>
             )}
             {' · '}
-            {game.reviewCount}{' '}
-            {game.reviewCount === 1 ? 'review' : 'reviews'}
+            {game.reviewCount} {game.reviewCount === 1 ? 'review' : 'reviews'}
           </p>
           <div className="game-collection-block">
             <h2 className="h-aside">Collection</h2>

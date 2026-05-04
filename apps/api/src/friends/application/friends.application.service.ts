@@ -5,20 +5,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { FriendshipStatus } from '@prisma/client';
-import { AuthUsersRepositoryPort } from '../../auth/domain/ports/auth-users.repository.port';
-import { FriendshipsRepositoryPort } from '../domain/ports/friendships.repository.port';
+import { PrismaAuthUsersRepository } from '../../auth/infrastructure/persistence/prisma-auth-users.repository';
 import type {
   DiscoverUserRow,
   FriendConnectionView,
   FriendshipRelationship,
   PendingRequestView,
 } from '../domain/types/friends.types';
+import { PrismaFriendshipsRepository } from '../infrastructure/persistence/prisma-friendships.repository';
 
 @Injectable()
 export class FriendsApplicationService {
   constructor(
-    private readonly authUsersRepository: AuthUsersRepositoryPort,
-    private readonly friendshipsRepository: FriendshipsRepositoryPort,
+    private readonly authUsersRepository: PrismaAuthUsersRepository,
+    private readonly friendshipsRepository: PrismaFriendshipsRepository,
   ) {}
 
   private relationshipFromRow(

@@ -47,7 +47,11 @@ export function ProfilePage() {
     <section className="page profile-dashboard">
       <h1>Your profile</h1>
       <p className="muted profile-dashboard-subhead">
-        <Link to="/u/$userId" params={{ userId: user.id }} className="text-link">
+        <Link
+          to="/u/$userId"
+          params={{ userId: user.id }}
+          className="text-link"
+        >
           View public profile
         </Link>
       </p>
@@ -135,11 +139,17 @@ export function ProfilePage() {
               </label>
               {save.isError && (
                 <p className="error" role="alert">
-                  {save.error instanceof Error ? save.error.message : 'Save failed'}
+                  {save.error instanceof Error
+                    ? save.error.message
+                    : 'Save failed'}
                 </p>
               )}
               <div className="button-row">
-                <button type="submit" className="button" disabled={save.isPending}>
+                <button
+                  type="submit"
+                  className="button"
+                  disabled={save.isPending}
+                >
                   {save.isPending ? 'Saving…' : 'Save'}
                 </button>
                 <Link

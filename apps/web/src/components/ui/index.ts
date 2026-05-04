@@ -1,4 +1,5 @@
-export { Button, buttonClassName } from "./button";
+export { Button } from './button';
+export { buttonClassName } from './button-class-name';
 export { Modal } from './modal';
 export {
   SuggestionMultiSelect,

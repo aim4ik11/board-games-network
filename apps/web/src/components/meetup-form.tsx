@@ -1,15 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { fetchMyCollection } from "../api/collection";
-import { fetchGamesList } from "../api/games";
-import type { PlaySessionVisibility } from "../api/meetups";
-import type { GameListItem } from "../api/types";
-import { gamesListSearchDefault } from "../lib/games-route-defaults";
-import { queryKeys } from "../lib/query-keys";
-import { Button } from "./ui";
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { fetchMyCollection } from '../api/collection';
+import { fetchGamesList } from '../api/games';
+import type { PlaySessionVisibility } from '../api/meetups';
+import type { GameListItem } from '../api/types';
+import { gamesListSearchDefault } from '../lib/games-route-defaults';
+import { queryKeys } from '../lib/query-keys';
+import { Button } from './ui';
 
-const RECENT_MEETUP_GAMES_STORAGE_KEY = "boardgame:recent-meetup-games";
+const RECENT_MEETUP_GAMES_STORAGE_KEY = 'boardgame:recent-meetup-games';
 const RECENT_MEETUP_GAMES_LIMIT = 8;
 
 const VISIBILITY_OPTIONS: Array<{
@@ -18,19 +18,19 @@ const VISIBILITY_OPTIONS: Array<{
   hint: string;
 }> = [
   {
-    value: "PUBLIC",
-    label: "Public",
-    hint: "Anyone can discover and join this meetup.",
+    value: 'PUBLIC',
+    label: 'Public',
+    hint: 'Anyone can discover and join this meetup.',
   },
   {
-    value: "FRIENDS",
-    label: "Friends only",
-    hint: "Only your accepted friends can access and join.",
+    value: 'FRIENDS',
+    label: 'Friends only',
+    hint: 'Only your accepted friends can access and join.',
   },
   {
-    value: "INVITE_ONLY",
-    label: "Invite only",
-    hint: "Only invited players can view and join.",
+    value: 'INVITE_ONLY',
+    label: 'Invite only',
+    hint: 'Only invited players can view and join.',
   },
 ];
 
@@ -60,7 +60,6 @@ type MeetupFormProps = {
   isSubmitting: boolean;
   submitLabel: string;
   maxPlayersLimit?: number;
-  formKey?: string;
 };
 
 function dedupeGames(games: GameListItem[]): GameListItem[] {
@@ -76,7 +75,7 @@ function dedupeGames(games: GameListItem[]): GameListItem[] {
 }
 
 function readRecentMeetupGames(): GameListItem[] {
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return [];
   }
   try {
@@ -91,11 +90,11 @@ function readRecentMeetupGames(): GameListItem[] {
     return parsed
       .filter((entry): entry is GameListItem => {
         return (
-          typeof entry === "object" &&
+          typeof entry === 'object' &&
           entry !== null &&
-          typeof (entry as { id?: unknown }).id === "string" &&
-          typeof (entry as { title?: unknown }).title === "string" &&
-          typeof (entry as { slug?: unknown }).slug === "string"
+          typeof (entry as { id?: unknown }).id === 'string' &&
+          typeof (entry as { title?: unknown }).title === 'string' &&
+          typeof (entry as { slug?: unknown }).slug === 'string'
         );
       })
       .slice(0, RECENT_MEETUP_GAMES_LIMIT);
@@ -105,12 +104,35 @@ function readRecentMeetupGames(): GameListItem[] {
 }
 
 function storeRecentMeetupGame(game: GameListItem): void {
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return;
   }
   const existing = readRecentMeetupGames();
-  const next = dedupeGames([game, ...existing]).slice(0, RECENT_MEETUP_GAMES_LIMIT);
-  window.localStorage.setItem(RECENT_MEETUP_GAMES_STORAGE_KEY, JSON.stringify(next));
+  const next = dedupeGames([game, ...existing]).slice(
+    0,
+    RECENT_MEETUP_GAMES_LIMIT,
+  );
+  window.localStorage.setItem(
+    RECENT_MEETUP_GAMES_STORAGE_KEY,
+    JSON.stringify(next),
+  );
+}
+
+function toSelectedGame(
+  game: MeetupFormInitialValues['game'],
+): GameListItem | null {
+  return game
+    ? {
+        id: game.id,
+        title: game.title,
+        slug: '',
+        imageUrl: null,
+        yearPublished: null,
+        minPlayers: null,
+        maxPlayers: null,
+        playTimeMin: null,
+      }
+    : null;
 }
 
 export function MeetupForm({
@@ -119,52 +141,17 @@ export function MeetupForm({
   isSubmitting,
   submitLabel,
   maxPlayersLimit = 20,
-  formKey,
 }: MeetupFormProps) {
-  const [gameSearch, setGameSearch] = useState(initialValues.game?.title ?? "");
+  const [gameSearch, setGameSearch] = useState(initialValues.game?.title ?? '');
   const [isGamePickerOpen, setIsGamePickerOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<GameListItem | null>(
-    initialValues.game
-      ? {
-          id: initialValues.game.id,
-          title: initialValues.game.title,
-          slug: "",
-          imageUrl: null,
-          yearPublished: null,
-          minPlayers: null,
-          maxPlayers: null,
-          playTimeMin: null,
-        }
-      : null,
+  const [selectedGame, setSelectedGame] = useState<GameListItem | null>(() =>
+    toSelectedGame(initialValues.game),
   );
-  const [recentGames, setRecentGames] = useState<GameListItem[]>([]);
+  const [recentGames] = useState<GameListItem[]>(() => readRecentMeetupGames());
   const [visibility, setVisibility] = useState<PlaySessionVisibility>(
-    initialValues.visibility ?? "PUBLIC",
+    initialValues.visibility ?? 'PUBLIC',
   );
   const pickerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    setRecentGames(readRecentMeetupGames());
-  }, []);
-
-  useEffect(() => {
-    setGameSearch(initialValues.game?.title ?? "");
-    setSelectedGame(
-      initialValues.game
-        ? {
-            id: initialValues.game.id,
-            title: initialValues.game.title,
-            slug: "",
-            imageUrl: null,
-            yearPublished: null,
-            minPlayers: null,
-            maxPlayers: null,
-            playTimeMin: null,
-          }
-        : null,
-    );
-    setVisibility(initialValues.visibility ?? "PUBLIC");
-  }, [initialValues.game, initialValues.visibility, formKey]);
 
   useEffect(() => {
     if (!isGamePickerOpen) {
@@ -176,15 +163,15 @@ export function MeetupForm({
       }
     };
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         setIsGamePickerOpen(false);
       }
     };
-    window.addEventListener("mousedown", onPointerDown);
-    window.addEventListener("keydown", onEscape);
+    window.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('keydown', onEscape);
     return () => {
-      window.removeEventListener("mousedown", onPointerDown);
-      window.removeEventListener("keydown", onEscape);
+      window.removeEventListener('mousedown', onPointerDown);
+      window.removeEventListener('keydown', onEscape);
     };
   }, [isGamePickerOpen]);
 
@@ -200,7 +187,9 @@ export function MeetupForm({
   });
 
   const topGames = useMemo(() => {
-    const collectionGames = (collectionQuery.data ?? []).map((entry) => entry.game);
+    const collectionGames = (collectionQuery.data ?? []).map(
+      (entry) => entry.game,
+    );
     return dedupeGames([...collectionGames, ...recentGames]).slice(0, 12);
   }, [collectionQuery.data, recentGames]);
 
@@ -220,24 +209,25 @@ export function MeetupForm({
 
   return (
     <form
-      key={formKey}
       className="stack-form meetup-create-form"
       onSubmit={(e) => {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
-        const gameId = String(fd.get("gameId") ?? "");
-        const mp = fd.get("maxPlayers");
-        const nextVisibility = String(fd.get("visibility") ?? "PUBLIC");
+        const gameId = String(fd.get('gameId') ?? '');
+        const mp = fd.get('maxPlayers');
+        const nextVisibility = String(fd.get('visibility') ?? 'PUBLIC');
         onSubmit({
-          title: String(fd.get("title") ?? "").trim(),
-          scheduledAt: new Date(String(fd.get("scheduledAt") ?? "")).toISOString(),
+          title: String(fd.get('title') ?? '').trim(),
+          scheduledAt: new Date(
+            String(fd.get('scheduledAt') ?? ''),
+          ).toISOString(),
           ...(gameId ? { gameId } : {}),
-          location: String(fd.get("location") ?? "").trim() || undefined,
-          ...(mp !== "" && mp != null ? { maxPlayers: Number(mp) } : {}),
-          description: String(fd.get("description") ?? "").trim() || undefined,
-          ...(nextVisibility === "PUBLIC" ||
-          nextVisibility === "FRIENDS" ||
-          nextVisibility === "INVITE_ONLY"
+          location: String(fd.get('location') ?? '').trim() || undefined,
+          ...(mp !== '' && mp != null ? { maxPlayers: Number(mp) } : {}),
+          description: String(fd.get('description') ?? '').trim() || undefined,
+          ...(nextVisibility === 'PUBLIC' ||
+          nextVisibility === 'FRIENDS' ||
+          nextVisibility === 'INVITE_ONLY'
             ? { visibility: nextVisibility }
             : {}),
         });
@@ -254,7 +244,7 @@ export function MeetupForm({
             required
             className="input"
             maxLength={200}
-            defaultValue={initialValues.title ?? ""}
+            defaultValue={initialValues.title ?? ''}
           />
         </label>
         <label className="field">
@@ -264,7 +254,7 @@ export function MeetupForm({
             type="datetime-local"
             required
             className="input"
-            defaultValue={initialValues.scheduledAtLocal ?? ""}
+            defaultValue={initialValues.scheduledAtLocal ?? ''}
           />
         </label>
         <label className="field">
@@ -273,7 +263,7 @@ export function MeetupForm({
             name="location"
             className="input"
             maxLength={500}
-            defaultValue={initialValues.location ?? ""}
+            defaultValue={initialValues.location ?? ''}
           />
         </label>
         <label className="field">
@@ -285,7 +275,7 @@ export function MeetupForm({
             max={maxPlayersLimit}
             className="input"
             placeholder="e.g. 4"
-            defaultValue={initialValues.maxPlayers ?? ""}
+            defaultValue={initialValues.maxPlayers ?? ''}
           />
         </label>
         <label className="field">
@@ -294,7 +284,9 @@ export function MeetupForm({
             name="visibility"
             className="input"
             value={visibility}
-            onChange={(e) => setVisibility(e.target.value as PlaySessionVisibility)}
+            onChange={(e) =>
+              setVisibility(e.target.value as PlaySessionVisibility)
+            }
           >
             {VISIBILITY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -303,7 +295,10 @@ export function MeetupForm({
             ))}
           </select>
           <span className="field-hint">
-            {VISIBILITY_OPTIONS.find((option) => option.value === visibility)?.hint}
+            {
+              VISIBILITY_OPTIONS.find((option) => option.value === visibility)
+                ?.hint
+            }
           </span>
         </label>
         <div className="field">
@@ -312,7 +307,7 @@ export function MeetupForm({
             <input
               type="hidden"
               name="gameId"
-              value={selectedGame?.id ?? ""}
+              value={selectedGame?.id ?? ''}
               readOnly
             />
             <input
@@ -334,7 +329,7 @@ export function MeetupForm({
                 className="meetup-game-clear-icon"
                 onClick={() => {
                   setSelectedGame(null);
-                  setGameSearch("");
+                  setGameSearch('');
                   setIsGamePickerOpen(false);
                 }}
                 aria-label="Clear selected game"
@@ -357,7 +352,9 @@ export function MeetupForm({
                           className="meetup-game-option"
                           onClick={() => selectGame(game)}
                         >
-                          <span className="meetup-game-title">{game.title}</span>
+                          <span className="meetup-game-title">
+                            {game.title}
+                          </span>
                           {game.yearPublished != null && (
                             <span className="muted">{game.yearPublished}</span>
                           )}
@@ -399,9 +396,13 @@ export function MeetupForm({
             )}
           </div>
           <p className="muted">
-            <Link to="/games" search={gamesListSearchDefault} className="text-link">
+            <Link
+              to="/games"
+              search={gamesListSearchDefault as never}
+              className="text-link"
+            >
               Browse catalog
-            </Link>{" "}
+            </Link>{' '}
             if the game is missing from the list.
           </p>
         </div>
@@ -412,13 +413,13 @@ export function MeetupForm({
             rows={4}
             className="input textarea"
             maxLength={4000}
-            defaultValue={initialValues.description ?? ""}
+            defaultValue={initialValues.description ?? ''}
           />
         </label>
       </div>
       <div className="button-row">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving…" : submitLabel}
+          {isSubmitting ? 'Saving…' : submitLabel}
         </Button>
       </div>
     </form>

@@ -8,7 +8,9 @@ export async function fetchMyCollection(
   return apiFetch<CollectionEntry[]>(`/me/collection${qs}`);
 }
 
-export async function fetchCollectionEntry(slug: string): Promise<CollectionEntry | null> {
+export async function fetchCollectionEntry(
+  slug: string,
+): Promise<CollectionEntry | null> {
   try {
     return await apiFetch<CollectionEntry>(
       `/me/collection/${encodeURIComponent(slug)}`,

@@ -1,47 +1,51 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, Outlet } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { fetchConversations } from "../api/chat";
-import { fetchMeetups } from "../api/meetups";
-import { AuthCard } from "./auth-card";
-import { useAuthMe } from "../hooks/use-auth-me";
+import { useQuery } from '@tanstack/react-query';
+import { Link, Outlet } from '@tanstack/react-router';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { fetchConversations } from '../api/chat';
+import { fetchMeetups } from '../api/meetups';
+import { AuthCard } from './auth-card';
+import { useAuthMe } from '../hooks/use-auth-me';
 import {
   consumePendingAuthModal,
   OPEN_AUTH_MODAL_EVENT,
   type AuthModalMode,
-} from "../lib/auth-modal-intent";
-import { useAuth } from "../lib/use-auth";
-import { friendsSearchDefault } from "../lib/friends-route-defaults";
-import { meetupsSearchDefault } from "../lib/meetups-route-defaults";
-import { gamesListSearchDefault } from "../lib/games-route-defaults";
-import { queryKeys } from "../lib/query-keys";
+} from '../lib/auth-modal-intent';
+import { useAuth } from '../lib/use-auth';
+import { friendsSearchDefault } from '../lib/friends-route-defaults';
+import { meetupsSearchDefault } from '../lib/meetups-route-defaults';
+import { gamesListSearchDefault } from '../lib/games-route-defaults';
+import { queryKeys } from '../lib/query-keys';
 
-const collectionSearchDefault = { status: "OWNED" as const };
+const collectionSearchDefault = { status: 'OWNED' as const };
 
-function conversationTitle(c: Awaited<ReturnType<typeof fetchConversations>>[number]) {
-  if (c.type === "DIRECT") {
-    return c.otherUser?.displayName ?? "Direct chat";
+function conversationTitle(
+  c: Awaited<ReturnType<typeof fetchConversations>>[number],
+) {
+  if (c.type === 'DIRECT') {
+    return c.otherUser?.displayName ?? 'Direct chat';
   }
-  if (c.type === "SESSION") {
-    return c.title?.trim() || "Meetup chat";
+  if (c.type === 'SESSION') {
+    return c.title?.trim() || 'Meetup chat';
   }
-  return c.title?.trim() || "Group chat";
+  return c.title?.trim() || 'Group chat';
 }
 
 export function RootLayout() {
   const { token, signOut } = useAuth();
-  const [authModalMode, setAuthModalMode] = useState<AuthModalMode | null>(null);
+  const [authModalMode, setAuthModalMode] = useState<AuthModalMode | null>(() =>
+    consumePendingAuthModal(),
+  );
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const me = useAuthMe();
   const sidebarMeetups = useQuery({
-    queryKey: [...queryKeys.meetups.all, "sidebar-upcoming"],
-    queryFn: () => fetchMeetups({ page: 1, limit: 5, upcoming: "true" }),
+    queryKey: [...queryKeys.meetups.all, 'sidebar-upcoming'],
+    queryFn: () => fetchMeetups({ page: 1, limit: 5, upcoming: 'true' }),
     enabled: Boolean(token),
   });
   const sidebarConversations = useQuery({
-    queryKey: [...queryKeys.chat.all, "sidebar-recent"],
+    queryKey: [...queryKeys.chat.all, 'sidebar-recent'],
     queryFn: fetchConversations,
     enabled: Boolean(token),
   });
@@ -52,8 +56,8 @@ export function RootLayout() {
     }
     const previousOverflow = document.body.style.overflow;
     const previousTouchAction = document.body.style.touchAction;
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
     return () => {
       document.body.style.overflow = previousOverflow;
       document.body.style.touchAction = previousTouchAction;
@@ -61,14 +65,9 @@ export function RootLayout() {
   }, [authModalMode]);
 
   useEffect(() => {
-    const pendingMode = consumePendingAuthModal();
-    if (pendingMode) {
-      setAuthModalMode(pendingMode);
-    }
-
     const onOpenAuthModal = (event: Event) => {
       const mode = (event as CustomEvent<AuthModalMode>).detail;
-      if (mode === "register" || mode === "login") {
+      if (mode === 'register' || mode === 'login') {
         setAuthModalMode(mode);
       }
     };
@@ -89,20 +88,20 @@ export function RootLayout() {
       }
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         setIsUserMenuOpen(false);
       }
     };
-    window.addEventListener("mousedown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
     return () => {
-      window.removeEventListener("mousedown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener('mousedown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [isUserMenuOpen]);
 
-  const userName = me.data?.displayName ?? "Player";
-  const avatarInitial = userName.trim().charAt(0).toUpperCase() || "P";
+  const userName = me.data?.displayName ?? 'Player';
+  const avatarInitial = userName.trim().charAt(0).toUpperCase() || 'P';
 
   return (
     <div className="app-shell">
@@ -114,7 +113,7 @@ export function RootLayout() {
           <Link
             to="/games"
             search={gamesListSearchDefault}
-            activeProps={{ className: "active" }}
+            activeProps={{ className: 'active' }}
           >
             Catalog
           </Link>
@@ -123,14 +122,14 @@ export function RootLayout() {
               <Link
                 to="/meetups"
                 search={meetupsSearchDefault}
-                activeProps={{ className: "active" }}
+                activeProps={{ className: 'active' }}
               >
                 Meetups
               </Link>
               <Link
                 to="/friends"
                 search={friendsSearchDefault}
-                activeProps={{ className: "active" }}
+                activeProps={{ className: 'active' }}
               >
                 Friends
               </Link>
@@ -159,7 +158,7 @@ export function RootLayout() {
                   <div className="user-menu-panel" role="menu">
                     <div className="user-menu-head">
                       <span className="user-menu-name">
-                        {me.isLoading ? "Loading…" : userName}
+                        {me.isLoading ? 'Loading…' : userName}
                       </span>
                       <span className="muted">{me.data?.email}</span>
                     </div>
@@ -204,7 +203,7 @@ export function RootLayout() {
             <button
               type="button"
               className="link-button"
-              onClick={() => setAuthModalMode("login")}
+              onClick={() => setAuthModalMode('login')}
             >
               Sign in
             </button>
@@ -233,7 +232,7 @@ export function RootLayout() {
                 <button
                   type="button"
                   className="link-button"
-                  onClick={() => setAuthModalMode("register")}
+                  onClick={() => setAuthModalMode('register')}
                 >
                   Create account
                 </button>
@@ -308,7 +307,7 @@ export function RootLayout() {
                         <span className="muted">
                           {c.lastMessage?.body
                             ? c.lastMessage.body.slice(0, 48)
-                            : "No messages yet"}
+                            : 'No messages yet'}
                         </span>
                       </Link>
                     </li>
@@ -320,7 +319,7 @@ export function RootLayout() {
             <section className="side-card">
               <h3>Your status</h3>
               <p className="muted">
-                Signed in as <strong>{me.data?.displayName ?? "player"}</strong>
+                Signed in as <strong>{me.data?.displayName ?? 'player'}</strong>
               </p>
             </section>
           )}

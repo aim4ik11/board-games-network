@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { fetchGameBySlug } from "../api/games";
-import { queryKeys } from "../lib/query-keys";
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { fetchGameBySlug } from '../api/games';
+import { queryKeys } from '../lib/query-keys';
 
 type MeetupGamePreviewProps = {
   game: {
@@ -19,7 +19,11 @@ export function MeetupGamePreview({ game }: MeetupGamePreviewProps) {
   const imageUrl = detailQuery.data?.imageUrl ?? null;
 
   return (
-    <Link to="/games/$slug" params={{ slug: game.slug }} className="meetup-game-preview">
+    <Link
+      to="/games/$slug"
+      params={{ slug: game.slug }}
+      className="meetup-game-preview"
+    >
       {imageUrl ? (
         <img
           src={imageUrl}

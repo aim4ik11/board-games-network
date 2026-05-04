@@ -1,20 +1,25 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getRouteApi, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getRouteApi, Link } from '@tanstack/react-router';
+import { useEffect, useRef, useState } from 'react';
 import {
   fetchConversationMessages,
   inviteConversationMember,
   postConversationMessage,
-} from "../api/chat";
-import { fetchFriendsList } from "../api/friends";
-import type { MessageView } from "../api/types";
-import { useAuthMe } from "../hooks/use-auth-me";
-import { getSharedChatSocket } from "../lib/chat-socket";
-import { getStoredAccessToken } from "../lib/auth-storage";
-import { queryKeys } from "../lib/query-keys";
-import { Button, Modal, SuggestionMultiSelect, type SuggestionMultiSelectOption } from "../components/ui";
+} from '../api/chat';
+import { fetchFriendsList } from '../api/friends';
+import type { MessageView } from '../api/types';
+import { useAuthMe } from '../hooks/use-auth-me';
+import { getSharedChatSocket } from '../lib/chat-socket';
+import { getStoredAccessToken } from '../lib/auth-storage';
+import { queryKeys } from '../lib/query-keys';
+import {
+  Button,
+  Modal,
+  SuggestionMultiSelect,
+  type SuggestionMultiSelectOption,
+} from '../components/ui';
 
-const routeApi = getRouteApi("/messages/$conversationId");
+const routeApi = getRouteApi('/messages/$conversationId');
 const MSG_PAGE = 1;
 const MSG_LIMIT = 100;
 
@@ -122,65 +127,68 @@ export function MessagesThreadPage() {
 
     const joinCurrentConversation = () => {
       socket.emit(
-        "join",
+        'join',
         { conversationId },
         (result?: { ok?: boolean; error?: string }) => {
           if (!result?.ok) {
             console.warn(
-              `Failed to join chat room for ${conversationId}: ${result?.error ?? "unknown error"}`,
+              `Failed to join chat room for ${conversationId}: ${result?.error ?? 'unknown error'}`,
             );
           }
         },
       );
     };
 
-    socket.on("message:new", onNew);
-    socket.on("connect", joinCurrentConversation);
+    socket.on('message:new', onNew);
+    socket.on('connect', joinCurrentConversation);
     if (socket.connected) {
       joinCurrentConversation();
     }
 
     return () => {
-      socket.emit("leave", { conversationId });
-      socket.off("connect", joinCurrentConversation);
-      socket.off("message:new", onNew);
+      socket.emit('leave', { conversationId });
+      socket.off('connect', joinCurrentConversation);
+      socket.off('message:new', onNew);
     };
   }, [conversationId, queryClient]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messagesQuery.data?.data.length]);
 
   useEffect(() => {
-    document.body.classList.add("chat-route-active");
+    document.body.classList.add('chat-route-active');
     return () => {
-      document.body.classList.remove("chat-route-active");
+      document.body.classList.remove('chat-route-active');
     };
   }, []);
 
   const myId = me.data?.id;
-  const myDisplayName = me.data?.displayName ?? "You";
+  const myDisplayName = me.data?.displayName ?? 'You';
   const initialFromName = (name: string) =>
-    name.trim().charAt(0).toUpperCase() || "?";
+    name.trim().charAt(0).toUpperCase() || '?';
   const memberById = new Map(
     (messagesQuery.data?.members ?? []).map((member) => [member.id, member]),
   );
   const inviteOptions =
-    friendsQuery.data?.filter((friend) => !memberById.has(friend.user.id)) ?? [];
-  const inviteOptionItems: SuggestionMultiSelectOption[] = inviteOptions.map((friend) => ({
-    id: friend.user.id,
-    label: friend.user.displayName,
-    description: friend.user.city,
-    avatarUrl: friend.user.avatarUrl,
-  }));
+    friendsQuery.data?.filter((friend) => !memberById.has(friend.user.id)) ??
+    [];
+  const inviteOptionItems: SuggestionMultiSelectOption[] = inviteOptions.map(
+    (friend) => ({
+      id: friend.user.id,
+      label: friend.user.displayName,
+      description: friend.user.city,
+      avatarUrl: friend.user.avatarUrl,
+    }),
+  );
   const conversationLabel =
-    messagesQuery.data?.conversation.type === "DIRECT"
-      ? messagesQuery.data.members.find((m) => m.id !== myId)?.displayName ??
-        "Direct chat"
+    messagesQuery.data?.conversation.type === 'DIRECT'
+      ? (messagesQuery.data.members.find((m) => m.id !== myId)?.displayName ??
+        'Direct chat')
       : messagesQuery.data?.conversation.title?.trim() ||
-        (messagesQuery.data?.conversation.type === "SESSION"
-          ? "Meetup chat"
-          : "Group chat");
+        (messagesQuery.data?.conversation.type === 'SESSION'
+          ? 'Meetup chat'
+          : 'Group chat');
 
   return (
     <section className="page chat-thread-page">
@@ -192,15 +200,15 @@ export function MessagesThreadPage() {
       {messagesQuery.data && (
         <div className="button-row chat-thread-head">
           <h1>{conversationLabel}</h1>
-          {messagesQuery.data.conversation.type === "GROUP" && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsInviteModalOpen(true)}
-            disabled={inviteOptions.length === 0}
-          >
-            Invite people
-          </Button>
+          {messagesQuery.data.conversation.type === 'GROUP' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsInviteModalOpen(true)}
+              disabled={inviteOptions.length === 0}
+            >
+              Invite people
+            </Button>
           )}
         </div>
       )}
@@ -241,15 +249,18 @@ export function MessagesThreadPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={selectedInviteIds.length === 0 || invite.isPending}>
-              {invite.isPending ? "Inviting..." : "Send invites"}
+            <Button
+              type="submit"
+              disabled={selectedInviteIds.length === 0 || invite.isPending}
+            >
+              {invite.isPending ? 'Inviting...' : 'Send invites'}
             </Button>
           </div>
           {invite.isError && (
             <p className="error" role="alert">
               {invite.error instanceof Error
                 ? invite.error.message
-                : "Invitation failed"}
+                : 'Invitation failed'}
             </p>
           )}
         </form>
@@ -259,7 +270,7 @@ export function MessagesThreadPage() {
         <p className="error" role="alert">
           {messagesQuery.error instanceof Error
             ? messagesQuery.error.message
-            : "Could not load messages"}
+            : 'Could not load messages'}
         </p>
       )}
       {messagesQuery.data && (
@@ -274,11 +285,11 @@ export function MessagesThreadPage() {
               return (
                 <div
                   key={m.id}
-                  className={`chat-bubble-wrap ${mine ? "mine" : "theirs"}`}
+                  className={`chat-bubble-wrap ${mine ? 'mine' : 'theirs'}`}
                 >
                   {!mine && (
                     <div
-                      className={`chat-avatar ${isLastInSenderRun ? "" : "chat-avatar--ghost"}`.trim()}
+                      className={`chat-avatar ${isLastInSenderRun ? '' : 'chat-avatar--ghost'}`.trim()}
                       aria-hidden
                     >
                       {senderMember?.avatarUrl ? (
@@ -297,12 +308,12 @@ export function MessagesThreadPage() {
                     {isLastInSenderRun && (
                       <div className="chat-meta muted">
                         <span className="chat-sender">
-                          {mine ? "You" : senderName}
+                          {mine ? 'You' : senderName}
                         </span>
                         <span className="chat-time">
                           {new Date(m.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
+                            hour: '2-digit',
+                            minute: '2-digit',
                           })}
                         </span>
                       </div>
@@ -318,7 +329,7 @@ export function MessagesThreadPage() {
             onSubmit={(e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
-              const text = String(fd.get("body") ?? "").trim();
+              const text = String(fd.get('body') ?? '').trim();
               if (!text) {
                 return;
               }
@@ -339,7 +350,7 @@ export function MessagesThreadPage() {
           </form>
           {send.isError && (
             <p className="error" role="alert">
-              {send.error instanceof Error ? send.error.message : "Send failed"}
+              {send.error instanceof Error ? send.error.message : 'Send failed'}
             </p>
           )}
         </>

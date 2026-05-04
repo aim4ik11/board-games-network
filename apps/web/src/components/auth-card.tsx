@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { loginRequest, registerRequest } from "../api/auth";
-import { ApiError } from "../lib/api";
-import { useAuth } from "../lib/use-auth";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { loginRequest, registerRequest } from '../api/auth';
+import { ApiError } from '../lib/api';
+import { useAuth } from '../lib/use-auth';
 
-export type AuthMode = "login" | "register";
+export type AuthMode = 'login' | 'register';
 
 export function AuthCard({
   mode,
@@ -16,7 +16,7 @@ export function AuthCard({
 }) {
   const { signIn } = useAuth();
   const queryClient = useQueryClient();
-  const isRegister = mode === "register";
+  const isRegister = mode === 'register';
 
   const login = useMutation({
     mutationFn: loginRequest,
@@ -37,19 +37,19 @@ export function AuthCard({
 
   return (
     <div className="auth-card">
-      <h1>{isRegister ? "Create an account" : "Sign in"}</h1>
+      <h1>{isRegister ? 'Create an account' : 'Sign in'}</h1>
       <nav className="segmented auth-tabs">
         <button
           type="button"
-          className={!isRegister ? "active" : undefined}
-          onClick={() => onModeChange("login")}
+          className={!isRegister ? 'active' : undefined}
+          onClick={() => onModeChange('login')}
         >
           Sign in
         </button>
         <button
           type="button"
-          className={isRegister ? "active" : undefined}
-          onClick={() => onModeChange("register")}
+          className={isRegister ? 'active' : undefined}
+          onClick={() => onModeChange('register')}
         >
           Register
         </button>
@@ -64,9 +64,9 @@ export function AuthCard({
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
               register.mutate({
-                email: String(fd.get("email") ?? ""),
-                password: String(fd.get("password") ?? ""),
-                displayName: String(fd.get("displayName") ?? "").trim(),
+                email: String(fd.get('email') ?? ''),
+                password: String(fd.get('password') ?? ''),
+                displayName: String(fd.get('displayName') ?? '').trim(),
               });
             }}
           >
@@ -112,7 +112,7 @@ export function AuthCard({
                   ? register.error.message
                   : register.error instanceof Error
                     ? register.error.message
-                    : "Registration failed"}
+                    : 'Registration failed'}
               </p>
             )}
             <button
@@ -120,7 +120,7 @@ export function AuthCard({
               className="button"
               disabled={register.isPending}
             >
-              {register.isPending ? "Creating account…" : "Register"}
+              {register.isPending ? 'Creating account…' : 'Register'}
             </button>
           </form>
         ) : (
@@ -131,8 +131,8 @@ export function AuthCard({
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
               login.mutate({
-                email: String(fd.get("email") ?? ""),
-                password: String(fd.get("password") ?? ""),
+                email: String(fd.get('email') ?? ''),
+                password: String(fd.get('password') ?? ''),
               });
             }}
           >
@@ -164,11 +164,11 @@ export function AuthCard({
                   ? login.error.message
                   : login.error instanceof Error
                     ? login.error.message
-                    : "Sign in failed"}
+                    : 'Sign in failed'}
               </p>
             )}
             <button type="submit" className="button" disabled={login.isPending}>
-              {login.isPending ? "Signing in…" : "Sign in"}
+              {login.isPending ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
         )}

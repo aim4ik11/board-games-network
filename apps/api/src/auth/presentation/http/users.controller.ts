@@ -12,7 +12,9 @@ export class UsersController {
 
   @Public()
   @Get(':id/summary')
-  @ApiOperation({ summary: 'Public profile summary with social and collection stats' })
+  @ApiOperation({
+    summary: 'Public profile summary with social and collection stats',
+  })
   @ApiParam({ name: 'id' })
   getPublicSummary(@Param('id') id: string) {
     return this.authApplicationService.getPublicProfileSummary(id);

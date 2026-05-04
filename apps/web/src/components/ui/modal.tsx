@@ -40,7 +40,13 @@ export function Modal({ isOpen, title, onClose, children }: ModalProps) {
       >
         <div className="modal-header">
           <h2>{title}</h2>
-          <Button type="button" variant="icon" className="modal-close" onClick={onClose} aria-label="Close">
+          <Button
+            type="button"
+            variant="icon"
+            className="modal-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
             <X size={16} aria-hidden="true" />
           </Button>
         </div>

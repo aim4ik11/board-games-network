@@ -334,8 +334,9 @@ function buildPlayerSeedRows(count: number) {
   return Array.from({ length: count }, (_, idx) => {
     const first = playerFirstNames[idx % playerFirstNames.length];
     const last =
-      playerLastNames[Math.floor(idx / playerFirstNames.length) %
-        playerLastNames.length];
+      playerLastNames[
+        Math.floor(idx / playerFirstNames.length) % playerLastNames.length
+      ];
     const sequence = idx + 1;
     const email = `player${sequence}@seed.local`;
     return {

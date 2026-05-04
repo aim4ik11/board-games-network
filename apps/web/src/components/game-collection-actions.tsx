@@ -1,18 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addToCollection,
   fetchCollectionEntry,
   removeFromCollection,
-} from "../api/collection";
-import type { CollectionStatus } from "../api/types";
-import { requestAuthModal } from "../lib/auth-modal-intent";
-import { queryKeys } from "../lib/query-keys";
-import { useAuth } from "../lib/use-auth";
+} from '../api/collection';
+import type { CollectionStatus } from '../api/types';
+import { requestAuthModal } from '../lib/auth-modal-intent';
+import { queryKeys } from '../lib/query-keys';
+import { useAuth } from '../lib/use-auth';
 
 const STATUS_LABEL: Record<CollectionStatus, string> = {
-  OWNED: "Owned",
-  WISHLIST: "Wishlist",
-  PREVIOUSLY_OWNED: "Previously owned",
+  OWNED: 'Owned',
+  WISHLIST: 'Wishlist',
+  PREVIOUSLY_OWNED: 'Previously owned',
 };
 
 function invalidateCollection(qc: ReturnType<typeof useQueryClient>) {
@@ -45,10 +45,10 @@ export function GameCollectionActions({ slug }: { slug: string }) {
         <button
           type="button"
           className="link-button text-link"
-          onClick={() => requestAuthModal("login")}
+          onClick={() => requestAuthModal('login')}
         >
           Sign in
-        </button>{" "}
+        </button>{' '}
         to add this game to your collection.
       </p>
     );
@@ -77,7 +77,7 @@ export function GameCollectionActions({ slug }: { slug: string }) {
             type="button"
             className="button small"
             disabled={addOrUpdate.isPending}
-            onClick={() => addOrUpdate.mutate("OWNED")}
+            onClick={() => addOrUpdate.mutate('OWNED')}
           >
             Owned
           </button>
@@ -85,7 +85,7 @@ export function GameCollectionActions({ slug }: { slug: string }) {
             type="button"
             className="button small"
             disabled={addOrUpdate.isPending}
-            onClick={() => addOrUpdate.mutate("WISHLIST")}
+            onClick={() => addOrUpdate.mutate('WISHLIST')}
           >
             Wishlist
           </button>
@@ -97,7 +97,7 @@ export function GameCollectionActions({ slug }: { slug: string }) {
   return (
     <div className="collection-actions">
       <p>
-        <span className="muted">In your collection:</span>{" "}
+        <span className="muted">In your collection:</span>{' '}
         <strong>{STATUS_LABEL[entry.status]}</strong>
       </p>
       <div className="button-row wrap">
@@ -105,7 +105,7 @@ export function GameCollectionActions({ slug }: { slug: string }) {
           type="button"
           className="button small ghost"
           disabled={addOrUpdate.isPending}
-          onClick={() => addOrUpdate.mutate("OWNED")}
+          onClick={() => addOrUpdate.mutate('OWNED')}
         >
           Owned
         </button>
@@ -113,7 +113,7 @@ export function GameCollectionActions({ slug }: { slug: string }) {
           type="button"
           className="button small ghost"
           disabled={addOrUpdate.isPending}
-          onClick={() => addOrUpdate.mutate("WISHLIST")}
+          onClick={() => addOrUpdate.mutate('WISHLIST')}
         >
           Wishlist
         </button>
@@ -121,7 +121,7 @@ export function GameCollectionActions({ slug }: { slug: string }) {
           type="button"
           className="button small ghost"
           disabled={addOrUpdate.isPending}
-          onClick={() => addOrUpdate.mutate("PREVIOUSLY_OWNED")}
+          onClick={() => addOrUpdate.mutate('PREVIOUSLY_OWNED')}
         >
           Previously owned
         </button>

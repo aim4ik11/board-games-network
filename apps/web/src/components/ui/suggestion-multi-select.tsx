@@ -75,7 +75,9 @@ export function SuggestionMultiSelect({
     const byId = new Map(options.map((option) => [option.id, option]));
     return selectedIds
       .map((id) => byId.get(id))
-      .filter((option): option is SuggestionMultiSelectOption => option != null);
+      .filter(
+        (option): option is SuggestionMultiSelectOption => option != null,
+      );
   }, [options, selectedIds]);
 
   const toggle = (optionId: string) => {
@@ -181,11 +183,14 @@ export function SuggestionMultiSelect({
         {isOpen && (
           <div className="base-multi-select-dropdown">
             {loading && <p className="muted">Loading…</p>}
-            {!loading && filteredOptions.length === 0 && <p className="muted">{emptyText}</p>}
+            {!loading && filteredOptions.length === 0 && (
+              <p className="muted">{emptyText}</p>
+            )}
             {!loading &&
               filteredOptions.map((option, index) => {
                 const selected = selectedSet.has(option.id);
-                const initial = option.label.trim().charAt(0).toUpperCase() || '?';
+                const initial =
+                  option.label.trim().charAt(0).toUpperCase() || '?';
                 return (
                   <button
                     key={option.id}
@@ -207,10 +212,14 @@ export function SuggestionMultiSelect({
                           {initial}
                         </span>
                       )}
-                      <span className="base-multi-select-option-main">{option.label}</span>
+                      <span className="base-multi-select-option-main">
+                        {option.label}
+                      </span>
                     </span>
                     {option.description && (
-                      <span className="base-multi-select-option-meta muted">{option.description}</span>
+                      <span className="base-multi-select-option-meta muted">
+                        {option.description}
+                      </span>
                     )}
                   </button>
                 );
@@ -219,7 +228,9 @@ export function SuggestionMultiSelect({
         )}
       </div>
       <div className="base-multi-select-badges">
-        {selectedOptions.length === 0 && <p className="muted">{selectedEmptyText}</p>}
+        {selectedOptions.length === 0 && (
+          <p className="muted">{selectedEmptyText}</p>
+        )}
         {selectedOptions.map((option) => (
           <span key={option.id} className="base-multi-select-badge">
             <span>{option.label}</span>

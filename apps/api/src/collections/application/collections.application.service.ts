@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CollectionStatus } from '@prisma/client';
-import { BoardGamesRepositoryPort } from '../../games/domain/ports/board-games.repository.port';
-import { UserGamesRepositoryPort } from '../domain/ports/user-games.repository.port';
+import { PrismaBoardGamesRepository } from '../../games/infrastructure/persistence/prisma-board-games.repository';
 import type { CollectionEntryView } from '../domain/types/collection.types';
+import { PrismaUserGamesRepository } from '../infrastructure/persistence/prisma-user-games.repository';
 
 @Injectable()
 export class CollectionsApplicationService {
   constructor(
-    private readonly boardGamesRepository: BoardGamesRepositoryPort,
-    private readonly userGamesRepository: UserGamesRepositoryPort,
+    private readonly boardGamesRepository: PrismaBoardGamesRepository,
+    private readonly userGamesRepository: PrismaUserGamesRepository,
   ) {}
 
   listMyCollection(

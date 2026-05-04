@@ -9,9 +9,9 @@ import type {
   PublicProfileSummary,
   PublicUserCard,
 } from '../domain/types/auth-user.types';
-import { AccessTokenIssuerPort } from '../domain/ports/access-token-issuer.port';
-import { AuthUsersRepositoryPort } from '../domain/ports/auth-users.repository.port';
-import { PasswordHasherPort } from '../domain/ports/password-hasher.port';
+import { BcryptPasswordHasher } from '../infrastructure/crypto/bcrypt-password-hasher';
+import { JwtAccessTokenIssuer } from '../infrastructure/jwt/jwt-access-token-issuer';
+import { PrismaAuthUsersRepository } from '../infrastructure/persistence/prisma-auth-users.repository';
 
 export type RegisterUserProps = {
   email: string;
@@ -27,9 +27,9 @@ export type LoginUserProps = {
 @Injectable()
 export class AuthApplicationService {
   constructor(
-    private readonly authUsersRepository: AuthUsersRepositoryPort,
-    private readonly passwordHasher: PasswordHasherPort,
-    private readonly accessTokenIssuer: AccessTokenIssuerPort,
+    private readonly authUsersRepository: PrismaAuthUsersRepository,
+    private readonly passwordHasher: BcryptPasswordHasher,
+    private readonly accessTokenIssuer: JwtAccessTokenIssuer,
   ) {}
 
   async register(props: RegisterUserProps) {
@@ -67,7 +67,8 @@ export class AuthApplicationService {
     if (!ok) {
       throw new UnauthorizedException('Invalid email or password');
     }
-    const { passwordHash: _pw, ...user } = row;
+    const { passwordHash, ...user } = row;
+    void passwordHash;
     return {
       accessToken: this.accessTokenIssuer.issueAccessToken({
         sub: user.id,

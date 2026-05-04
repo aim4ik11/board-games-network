@@ -30,7 +30,7 @@ export type GameDetail = GameListItem & {
   reviewCount: number;
 };
 
-export type CollectionStatus = "OWNED" | "WISHLIST" | "PREVIOUSLY_OWNED";
+export type CollectionStatus = 'OWNED' | 'WISHLIST' | 'PREVIOUSLY_OWNED';
 
 export type CollectionEntry = {
   id: string;
@@ -49,7 +49,7 @@ export type AuthUser = {
   avatarUrl: string | null;
 };
 
-export type PublicUserCard = Omit<AuthUser, "email">;
+export type PublicUserCard = Omit<AuthUser, 'email'>;
 
 export type PublicProfileGamePreview = {
   id: string;
@@ -77,11 +77,11 @@ export type PublicProfileSummary = {
 };
 
 export type FriendshipRelationship =
-  | "none"
-  | "friend"
-  | "outgoing_pending"
-  | "incoming_pending"
-  | "blocked";
+  | 'none'
+  | 'friend'
+  | 'outgoing_pending'
+  | 'incoming_pending'
+  | 'blocked';
 
 export type DiscoverUserRow = PublicUserCard & {
   relationship: FriendshipRelationship;

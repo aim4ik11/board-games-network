@@ -89,7 +89,9 @@ export function FriendsPage() {
     discoverQuery.data != null
       ? Math.max(
           1,
-          Math.ceil(discoverQuery.data.meta.total / discoverQuery.data.meta.limit),
+          Math.ceil(
+            discoverQuery.data.meta.total / discoverQuery.data.meta.limit,
+          ),
         )
       : 1;
 
@@ -155,9 +157,7 @@ export function FriendsPage() {
               className="input discover-city-input"
               aria-label="Filter by city"
             />
-            <Button type="submit">
-              Search
-            </Button>
+            <Button type="submit">Search</Button>
           </form>
           <p className="muted discover-city-hint">
             {effectiveCity
@@ -400,7 +400,9 @@ function UserActionCard({
   action: UserCardAction;
 }) {
   return (
-    <li className={`user-card discover-user-card ${cardClassName ?? ''}`.trim()}>
+    <li
+      className={`user-card discover-user-card ${cardClassName ?? ''}`.trim()}
+    >
       <div className="discover-user-card-main">
         <UserIdentity
           userId={userId}

@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { FriendshipStatus } from '@prisma/client';
 import type { PublicUserCard } from '../../../auth/domain/types/auth-user.types';
 import { PrismaService } from '../../../prisma/prisma.service';
-import {
-  FriendshipsRepositoryPort,
-  type StoredFriendship,
-} from '../../domain/ports/friendships.repository.port';
+
+type StoredFriendship = {
+  id: string;
+  requesterId: string;
+  addresseeId: string;
+  status: string;
+  createdAt: Date;
+};
 
 const cardSelect = {
   id: true,
@@ -16,10 +20,8 @@ const cardSelect = {
 } as const;
 
 @Injectable()
-export class PrismaFriendshipsRepository extends FriendshipsRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaFriendshipsRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findPair(
     userIdA: string,

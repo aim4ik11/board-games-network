@@ -50,21 +50,27 @@ export function sendFriendRequest(toUserId: string): Promise<{ ok: boolean }> {
   });
 }
 
-export function acceptFriendRequest(fromUserId: string): Promise<{ ok: boolean }> {
+export function acceptFriendRequest(
+  fromUserId: string,
+): Promise<{ ok: boolean }> {
   return apiFetch<{ ok: boolean }>(
     `/friends/requests/${encodeURIComponent(fromUserId)}/accept`,
     { method: 'POST' },
   );
 }
 
-export function declineFriendRequest(fromUserId: string): Promise<{ ok: boolean }> {
+export function declineFriendRequest(
+  fromUserId: string,
+): Promise<{ ok: boolean }> {
   return apiFetch<{ ok: boolean }>(
     `/friends/requests/${encodeURIComponent(fromUserId)}`,
     { method: 'DELETE' },
   );
 }
 
-export function cancelOutgoingRequest(toUserId: string): Promise<{ ok: boolean }> {
+export function cancelOutgoingRequest(
+  toUserId: string,
+): Promise<{ ok: boolean }> {
   return apiFetch<{ ok: boolean }>(
     `/friends/outgoing/${encodeURIComponent(toUserId)}`,
     { method: 'DELETE' },

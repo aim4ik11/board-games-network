@@ -1,13 +1,16 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getRouteApi, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { fetchFriendsList } from "../api/friends";
-import { createMeetupInvitation, fetchMeetup } from "../api/meetups";
-import { MultiSelectPicker, type MultiSelectOption } from "../components/multi-select-picker";
-import { Button } from "../components/ui";
-import { queryKeys } from "../lib/query-keys";
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { getRouteApi, Link } from '@tanstack/react-router';
+import { useMemo, useState } from 'react';
+import { fetchFriendsList } from '../api/friends';
+import { createMeetupInvitation, fetchMeetup } from '../api/meetups';
+import {
+  MultiSelectPicker,
+  type MultiSelectOption,
+} from '../components/multi-select-picker';
+import { Button } from '../components/ui';
+import { queryKeys } from '../lib/query-keys';
 
-const routeApi = getRouteApi("/meetups/$meetupId/invite");
+const routeApi = getRouteApi('/meetups/$meetupId/invite');
 
 export function MeetupInvitePage() {
   const { meetupId } = routeApi.useParams();
@@ -38,13 +41,15 @@ export function MeetupInvitePage() {
       const results = await Promise.allSettled(
         userIds.map((userId) => createMeetupInvitation(meetupId, userId)),
       );
-      const failed = results.filter((result) => result.status === "rejected").length;
+      const failed = results.filter(
+        (result) => result.status === 'rejected',
+      ).length;
       return { failed, total: userIds.length };
     },
     onSuccess: ({ failed, total }) => {
       if (failed === 0) {
         setStatusMessage(
-          `Sent ${total} invite${total === 1 ? "" : "s"} successfully.`,
+          `Sent ${total} invite${total === 1 ? '' : 's'} successfully.`,
         );
       } else {
         setStatusMessage(
@@ -69,7 +74,7 @@ export function MeetupInvitePage() {
         <p className="error" role="alert">
           {detailQuery.error instanceof Error
             ? detailQuery.error.message
-            : "Meetup not found"}
+            : 'Meetup not found'}
         </p>
       </section>
     );
@@ -88,14 +93,15 @@ export function MeetupInvitePage() {
       </p>
       <h1>Invite players</h1>
       <p className="muted">
-        {detailQuery.data.title} · {new Date(detailQuery.data.scheduledAt).toLocaleString()}
+        {detailQuery.data.title} ·{' '}
+        {new Date(detailQuery.data.scheduledAt).toLocaleString()}
       </p>
       <form
         className="stack-form"
         onSubmit={(e) => {
           e.preventDefault();
           if (selectedIds.length === 0) {
-            setStatusMessage("Select at least one friend to send invites.");
+            setStatusMessage('Select at least one friend to send invites.');
             return;
           }
           setStatusMessage(null);
@@ -121,7 +127,9 @@ export function MeetupInvitePage() {
         )}
         {invite.isError && (
           <p className="error" role="alert">
-            {invite.error instanceof Error ? invite.error.message : "Failed to send invites"}
+            {invite.error instanceof Error
+              ? invite.error.message
+              : 'Failed to send invites'}
           </p>
         )}
         <div className="button-row">
@@ -129,7 +137,7 @@ export function MeetupInvitePage() {
             type="submit"
             disabled={invite.isPending || selectedIds.length === 0}
           >
-            {invite.isPending ? "Sending..." : "Send invites"}
+            {invite.isPending ? 'Sending...' : 'Send invites'}
           </Button>
         </div>
       </form>

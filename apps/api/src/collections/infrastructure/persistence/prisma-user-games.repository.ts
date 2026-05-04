@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { CollectionStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type { BoardGameListItem } from '../../../games/domain/types/game.types';
-import { UserGamesRepositoryPort } from '../../domain/ports/user-games.repository.port';
 import type {
   CollectionEntryView,
   PatchCollectionProps,
@@ -25,10 +24,8 @@ type RowWithGame = Prisma.UserGameGetPayload<{
 }>;
 
 @Injectable()
-export class PrismaUserGamesRepository extends UserGamesRepositoryPort {
-  constructor(private readonly prismaService: PrismaService) {
-    super();
-  }
+export class PrismaUserGamesRepository {
+  constructor(private readonly prismaService: PrismaService) {}
 
   async listForUser(params: {
     userId: string;

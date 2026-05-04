@@ -11,8 +11,8 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { AuthUsersRepositoryPort } from '../../../auth/domain/ports/auth-users.repository.port';
 import type { AuthUser } from '../../../auth/domain/types/auth-user.types';
+import { PrismaAuthUsersRepository } from '../../../auth/infrastructure/persistence/prisma-auth-users.repository';
 import { ChatApplicationService } from '../../application/chat.application.service';
 import { ChatBroadcastService } from '../../infrastructure/realtime/chat-broadcast.service';
 
@@ -37,7 +37,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly authUsersRepository: AuthUsersRepositoryPort,
+    private readonly authUsersRepository: PrismaAuthUsersRepository,
     private readonly chatApplicationService: ChatApplicationService,
     private readonly chatBroadcastService: ChatBroadcastService,
   ) {}

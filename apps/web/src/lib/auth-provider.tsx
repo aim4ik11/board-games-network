@@ -1,21 +1,21 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useCallback,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
-} from "react";
-import { AUTH_LOGOUT_EVENT } from "./api";
-import { AuthContext } from "./auth-context";
+} from 'react';
+import { AUTH_LOGOUT_EVENT } from './api';
+import { AuthContext } from './auth-context';
 import {
   clearStoredAccessToken,
   getStoredAccessToken,
   setStoredAccessToken,
-} from "./auth-storage";
-import { disconnectSharedChatSocket } from "./chat-socket";
-import { queryKeys } from "./query-keys";
-import type { AuthUser } from "../api/types";
+} from './auth-storage';
+import { disconnectSharedChatSocket } from './chat-socket';
+import { queryKeys } from './query-keys';
+import type { AuthUser } from '../api/types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();

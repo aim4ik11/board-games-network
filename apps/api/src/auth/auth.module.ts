@@ -3,9 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthApplicationService } from './application/auth.application.service';
-import { AccessTokenIssuerPort } from './domain/ports/access-token-issuer.port';
-import { AuthUsersRepositoryPort } from './domain/ports/auth-users.repository.port';
-import { PasswordHasherPort } from './domain/ports/password-hasher.port';
 import { BcryptPasswordHasher } from './infrastructure/crypto/bcrypt-password-hasher';
 import { JwtAccessTokenIssuer } from './infrastructure/jwt/jwt-access-token-issuer';
 import { JwtStrategy } from './infrastructure/passport/jwt.strategy';
@@ -35,19 +32,10 @@ import { UsersController } from './presentation/http/users.controller';
   providers: [
     AuthApplicationService,
     JwtStrategy,
-    {
-      provide: AuthUsersRepositoryPort,
-      useClass: PrismaAuthUsersRepository,
-    },
-    {
-      provide: PasswordHasherPort,
-      useClass: BcryptPasswordHasher,
-    },
-    {
-      provide: AccessTokenIssuerPort,
-      useClass: JwtAccessTokenIssuer,
-    },
+    PrismaAuthUsersRepository,
+    BcryptPasswordHasher,
+    JwtAccessTokenIssuer,
   ],
-  exports: [AuthApplicationService, AuthUsersRepositoryPort, JwtModule],
+  exports: [AuthApplicationService, PrismaAuthUsersRepository, JwtModule],
 })
 export class AuthModule {}

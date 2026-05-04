@@ -1,8 +1,5 @@
 import { Module } from '@nestjs/common';
 import { GamesApplicationService } from './application/games.application.service';
-import { BoardGamesRepositoryPort } from './domain/ports/board-games.repository.port';
-import { GameRatingsRepositoryPort } from './domain/ports/game-ratings.repository.port';
-import { GameReviewsRepositoryPort } from './domain/ports/game-reviews.repository.port';
 import { PrismaBoardGamesRepository } from './infrastructure/persistence/prisma-board-games.repository';
 import { PrismaGameRatingsRepository } from './infrastructure/persistence/prisma-game-ratings.repository';
 import { PrismaGameReviewsRepository } from './infrastructure/persistence/prisma-game-reviews.repository';
@@ -14,19 +11,10 @@ import { GamesController } from './presentation/http/games.controller';
   controllers: [GamesController, GameReviewsController, GameRatingsController],
   providers: [
     GamesApplicationService,
-    {
-      provide: BoardGamesRepositoryPort,
-      useClass: PrismaBoardGamesRepository,
-    },
-    {
-      provide: GameReviewsRepositoryPort,
-      useClass: PrismaGameReviewsRepository,
-    },
-    {
-      provide: GameRatingsRepositoryPort,
-      useClass: PrismaGameRatingsRepository,
-    },
+    PrismaBoardGamesRepository,
+    PrismaGameReviewsRepository,
+    PrismaGameRatingsRepository,
   ],
-  exports: [GamesApplicationService, BoardGamesRepositoryPort],
+  exports: [GamesApplicationService, PrismaBoardGamesRepository],
 })
 export class GamesModule {}

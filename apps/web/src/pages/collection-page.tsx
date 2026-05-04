@@ -59,7 +59,11 @@ export function CollectionPage() {
                     className="game-card"
                   >
                     {row.game.imageUrl ? (
-                      <img src={row.game.imageUrl} alt="" className="game-thumb" />
+                      <img
+                        src={row.game.imageUrl}
+                        alt=""
+                        className="game-thumb"
+                      />
                     ) : (
                       <div className="game-thumb placeholder" aria-hidden />
                     )}

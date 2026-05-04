@@ -30,14 +30,21 @@ export function PublicProfileOverview({ summary, headerAction }: Props) {
             {user.city && <p className="muted">{user.city}</p>}
             {user.bio && <p className="profile-bio">{user.bio}</p>}
           </div>
-          {headerAction && <div className="profile-public-action">{headerAction}</div>}
+          {headerAction && (
+            <div className="profile-public-action">{headerAction}</div>
+          )}
         </div>
       </section>
 
-      <section className="profile-panel profile-stats-grid" aria-label="Profile stats">
+      <section
+        className="profile-panel profile-stats-grid"
+        aria-label="Profile stats"
+      >
         <article className="profile-stat">
           <span className="profile-stat-label">Collection</span>
-          <strong className="profile-stat-value">{stats.collectionTotal}</strong>
+          <strong className="profile-stat-value">
+            {stats.collectionTotal}
+          </strong>
           <span className="muted">games tracked</span>
         </article>
         <article className="profile-stat">
@@ -57,7 +64,10 @@ export function PublicProfileOverview({ summary, headerAction }: Props) {
         </article>
       </section>
 
-      <section className="profile-panel" aria-labelledby="profile-collection-title">
+      <section
+        className="profile-panel"
+        aria-labelledby="profile-collection-title"
+      >
         <h2 id="profile-collection-title" className="h-aside">
           Collection snapshot
         </h2>

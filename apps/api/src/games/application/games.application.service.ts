@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { AuthUser } from '../../auth/domain/types/auth-user.types';
-import { BoardGamesRepositoryPort } from '../domain/ports/board-games.repository.port';
-import { GameRatingsRepositoryPort } from '../domain/ports/game-ratings.repository.port';
-import { GameReviewsRepositoryPort } from '../domain/ports/game-reviews.repository.port';
 import type {
   CreateGameProps,
   UpdateGamePatch,
 } from '../domain/types/game.types';
+import { PrismaBoardGamesRepository } from '../infrastructure/persistence/prisma-board-games.repository';
+import { PrismaGameRatingsRepository } from '../infrastructure/persistence/prisma-game-ratings.repository';
+import { PrismaGameReviewsRepository } from '../infrastructure/persistence/prisma-game-reviews.repository';
 
 export type ListGamesParams = {
   titleSearch?: string;
@@ -28,9 +28,9 @@ export type ListReviewsParams = {
 @Injectable()
 export class GamesApplicationService {
   constructor(
-    private readonly boardGamesRepository: BoardGamesRepositoryPort,
-    private readonly gameReviewsRepository: GameReviewsRepositoryPort,
-    private readonly gameRatingsRepository: GameRatingsRepositoryPort,
+    private readonly boardGamesRepository: PrismaBoardGamesRepository,
+    private readonly gameReviewsRepository: PrismaGameReviewsRepository,
+    private readonly gameRatingsRepository: PrismaGameRatingsRepository,
   ) {}
 
   async listGames(query: ListGamesParams) {

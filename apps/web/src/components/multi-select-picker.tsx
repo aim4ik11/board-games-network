@@ -1,7 +1,4 @@
-import {
-  SuggestionMultiSelect,
-  type SuggestionMultiSelectOption,
-} from './ui';
+import { SuggestionMultiSelect, type SuggestionMultiSelectOption } from './ui';
 
 export type MultiSelectOption = SuggestionMultiSelectOption;
 
@@ -20,8 +17,8 @@ export function MultiSelectPicker({
   selectedIds,
   onChange,
   placeholder,
-  searchPlaceholder = "Search...",
-  emptyText = "No options found.",
+  searchPlaceholder = 'Search...',
+  emptyText = 'No options found.',
   loading = false,
 }: MultiSelectPickerProps) {
   return (
