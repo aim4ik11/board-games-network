@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { AuthUser } from '../../auth/domain/types/auth-user.types';
+import type { AuthUser } from '@boardgame/shared';
 import type {
   CreateGameProps,
   UpdateGamePatch,

@@ -1,5 +1,5 @@
+import type { AuthSuccessResponse, AuthUser } from '@boardgame/shared';
 import { apiFetch } from '../lib/api';
-import type { AuthSuccessResponse, AuthUser } from './types';
 
 export function loginRequest(body: {
   email: string;

@@ -4,7 +4,7 @@ import type {
   AuthUser,
   PublicProfileSummary,
   PublicUserCard,
-} from '../../domain/types/auth-user.types';
+} from '@boardgame/shared';
 import { CollectionStatus, FriendshipStatus } from '@prisma/client';
 
 type UserCredentialsRecord = AuthUser & {

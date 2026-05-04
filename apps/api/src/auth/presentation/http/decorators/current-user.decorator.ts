@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import type { AuthUser } from '../../../domain/types/auth-user.types';
+import type { AuthUser } from '@boardgame/shared';
 
 export type { AuthUser };
 

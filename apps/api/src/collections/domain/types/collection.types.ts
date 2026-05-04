@@ -1,21 +1,13 @@
-import type { BoardGameListItem } from '../../../games/domain/types/game.types';
-
-export type CollectionEntryView = {
-  id: string;
-  status: string;
-  notes: string | null;
-  acquiredAt: string | null;
-  game: BoardGameListItem;
-};
+import type { CollectionStatus as PrismaCollectionStatus } from '@prisma/client';
 
 export type UpsertCollectionProps = {
-  status: string;
+  status: PrismaCollectionStatus;
   notes?: string | null;
   acquiredAt?: Date | null;
 };
 
 export type PatchCollectionProps = {
-  status?: string;
+  status?: PrismaCollectionStatus;
   notes?: string | null;
   acquiredAt?: Date | null;
 };

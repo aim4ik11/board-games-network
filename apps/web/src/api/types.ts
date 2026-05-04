@@ -1,113 +1,19 @@
-export type PaginatedMeta = {
-  total: number;
-  page: number;
-  limit: number;
-};
-
-export type GameListItem = {
-  id: string;
-  slug: string;
-  title: string;
-  yearPublished: number | null;
-  minPlayers: number | null;
-  maxPlayers: number | null;
-  playTimeMin: number | null;
-  imageUrl: string | null;
-};
-
-export type GamesListResponse = {
-  data: GameListItem[];
-  meta: PaginatedMeta;
-};
-
-export type GameDetail = GameListItem & {
-  description: string | null;
-  externalId: string | null;
-  createdAt: string;
-  updatedAt: string;
-  averageRating: number | null;
-  ratingCount: number;
-  reviewCount: number;
-};
-
-export type CollectionStatus = 'OWNED' | 'WISHLIST' | 'PREVIOUSLY_OWNED';
-
-export type CollectionEntry = {
-  id: string;
-  status: CollectionStatus;
-  notes: string | null;
-  acquiredAt: string | null;
-  game: GameListItem;
-};
-
-export type AuthUser = {
-  id: string;
-  email: string;
-  displayName: string;
-  bio: string | null;
-  city: string | null;
-  avatarUrl: string | null;
-};
-
-export type PublicUserCard = Omit<AuthUser, 'email'>;
-
-export type PublicProfileGamePreview = {
-  id: string;
-  slug: string;
-  title: string;
-  imageUrl: string | null;
-};
-
-export type PublicProfileSummary = {
-  user: PublicUserCard;
-  stats: {
-    collectionTotal: number;
-    ownedCount: number;
-    wishlistCount: number;
-    previouslyOwnedCount: number;
-    friendsCount: number;
-    ratingsCount: number;
-    reviewsCount: number;
-  };
-  collectionPreview: {
-    owned: PublicProfileGamePreview[];
-    wishlist: PublicProfileGamePreview[];
-    previouslyOwned: PublicProfileGamePreview[];
-  };
-};
-
-export type FriendshipRelationship =
-  | 'none'
-  | 'friend'
-  | 'outgoing_pending'
-  | 'incoming_pending'
-  | 'blocked';
-
-export type DiscoverUserRow = PublicUserCard & {
-  relationship: FriendshipRelationship;
-};
-
-export type FriendConnection = {
-  friendshipId: string;
-  user: PublicUserCard;
-  friendsSince: string;
-};
-
-export type PendingRequest = {
-  friendshipId: string;
-  user: PublicUserCard;
-  createdAt: string;
-};
-
-export type MessageView = {
-  id: string;
-  conversationId: string;
-  body: string;
-  createdAt: string;
-  sender: { id: string; displayName: string };
-};
-
-export type AuthSuccessResponse = {
-  accessToken: string;
-  user: AuthUser;
-};
+/** Compatibility re-exports — prefer `import type { … } from '@boardgame/shared'`. */
+export type {
+  AuthSuccessResponse,
+  AuthUser,
+  CollectionEntry,
+  CollectionStatus,
+  DiscoverUserRow,
+  FriendConnection,
+  FriendshipRelationship,
+  GameDetail,
+  GameListItem,
+  GamesListResponse,
+  MessageView,
+  PaginatedMeta,
+  PendingRequest,
+  PublicProfileGamePreview,
+  PublicProfileSummary,
+  PublicUserCard,
+} from '@boardgame/shared';

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FriendshipStatus } from '@prisma/client';
-import type { PublicUserCard } from '../../../auth/domain/types/auth-user.types';
+import type { PublicUserCard } from '@boardgame/shared';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 type StoredFriendship = {

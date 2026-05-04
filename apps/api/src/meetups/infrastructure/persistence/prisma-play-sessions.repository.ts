@@ -9,12 +9,14 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type {
+  MeetupDetail,
+  MeetupGame,
+  MeetupHost,
+  MeetupListItem,
+  MeetupParticipant,
+} from '@boardgame/shared';
+import type {
   CreateMeetupProps,
-  MeetupDetailView,
-  MeetupGameSummary,
-  MeetupHostSummary,
-  MeetupListItemView,
-  MeetupParticipantView,
   UpdateMeetupPatch,
 } from '../../domain/types/meetup.types';
 
@@ -47,7 +49,7 @@ export class PrismaPlaySessionsRepository {
     visibility?: string;
     skip: number;
     take: number;
-  }): Promise<{ items: MeetupListItemView[]; total: number }> {
+  }): Promise<{ items: MeetupListItem[]; total: number }> {
     const where: Prisma.PlaySessionWhereInput = {};
     if (params.status) {
       where.status = params.status as PlaySessionStatus;
@@ -69,7 +71,7 @@ export class PrismaPlaySessionsRepository {
     scheduledFrom?: Date;
     skip: number;
     take: number;
-  }): Promise<{ items: MeetupListItemView[]; total: number }> {
+  }): Promise<{ items: MeetupListItem[]; total: number }> {
     const where: Prisma.PlaySessionWhereInput = {
       OR: [
         { visibility: PlaySessionVisibility.PUBLIC },
@@ -139,7 +141,7 @@ export class PrismaPlaySessionsRepository {
     return [rows, total] as const;
   }
 
-  async findDetailById(id: string): Promise<MeetupDetailView | null> {
+  async findDetailById(id: string): Promise<MeetupDetail | null> {
     const row = await this.prismaService.playSession.findUnique({
       where: { id },
       include: {
@@ -154,7 +156,7 @@ export class PrismaPlaySessionsRepository {
     return row ? this.toDetail(row) : null;
   }
 
-  async create(props: CreateMeetupProps): Promise<MeetupDetailView> {
+  async create(props: CreateMeetupProps): Promise<MeetupDetail> {
     const created = await this.prismaService.playSession.create({
       data: {
         hostId: props.hostId,
@@ -184,7 +186,7 @@ export class PrismaPlaySessionsRepository {
   async updateById(
     id: string,
     patch: UpdateMeetupPatch,
-  ): Promise<MeetupDetailView | null> {
+  ): Promise<MeetupDetail | null> {
     const existing = await this.prismaService.playSession.findUnique({
       where: { id },
     });
@@ -224,10 +226,7 @@ export class PrismaPlaySessionsRepository {
     return this.findDetailById(id);
   }
 
-  async setStatus(
-    id: string,
-    status: string,
-  ): Promise<MeetupDetailView | null> {
+  async setStatus(id: string, status: string): Promise<MeetupDetail | null> {
     const existing = await this.prismaService.playSession.findUnique({
       where: { id },
     });
@@ -380,7 +379,7 @@ export class PrismaPlaySessionsRepository {
     displayName: string;
     avatarUrl: string | null;
     city: string | null;
-  }): MeetupHostSummary {
+  }): MeetupHost {
     return {
       id: row.id,
       displayName: row.displayName,
@@ -391,7 +390,7 @@ export class PrismaPlaySessionsRepository {
 
   private toGame(
     row: { id: string; slug: string; title: string } | null,
-  ): MeetupGameSummary | null {
+  ): MeetupGame | null {
     return row;
   }
 
@@ -403,7 +402,7 @@ export class PrismaPlaySessionsRepository {
         participants: { select: { id: true } };
       };
     }>,
-  ): MeetupListItemView {
+  ): MeetupListItem {
     return {
       id: row.id,
       title: row.title,
@@ -428,11 +427,11 @@ export class PrismaPlaySessionsRepository {
         };
       };
     }>,
-  ): MeetupDetailView {
+  ): MeetupDetail {
     const joinedCount = row.participants.filter(
       (p) => p.status === ParticipantStatus.JOINED,
     ).length;
-    const participants: MeetupParticipantView[] = row.participants.map((p) => ({
+    const participants: MeetupParticipant[] = row.participants.map((p) => ({
       userId: p.user.id,
       displayName: p.user.displayName,
       avatarUrl: p.user.avatarUrl,

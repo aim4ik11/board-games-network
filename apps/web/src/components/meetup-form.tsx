@@ -1,10 +1,13 @@
+import type {
+  CreateMeetupPayload,
+  GameListItem,
+  PlaySessionVisibility,
+} from '@boardgame/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchMyCollection } from '../api/collection';
 import { fetchGamesList } from '../api/games';
-import type { PlaySessionVisibility } from '../api/meetups';
-import type { GameListItem } from '../api/types';
 import { gamesListSearchDefault } from '../lib/games-route-defaults';
 import { queryKeys } from '../lib/query-keys';
 import { Button } from './ui';
@@ -34,16 +37,6 @@ const VISIBILITY_OPTIONS: Array<{
   },
 ];
 
-export type MeetupFormSubmitPayload = {
-  title: string;
-  scheduledAt: string;
-  gameId?: string;
-  location?: string;
-  maxPlayers?: number;
-  description?: string;
-  visibility?: PlaySessionVisibility;
-};
-
 type MeetupFormInitialValues = {
   title?: string;
   scheduledAtLocal?: string;
@@ -56,7 +49,7 @@ type MeetupFormInitialValues = {
 
 type MeetupFormProps = {
   initialValues: MeetupFormInitialValues;
-  onSubmit: (payload: MeetupFormSubmitPayload) => void;
+  onSubmit: (payload: CreateMeetupPayload) => void;
   isSubmitting: boolean;
   submitLabel: string;
   maxPlayersLimit?: number;

@@ -5,7 +5,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import type { AuthUser } from '../../../auth/domain/types/auth-user.types';
+import type { AuthUser } from '@boardgame/shared';
 import { CurrentUser } from '../../../auth/presentation/http/decorators/current-user.decorator';
 import { GamesApplicationService } from '../../application/games.application.service';
 import { UpsertRatingDto } from './dto/upsert-rating.dto';

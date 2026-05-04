@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Server } from 'socket.io';
-import type { MessageView } from '../../domain/types/chat.types';
+import type { MessageView } from '@boardgame/shared';
 
 @Injectable()
 export class ChatBroadcastService {

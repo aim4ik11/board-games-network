@@ -1,3 +1,4 @@
+import { COLLECTION_STATUSES } from '@boardgame/shared';
 import {
   createRootRoute,
   createRoute,
@@ -22,7 +23,6 @@ import { MeetupsListPage } from './pages/meetups-list-page';
 import { ProfilePage } from './pages/profile-page';
 import { PublicUserPage } from './pages/public-user-page';
 
-const COLLECTION_STATUSES = ['OWNED', 'WISHLIST', 'PREVIOUSLY_OWNED'] as const;
 type CollectionTab = (typeof COLLECTION_STATUSES)[number];
 
 function parseCollectionStatus(raw: unknown): CollectionTab {

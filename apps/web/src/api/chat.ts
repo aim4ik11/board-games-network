@@ -1,19 +1,14 @@
+import type {
+  ConversationListItem,
+  ConversationMessages,
+  MessageView,
+} from '@boardgame/shared';
 import { apiFetch } from '../lib/api';
-import type { MessageView, PublicUserCard } from './types';
 
-export type ConversationListItem = {
-  id: string;
-  type: string;
-  title: string | null;
-  playSessionId: string | null;
-  updatedAt: string;
-  otherUser: PublicUserCard | null;
-  lastMessage: {
-    body: string;
-    createdAt: string;
-    senderDisplayName: string;
-  } | null;
-};
+export type {
+  ConversationListItem,
+  ConversationMessages,
+} from '@boardgame/shared';
 
 export function fetchConversations(): Promise<ConversationListItem[]> {
   return apiFetch<ConversationListItem[]>('/conversations');
@@ -54,17 +49,7 @@ export function inviteConversationMember(
 export function fetchConversationMessages(
   conversationId: string,
   params?: { page?: number; limit?: number },
-): Promise<{
-  conversation: {
-    id: string;
-    type: string;
-    title: string | null;
-    playSessionId: string | null;
-  };
-  data: MessageView[];
-  members: Array<Pick<PublicUserCard, 'id' | 'displayName' | 'avatarUrl'>>;
-  meta: { total: number; page: number; limit: number };
-}> {
+): Promise<ConversationMessages> {
   const sp = new URLSearchParams();
   if (params?.page != null) {
     sp.set('page', String(params.page));
@@ -73,7 +58,7 @@ export function fetchConversationMessages(
     sp.set('limit', String(params.limit));
   }
   const qs = sp.toString();
-  return apiFetch(
+  return apiFetch<ConversationMessages>(
     `/conversations/${encodeURIComponent(conversationId)}/messages${qs ? `?${qs}` : ''}`,
   );
 }

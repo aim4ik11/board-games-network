@@ -1,10 +1,10 @@
-import { apiFetch } from '../lib/api';
 import type {
   DiscoverUserRow,
   FriendConnection,
   PaginatedMeta,
   PendingRequest,
-} from './types';
+} from '@boardgame/shared';
+import { apiFetch } from '../lib/api';
 
 export function fetchFriendsDiscover(params: {
   q?: string;

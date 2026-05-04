@@ -8,7 +8,7 @@ import type {
   AuthUser,
   PublicProfileSummary,
   PublicUserCard,
-} from '../domain/types/auth-user.types';
+} from '@boardgame/shared';
 import { BcryptPasswordHasher } from '../infrastructure/crypto/bcrypt-password-hasher';
 import { JwtAccessTokenIssuer } from '../infrastructure/jwt/jwt-access-token-issuer';
 import { PrismaAuthUsersRepository } from '../infrastructure/persistence/prisma-auth-users.repository';

@@ -1,5 +1,5 @@
+import type { GameDetail, GamesListResponse } from '@boardgame/shared';
 import { apiFetch } from '../lib/api';
-import type { GameDetail, GamesListResponse } from './types';
 
 export function fetchGamesList(params: {
   q?: string;

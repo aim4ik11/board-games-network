@@ -9,10 +9,10 @@ import { FriendsApplicationService } from '../../friends/application/friends.app
 import { PrismaChatRepository } from '../infrastructure/persistence/prisma-chat.repository';
 import { ChatBroadcastService } from '../infrastructure/realtime/chat-broadcast.service';
 import type {
-  ConversationMessagesView,
-  ConversationListItemView,
+  ConversationListItem,
+  ConversationMessages,
   MessageView,
-} from '../domain/types/chat.types';
+} from '@boardgame/shared';
 
 @Injectable()
 export class ChatApplicationService {
@@ -22,7 +22,7 @@ export class ChatApplicationService {
     private readonly chatBroadcastService: ChatBroadcastService,
   ) {}
 
-  listConversations(userId: string): Promise<ConversationListItemView[]> {
+  listConversations(userId: string): Promise<ConversationListItem[]> {
     return this.chatRepository.listConversationsForUser(userId);
   }
 
@@ -91,7 +91,7 @@ export class ChatApplicationService {
     conversationId: string,
     page: number,
     limit: number,
-  ): Promise<ConversationMessagesView> {
+  ): Promise<ConversationMessages> {
     const member = await this.chatRepository.isMember(userId, conversationId);
     if (!member) {
       throw new NotFoundException('Conversation not found');

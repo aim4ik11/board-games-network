@@ -7,10 +7,7 @@ import {
 } from '@nestjs/common';
 import { PlaySessionStatus, PlaySessionVisibility } from '@prisma/client';
 import { FriendsApplicationService } from '../../friends/application/friends.application.service';
-import type {
-  MeetupDetailView,
-  MeetupListItemView,
-} from '../domain/types/meetup.types';
+import type { MeetupDetail, MeetupListItem } from '@boardgame/shared';
 import { PrismaPlaySessionsRepository } from '../infrastructure/persistence/prisma-play-sessions.repository';
 
 @Injectable()
@@ -27,7 +24,7 @@ export class MeetupsApplicationService {
     page: number;
     limit: number;
   }): Promise<{
-    data: MeetupListItemView[];
+    data: MeetupListItem[];
     meta: { total: number; page: number; limit: number };
   }> {
     const scheduledFrom = params.upcomingOnly ? new Date() : undefined;
@@ -54,7 +51,7 @@ export class MeetupsApplicationService {
     };
   }
 
-  async getMeetup(id: string, requesterId?: string): Promise<MeetupDetailView> {
+  async getMeetup(id: string, requesterId?: string): Promise<MeetupDetail> {
     const row = await this.playSessionsRepository.findDetailById(id);
     if (!row) {
       throw new NotFoundException('Meetup not found');
@@ -77,7 +74,7 @@ export class MeetupsApplicationService {
       description?: string | null;
       visibility?: PlaySessionVisibility;
     },
-  ): Promise<MeetupDetailView> {
+  ): Promise<MeetupDetail> {
     if (props.gameId) {
       const ok = await this.playSessionsRepository.gameExists(props.gameId);
       if (!ok) {
@@ -108,7 +105,7 @@ export class MeetupsApplicationService {
       description?: string | null;
       visibility?: PlaySessionVisibility;
     },
-  ): Promise<MeetupDetailView> {
+  ): Promise<MeetupDetail> {
     const hostId = await this.playSessionsRepository.getHostId(id);
     if (!hostId) {
       throw new NotFoundException('Meetup not found');
@@ -151,7 +148,7 @@ export class MeetupsApplicationService {
     return updated;
   }
 
-  async cancelMeetup(userId: string, id: string): Promise<MeetupDetailView> {
+  async cancelMeetup(userId: string, id: string): Promise<MeetupDetail> {
     const hostId = await this.playSessionsRepository.getHostId(id);
     if (!hostId) {
       throw new NotFoundException('Meetup not found');
@@ -173,7 +170,7 @@ export class MeetupsApplicationService {
     return updated;
   }
 
-  async joinMeetup(userId: string, id: string): Promise<MeetupDetailView> {
+  async joinMeetup(userId: string, id: string): Promise<MeetupDetail> {
     const meta = await this.playSessionsRepository.getSessionMeta(id);
     if (!meta || meta.status !== PlaySessionStatus.SCHEDULED) {
       throw new NotFoundException('Meetup not found');
@@ -218,7 +215,7 @@ export class MeetupsApplicationService {
     return this.getMeetup(id, userId);
   }
 
-  async leaveMeetup(userId: string, id: string): Promise<MeetupDetailView> {
+  async leaveMeetup(userId: string, id: string): Promise<MeetupDetail> {
     const meta = await this.playSessionsRepository.getSessionMeta(id);
     if (!meta) {
       throw new NotFoundException('Meetup not found');
@@ -272,7 +269,7 @@ export class MeetupsApplicationService {
   }
 
   private async canAccessSession(
-    meetup: MeetupDetailView,
+    meetup: MeetupDetail,
     requesterId?: string,
   ): Promise<boolean> {
     if (meetup.visibility === PlaySessionVisibility.PUBLIC) {

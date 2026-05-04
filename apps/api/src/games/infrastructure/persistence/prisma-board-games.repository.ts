@@ -1,25 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import type { GameListItem } from '@boardgame/shared';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { slugifyTitle } from '../../domain/utils/slug.util';
 import type {
-  BoardGameListItem,
   BoardGameRecord,
   CreateGameProps,
   GameDetailWithStats,
   UpdateGamePatch,
 } from '../../domain/types/game.types';
-
-const listSelect = {
-  id: true,
-  slug: true,
-  title: true,
-  yearPublished: true,
-  minPlayers: true,
-  maxPlayers: true,
-  playTimeMin: true,
-  imageUrl: true,
-} as const;
+import {
+  boardGameListSelect,
+  boardGameListRowToItem,
+} from './board-game-list.mapper';
+import { prismaBoardGameToRecord } from './board-game-record.mapper';
 
 @Injectable()
 export class PrismaBoardGamesRepository {
@@ -29,7 +23,7 @@ export class PrismaBoardGamesRepository {
     titleSearch?: string;
     skip: number;
     take: number;
-  }): Promise<{ items: BoardGameListItem[]; total: number }> {
+  }): Promise<{ items: GameListItem[]; total: number }> {
     const where: Prisma.BoardGameWhereInput = params.titleSearch?.trim()
       ? {
           title: {
@@ -45,12 +39,12 @@ export class PrismaBoardGamesRepository {
         orderBy: { title: 'asc' },
         skip: params.skip,
         take: params.take,
-        select: listSelect,
+        select: boardGameListSelect,
       }),
       this.prismaService.boardGame.count({ where }),
     ]);
 
-    return { items: rows as BoardGameListItem[], total };
+    return { items: rows.map(boardGameListRowToItem), total };
   }
 
   async findWithRatingStatsBySlug(
@@ -72,7 +66,7 @@ export class PrismaBoardGamesRepository {
     ]);
 
     return {
-      ...(game as BoardGameRecord),
+      ...prismaBoardGameToRecord(game),
       averageRating: agg._avg.score,
       ratingCount: agg._count._all,
       reviewCount,
@@ -95,7 +89,7 @@ export class PrismaBoardGamesRepository {
         externalId: data.externalId,
       },
     });
-    return created as BoardGameRecord;
+    return prismaBoardGameToRecord(created);
   }
 
   async updateGameBySlug(
@@ -143,7 +137,7 @@ export class PrismaBoardGamesRepository {
         }),
       },
     });
-    return updated as BoardGameRecord;
+    return prismaBoardGameToRecord(updated);
   }
 
   async deleteGameBySlug(slug: string): Promise<boolean> {

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConversationType, Prisma } from '@prisma/client';
-import type { PublicUserCard } from '../../../auth/domain/types/auth-user.types';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type {
-  ConversationMemberView,
-  ConversationListItemView,
+  ConversationListItem,
+  ConversationMember,
   MessageView,
-} from '../../domain/types/chat.types';
+  PublicUserCard,
+} from '@boardgame/shared';
 
 const cardSelect = {
   id: true,
@@ -82,7 +82,7 @@ export class PrismaChatRepository {
 
   async listConversationsForUser(
     userId: string,
-  ): Promise<ConversationListItemView[]> {
+  ): Promise<ConversationListItem[]> {
     const rows = await this.prismaService.conversation.findMany({
       where: { members: { some: { userId } } },
       include: {
@@ -163,7 +163,7 @@ export class PrismaChatRepository {
 
   async listConversationMembers(
     conversationId: string,
-  ): Promise<ConversationMemberView[]> {
+  ): Promise<ConversationMember[]> {
     const rows = await this.prismaService.conversationMember.findMany({
       where: { conversationId },
       select: { user: { select: cardSelect } },
@@ -241,7 +241,7 @@ export class PrismaChatRepository {
       };
     }>,
     meId: string,
-  ): ConversationListItemView {
+  ): ConversationListItem {
     let otherUser: PublicUserCard | null = null;
     if (row.type === ConversationType.DIRECT && row.members.length === 2) {
       const other = row.members.find((m) => m.userId !== meId);

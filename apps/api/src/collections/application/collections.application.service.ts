@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CollectionStatus } from '@prisma/client';
 import { PrismaBoardGamesRepository } from '../../games/infrastructure/persistence/prisma-board-games.repository';
-import type { CollectionEntryView } from '../domain/types/collection.types';
+import type { CollectionEntry } from '@boardgame/shared';
 import { PrismaUserGamesRepository } from '../infrastructure/persistence/prisma-user-games.repository';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class CollectionsApplicationService {
   listMyCollection(
     userId: string,
     status?: CollectionStatus,
-  ): Promise<CollectionEntryView[]> {
+  ): Promise<CollectionEntry[]> {
     return this.userGamesRepository.listForUser({
       userId,
       ...(status ? { status } : {}),
@@ -25,7 +25,7 @@ export class CollectionsApplicationService {
     userId: string,
     slug: string,
     status: CollectionStatus = CollectionStatus.OWNED,
-  ): Promise<CollectionEntryView> {
+  ): Promise<CollectionEntry> {
     const gameId = await this.boardGamesRepository.findIdBySlug(slug);
     if (!gameId) {
       throw new NotFoundException('Game not found');
@@ -45,7 +45,7 @@ export class CollectionsApplicationService {
       notes?: string | null;
       acquiredAt?: Date | null;
     },
-  ): Promise<CollectionEntryView> {
+  ): Promise<CollectionEntry> {
     const updated = await this.userGamesRepository.updateByUserAndGameSlug({
       userId,
       gameSlug: slug,
@@ -74,7 +74,7 @@ export class CollectionsApplicationService {
   myEntryForGame(
     userId: string,
     slug: string,
-  ): Promise<CollectionEntryView | null> {
+  ): Promise<CollectionEntry | null> {
     return this.userGamesRepository.findEntryByUserAndGameSlug(userId, slug);
   }
 }

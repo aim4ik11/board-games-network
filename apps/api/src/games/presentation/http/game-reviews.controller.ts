@@ -14,7 +14,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import type { AuthUser } from '../../../auth/domain/types/auth-user.types';
+import type { AuthUser } from '@boardgame/shared';
 import { CurrentUser } from '../../../auth/presentation/http/decorators/current-user.decorator';
 import { Public } from '../../../auth/presentation/http/decorators/public.decorator';
 import { GamesApplicationService } from '../../application/games.application.service';

@@ -11,7 +11,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import type { AuthUser } from '../../../auth/domain/types/auth-user.types';
+import type { AuthUser } from '@boardgame/shared';
 import { PrismaAuthUsersRepository } from '../../../auth/infrastructure/persistence/prisma-auth-users.repository';
 import { ChatApplicationService } from '../../application/chat.application.service';
 import { ChatBroadcastService } from '../../infrastructure/realtime/chat-broadcast.service';

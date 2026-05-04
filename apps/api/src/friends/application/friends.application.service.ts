@@ -8,10 +8,10 @@ import { FriendshipStatus } from '@prisma/client';
 import { PrismaAuthUsersRepository } from '../../auth/infrastructure/persistence/prisma-auth-users.repository';
 import type {
   DiscoverUserRow,
-  FriendConnectionView,
+  FriendConnection,
   FriendshipRelationship,
-  PendingRequestView,
-} from '../domain/types/friends.types';
+  PendingRequest,
+} from '@boardgame/shared';
 import { PrismaFriendshipsRepository } from '../infrastructure/persistence/prisma-friendships.repository';
 
 @Injectable()
@@ -82,7 +82,7 @@ export class FriendsApplicationService {
     return { data, meta: { total, page, limit } };
   }
 
-  async listFriends(meId: string): Promise<FriendConnectionView[]> {
+  async listFriends(meId: string): Promise<FriendConnection[]> {
     const rows = await this.friendshipsRepository.listAcceptedFriends(meId);
     return rows.map((r) => ({
       friendshipId: r.friendshipId,
@@ -91,7 +91,7 @@ export class FriendsApplicationService {
     }));
   }
 
-  async listIncomingRequests(meId: string): Promise<PendingRequestView[]> {
+  async listIncomingRequests(meId: string): Promise<PendingRequest[]> {
     const rows = await this.friendshipsRepository.listIncomingPending(meId);
     return rows.map((r) => ({
       friendshipId: r.friendshipId,
@@ -100,7 +100,7 @@ export class FriendsApplicationService {
     }));
   }
 
-  async listOutgoingRequests(meId: string): Promise<PendingRequestView[]> {
+  async listOutgoingRequests(meId: string): Promise<PendingRequest[]> {
     const rows = await this.friendshipsRepository.listOutgoingPending(meId);
     return rows.map((r) => ({
       friendshipId: r.friendshipId,

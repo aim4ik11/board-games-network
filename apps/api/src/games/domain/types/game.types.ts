@@ -1,17 +1,8 @@
 /** Domain / read-model types for the games catalog (no framework or ORM imports). */
 
-export type BoardGameListItem = {
-  id: string;
-  slug: string;
-  title: string;
-  yearPublished: number | null;
-  minPlayers: number | null;
-  maxPlayers: number | null;
-  playTimeMin: number | null;
-  imageUrl: string | null;
-};
+import type { GameListItem } from '@boardgame/shared';
 
-export type BoardGameRecord = BoardGameListItem & {
+export type BoardGameRecord = GameListItem & {
   description: string | null;
   externalId: string | null;
   createdAt: Date;

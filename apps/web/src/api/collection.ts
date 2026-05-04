@@ -1,5 +1,5 @@
+import type { CollectionEntry, CollectionStatus } from '@boardgame/shared';
 import { apiFetch, ApiError } from '../lib/api';
-import type { CollectionEntry, CollectionStatus } from './types';
 
 export async function fetchMyCollection(
   status?: CollectionStatus,

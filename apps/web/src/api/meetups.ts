@@ -1,32 +1,19 @@
+import type {
+  CreateMeetupPayload,
+  MeetupDetail,
+  MeetupListItem,
+  PaginatedMeta,
+  PatchMeetupPayload,
+} from '@boardgame/shared';
 import { apiFetch } from '../lib/api';
-import type { PaginatedMeta, PublicUserCard } from './types';
 
-export type PlaySessionVisibility = 'PUBLIC' | 'FRIENDS' | 'INVITE_ONLY';
-
-export type MeetupListItem = {
-  id: string;
-  title: string;
-  scheduledAt: string;
-  location: string | null;
-  maxPlayers: number | null;
-  status: string;
-  visibility: PlaySessionVisibility;
-  host: PublicUserCard;
-  game: { id: string; slug: string; title: string } | null;
-  joinedParticipantCount: number;
-};
-
-export type MeetupParticipant = {
-  userId: string;
-  displayName: string;
-  avatarUrl: string | null;
-  status: string;
-};
-
-export type MeetupDetail = MeetupListItem & {
-  description: string | null;
-  participants: MeetupParticipant[];
-};
+export type {
+  CreateMeetupPayload,
+  MeetupDetail,
+  MeetupListItem,
+  PatchMeetupPayload,
+  PlaySessionVisibility,
+} from '@boardgame/shared';
 
 export function fetchMeetups(params: {
   page?: number;
@@ -53,15 +40,7 @@ export function fetchMeetup(id: string): Promise<MeetupDetail> {
   return apiFetch<MeetupDetail>(`/meetups/${encodeURIComponent(id)}`);
 }
 
-export function createMeetup(body: {
-  title: string;
-  scheduledAt: string;
-  gameId?: string;
-  location?: string;
-  maxPlayers?: number;
-  description?: string;
-  visibility?: PlaySessionVisibility;
-}): Promise<MeetupDetail> {
+export function createMeetup(body: CreateMeetupPayload): Promise<MeetupDetail> {
   return apiFetch<MeetupDetail>('/meetups', {
     method: 'POST',
     body: JSON.stringify(body),
@@ -70,15 +49,7 @@ export function createMeetup(body: {
 
 export function patchMeetup(
   id: string,
-  body: {
-    title?: string;
-    scheduledAt?: string;
-    gameId?: string;
-    location?: string;
-    maxPlayers?: number;
-    description?: string;
-    visibility?: PlaySessionVisibility;
-  },
+  body: PatchMeetupPayload,
 ): Promise<MeetupDetail> {
   return apiFetch<MeetupDetail>(`/meetups/${encodeURIComponent(id)}`, {
     method: 'PATCH',
