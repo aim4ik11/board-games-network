@@ -7,6 +7,8 @@ export const queryKeys = {
     list: (q: { q: string; page: number }) =>
       [...queryKeys.games.all, 'list', q] as const,
     detail: (slug: string) => [...queryKeys.games.all, 'detail', slug] as const,
+    reviews: (slug: string, q: { page: number; limit: number }) =>
+      [...queryKeys.games.all, 'reviews', slug, q] as const,
   },
   collection: {
     all: ['collection'] as const,

@@ -19,7 +19,7 @@ export class GameRatingsController {
 
   @Put()
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Set or update your 1–10 rating' })
+  @ApiOperation({ summary: 'Set or update your 1–5 rating' })
   @ApiParam({ name: 'slug' })
   upsert(
     @Param('slug') slug: string,

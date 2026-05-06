@@ -1,4 +1,13 @@
-import type { GameDetail, GamesListResponse } from '@boardgame/shared';
+import type {
+  CreateGameReviewPayload,
+  GameDetail,
+  GameReview,
+  GameReviewsListResponse,
+  GamesListResponse,
+  OkResponse,
+  UpsertGameRatingPayload,
+  UpdateGameReviewPayload,
+} from '@boardgame/shared';
 import { apiFetch } from '../lib/api';
 
 export function fetchGamesList(params: {
@@ -22,4 +31,58 @@ export function fetchGamesList(params: {
 
 export function fetchGameBySlug(slug: string): Promise<GameDetail> {
   return apiFetch<GameDetail>(`/games/${encodeURIComponent(slug)}`);
+}
+
+export function fetchGameReviews(params: {
+  slug: string;
+  page?: number;
+  limit?: number;
+}): Promise<GameReviewsListResponse> {
+  const sp = new URLSearchParams();
+  if (params.page != null) {
+    sp.set('page', String(params.page));
+  }
+  if (params.limit != null) {
+    sp.set('limit', String(params.limit));
+  }
+  const qs = sp.toString();
+  return apiFetch<GameReviewsListResponse>(
+    `/games/${encodeURIComponent(params.slug)}/reviews${qs ? `?${qs}` : ''}`,
+  );
+}
+
+export function createGameReview(
+  slug: string,
+  payload: CreateGameReviewPayload,
+): Promise<GameReview> {
+  return apiFetch<GameReview>(`/games/${encodeURIComponent(slug)}/reviews`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateGameReview(
+  slug: string,
+  payload: UpdateGameReviewPayload,
+): Promise<GameReview> {
+  return apiFetch<GameReview>(`/games/${encodeURIComponent(slug)}/reviews`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteGameReview(slug: string): Promise<OkResponse> {
+  return apiFetch<OkResponse>(`/games/${encodeURIComponent(slug)}/reviews`, {
+    method: 'DELETE',
+  });
+}
+
+export function upsertGameRating(
+  slug: string,
+  payload: UpsertGameRatingPayload,
+): Promise<{ id: string; score: number; userId: string; gameId: string }> {
+  return apiFetch(`/games/${encodeURIComponent(slug)}/ratings`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
 }

@@ -95,6 +95,37 @@ export type GameDetail = GameListItem & {
   reviewCount: number;
 };
 
+export type GameReviewAuthor = {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+};
+
+export type GameReview = {
+  id: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  user: GameReviewAuthor;
+};
+
+export type GameReviewsListResponse = PaginatedResponse<GameReview>;
+
+/** JSON body for POST /games/:slug/reviews */
+export type CreateGameReviewPayload = {
+  body: string;
+};
+
+/** JSON body for PATCH /games/:slug/reviews */
+export type UpdateGameReviewPayload = {
+  body: string;
+};
+
+/** JSON body for PUT /games/:slug/ratings (score 1..5) */
+export type UpsertGameRatingPayload = {
+  score: number;
+};
+
 // --- Collection ---
 
 export const COLLECTION_STATUSES = [
