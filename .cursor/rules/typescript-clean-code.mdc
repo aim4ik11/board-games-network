@@ -1,0 +1,29 @@
+---
+description: TypeScript clean-code and type-safety rules
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript Clean Code
+
+Use strict, explicit types at boundaries: exported functions, public methods, DTOs, API clients, repositories, and shared contracts should have clear return types.
+
+Avoid `any`. Use `unknown` only at real external boundaries, then narrow it immediately. Avoid type assertions unless a mapper or framework boundary makes the invariant obvious.
+
+Model states with unions and `as const` values instead of loose strings. Prefer discriminated unions when a value can be in distinct states.
+
+Make invalid states hard to represent. Keep nullability explicit and do not use optional fields where the wire contract really returns `null`.
+
+Prefer `type` for object shapes and `interface` for framework contracts or extension points. Keep domain/application types separate from Prisma types and HTTP DTO classes.
+
+Use descriptive names and the same vocabulary for the same concept across API, web, and shared contracts.
+
+Keep functions focused. Extract helpers when a block mixes validation, persistence, mapping, and presentation concerns.
+
+Keep parameter lists short. If a function needs more than a few values, accept a typed options object with names that explain the call site.
+
+Do not swallow errors. If an error is intentionally converted to `null`, `false`, or a domain outcome, keep that conversion local and obvious.
+
+Use type-only imports for types and avoid importing framework or database types into shared/browser code.
+
+Dates crossing HTTP boundaries are ISO strings. `Date` objects should stay inside server-side infrastructure/application code unless explicitly converted.

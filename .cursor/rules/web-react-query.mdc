@@ -1,0 +1,21 @@
+---
+description: React web app rules for API clients, state, and components
+globs: "apps/web/src/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Web React Rules
+
+Keep HTTP access in `apps/web/src/api` and route it through `apiFetch`. Components should call typed API helpers rather than constructing fetch requests inline.
+
+Use `@boardgame/shared` response and payload types for API data. Do not duplicate backend DTOs in the web app.
+
+Keep React Query keys centralized in `apps/web/src/lib/query-keys.ts` when adding or changing server state.
+
+Prefer derived state over duplicated local state. Store only user input or UI state locally.
+
+Components should stay focused on rendering and interaction. Extract reusable UI into `components/ui` and reusable feature logic into hooks or `lib` helpers when it is used in more than one place.
+
+Handle loading, empty, and error states deliberately for user-facing data. Do not leave failed requests invisible.
+
+Avoid unsafe casts around route params, API responses, and form values. Parse or narrow values before using them.

@@ -1,0 +1,32 @@
+---
+description: NestJS API DDD and clean architecture boundaries
+globs: "apps/api/src/**/*.ts"
+alwaysApply: false
+---
+
+# API DDD Boundaries
+
+Keep feature modules organized by role:
+
+- `presentation`: controllers, DTOs, decorators, HTTP/WebSocket adapters.
+- `application`: use-case orchestration, authorization checks, transactions, and mapping to response contracts.
+- `domain`: business concepts, value types, pure rules, and domain utilities.
+- `infrastructure`: Prisma repositories, external services, crypto, JWT, realtime adapters.
+
+Respect dependency direction. Presentation may call application. Application may use domain concepts and repository/service ports. Infrastructure may depend on Prisma/Nest/external libraries. Domain must not import Nest, Prisma, HTTP, React, or browser code.
+
+Keep HTTP controllers and WebSocket gateways thin: validate input through DTOs/decorators, map request values, call one application method, and return or emit a response shape. Do not put business rules, authorization decisions, or Prisma calls in controllers/gateways.
+
+Application services should express use cases in business language. Prefer meaningful methods over generic CRUD plumbing.
+
+Repositories should hide Prisma details and map persistence rows into domain or shared contract shapes. Do not leak Prisma models through application or presentation unless the existing feature already owns that boundary.
+
+Use mappers when persistence shape, domain shape, and HTTP/shared contract shape differ. Keep mappers stateless pure functions or static methods; do not inject mapper classes only to transform data.
+
+DTOs live in `presentation/http/dto` and should be scoped to a use case or endpoint, such as `login.dto.ts` or `create-meetup.dto.ts`. Put `class-validator`, `class-transformer`, and Swagger decorators on DTOs, not on domain models or repository types.
+
+Use existing auth decorators and guards, including `@Public()`, `@CurrentUser()`, and `JwtAuthGuard`. Do not parse JWTs manually in controllers, gateways, or application services.
+
+Handle errors deliberately. Use Nest exceptions for request-facing failures, domain/application outcomes for expected business failures, and specific Prisma error handling for known persistence cases.
+
+Avoid broad `catch` blocks. If converting a persistence miss into `null` or `false`, keep the method name and return type honest about that behavior.

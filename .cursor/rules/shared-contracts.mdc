@@ -1,0 +1,19 @@
+---
+description: Shared package rules for API and web wire contracts
+globs: "packages/shared/src/**/*.ts"
+alwaysApply: false
+---
+
+# Shared Contracts
+
+`packages/shared` contains browser-safe HTTP/JSON contracts used by both `apps/api` and `apps/web`.
+
+Do not import Nest, Prisma, React, Node-only APIs, or app-local modules here.
+
+Represent the JSON wire format, not server internals. Dates are ISO strings, nullable fields are explicit `null`, and optional fields are reserved for values that may truly be omitted.
+
+Define finite value sets with exported `as const` arrays plus derived union types so API and web share the same vocabulary.
+
+When changing a shared contract, update the API response creation and the web API consumer in the same change.
+
+Keep shared types stable and small. Do not move feature-only implementation details into this package just to avoid a local type.

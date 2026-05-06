@@ -1,0 +1,37 @@
+---
+description: Repo-wide agent workflow for clean, maintainable changes
+alwaysApply: true
+---
+
+# Repo Agent Standards
+
+This is a pnpm monorepo:
+
+- `apps/api`: NestJS API with Prisma and feature modules.
+- `apps/web`: React + Vite app.
+- `packages/shared`: browser-safe API wire contracts shared by API and web.
+
+Before changing code, inspect the nearest existing feature and follow its naming, module boundaries, DTO style, repository style, and tests.
+
+Keep changes narrow. Do not refactor unrelated code, rewrite formatting, or move files unless the requested change requires it.
+
+Prefer shared contracts from `@boardgame/shared` over duplicated request/response types. When an API response changes, update `packages/shared`, the API mapper/service, and the web API client together.
+
+Create shared package code only when it is used across app boundaries or represents a stable API contract. Keep app-specific business logic inside `apps/api/src/<feature>` or `apps/web/src` rather than moving it into `packages/shared`.
+
+Use workspace package imports, especially `@boardgame/shared`, across package boundaries. Do not reach into another workspace with `../../packages/...` imports from app code.
+
+This repo exposes HTTP APIs and Socket.IO realtime behavior. Do not introduce gRPC, Knex, RabbitMQ, Redis, or extra infrastructure patterns unless the feature explicitly requires them and the surrounding code is updated consistently.
+
+Use kebab-case file names, PascalCase classes/components, and SCREAMING_SNAKE_CASE constants only for true constants. Match existing feature names for domain types, repositories, DTOs, and application services.
+
+Use workspace scripts and scoped checks:
+
+- Root: `pnpm build`, `pnpm format:check`.
+- API: `pnpm --filter api lint`, `pnpm --filter api test`, `pnpm --filter api build`.
+- Web: `pnpm --filter web lint`, `pnpm --filter web build`.
+- Shared: `pnpm --filter @boardgame/shared build`.
+
+Treat existing uncommitted changes as user work. Do not revert them unless explicitly asked.
+
+Public guidance adapted for this repo: Clean Code TypeScript (`https://labs42io.github.io/clean-code-typescript`) and DDD/Clean Architecture dependency rules.
