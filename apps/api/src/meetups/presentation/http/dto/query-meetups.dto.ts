@@ -1,12 +1,15 @@
-import { PlaySessionStatus } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  PLAY_SESSION_STATUSES,
+  type PlaySessionStatus,
+} from '@boardgame/shared';
 import { Type } from 'class-transformer';
-import { IsEnum, IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class QueryMeetupsDto {
-  @ApiPropertyOptional({ enum: PlaySessionStatus })
+  @ApiPropertyOptional({ enum: PLAY_SESSION_STATUSES })
   @IsOptional()
-  @IsEnum(PlaySessionStatus)
+  @IsIn([...PLAY_SESSION_STATUSES])
   status?: PlaySessionStatus;
 
   @ApiPropertyOptional({

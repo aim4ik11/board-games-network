@@ -18,3 +18,20 @@ export function prismaCollectionStatusToWire(
     }
   }
 }
+
+export function wireCollectionStatusToPrisma(
+  status: CollectionStatus,
+): PrismaCollectionStatus {
+  switch (status) {
+    case 'OWNED':
+      return PrismaCollectionStatus.OWNED;
+    case 'WISHLIST':
+      return PrismaCollectionStatus.WISHLIST;
+    case 'PREVIOUSLY_OWNED':
+      return PrismaCollectionStatus.PREVIOUSLY_OWNED;
+    default: {
+      const _exhaustive: never = status;
+      throw new Error(`Unexpected collection status: ${String(_exhaustive)}`);
+    }
+  }
+}

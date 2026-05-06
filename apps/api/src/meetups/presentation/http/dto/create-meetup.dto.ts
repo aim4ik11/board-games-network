@@ -1,8 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PlaySessionVisibility } from '@prisma/client';
+import {
+  PLAY_SESSION_VISIBILITIES,
+  type PlaySessionVisibility,
+} from '@boardgame/shared';
 import { Type } from 'class-transformer';
 import {
-  IsEnum,
+  IsIn,
   IsISO8601,
   IsInt,
   IsOptional,
@@ -50,8 +53,8 @@ export class CreateMeetupDto {
   @MaxLength(4000)
   description?: string;
 
-  @ApiPropertyOptional({ enum: PlaySessionVisibility })
+  @ApiPropertyOptional({ enum: PLAY_SESSION_VISIBILITIES })
   @IsOptional()
-  @IsEnum(PlaySessionVisibility)
+  @IsIn([...PLAY_SESSION_VISIBILITIES])
   visibility?: PlaySessionVisibility;
 }

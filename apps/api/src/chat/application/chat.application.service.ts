@@ -9,6 +9,7 @@ import { FriendsApplicationService } from '../../friends/application/friends.app
 import { PrismaChatRepository } from '../infrastructure/persistence/prisma-chat.repository';
 import { ChatBroadcastService } from '../infrastructure/realtime/chat-broadcast.service';
 import type {
+  ConversationIdResponse,
   ConversationListItem,
   ConversationMessages,
   MessageView,
@@ -29,7 +30,7 @@ export class ChatApplicationService {
   async getOrCreateDirectConversation(
     meId: string,
     otherUserId: string,
-  ): Promise<{ conversationId: string }> {
+  ): Promise<ConversationIdResponse> {
     if (meId === otherUserId) {
       throw new BadRequestException('Invalid recipient');
     }
@@ -57,7 +58,7 @@ export class ChatApplicationService {
     creatorId: string,
     memberIds: string[],
     title?: string,
-  ): Promise<{ conversationId: string }> {
+  ): Promise<ConversationIdResponse> {
     const normalizedMemberIds = Array.from(
       new Set(memberIds.map((id) => id.trim()).filter(Boolean)),
     ).filter((id) => id !== creatorId);

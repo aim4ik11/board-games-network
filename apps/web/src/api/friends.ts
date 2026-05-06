@@ -1,6 +1,8 @@
 import type {
   DiscoverUserRow,
   FriendConnection,
+  FriendRequestPayload,
+  OkResponse,
   PaginatedMeta,
   PendingRequest,
 } from '@boardgame/shared';
@@ -43,17 +45,17 @@ export function fetchOutgoingRequests(): Promise<PendingRequest[]> {
   return apiFetch<PendingRequest[]>('/friends/requests/outgoing');
 }
 
-export function sendFriendRequest(toUserId: string): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>('/friends/requests', {
+export function sendFriendRequest(toUserId: string): Promise<OkResponse> {
+  return apiFetch<OkResponse>('/friends/requests', {
     method: 'POST',
-    body: JSON.stringify({ toUserId }),
+    body: JSON.stringify({ toUserId } satisfies FriendRequestPayload),
   });
 }
 
 export function acceptFriendRequest(
   fromUserId: string,
-): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>(
+): Promise<OkResponse> {
+  return apiFetch<OkResponse>(
     `/friends/requests/${encodeURIComponent(fromUserId)}/accept`,
     { method: 'POST' },
   );
@@ -61,8 +63,8 @@ export function acceptFriendRequest(
 
 export function declineFriendRequest(
   fromUserId: string,
-): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>(
+): Promise<OkResponse> {
+  return apiFetch<OkResponse>(
     `/friends/requests/${encodeURIComponent(fromUserId)}`,
     { method: 'DELETE' },
   );
@@ -70,15 +72,15 @@ export function declineFriendRequest(
 
 export function cancelOutgoingRequest(
   toUserId: string,
-): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>(
+): Promise<OkResponse> {
+  return apiFetch<OkResponse>(
     `/friends/outgoing/${encodeURIComponent(toUserId)}`,
     { method: 'DELETE' },
   );
 }
 
-export function unfriend(otherUserId: string): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>(
+export function unfriend(otherUserId: string): Promise<OkResponse> {
+  return apiFetch<OkResponse>(
     `/friends/with/${encodeURIComponent(otherUserId)}`,
     { method: 'DELETE' },
   );

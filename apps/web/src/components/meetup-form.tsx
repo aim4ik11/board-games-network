@@ -128,6 +128,12 @@ function toSelectedGame(
     : null;
 }
 
+function isPlaySessionVisibility(value: string): value is PlaySessionVisibility {
+  return (
+    value === 'PUBLIC' || value === 'FRIENDS' || value === 'INVITE_ONLY'
+  );
+}
+
 export function MeetupForm({
   initialValues,
   onSubmit,
@@ -151,7 +157,7 @@ export function MeetupForm({
       return;
     }
     const onPointerDown = (event: MouseEvent) => {
-      if (!pickerRef.current?.contains(event.target as Node)) {
+      if (event.target instanceof Node && !pickerRef.current?.contains(event.target)) {
         setIsGamePickerOpen(false);
       }
     };
@@ -277,9 +283,11 @@ export function MeetupForm({
             name="visibility"
             className="input"
             value={visibility}
-            onChange={(e) =>
-              setVisibility(e.target.value as PlaySessionVisibility)
-            }
+            onChange={(e) => {
+              if (isPlaySessionVisibility(e.target.value)) {
+                setVisibility(e.target.value);
+              }
+            }}
           >
             {VISIBILITY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -391,7 +399,7 @@ export function MeetupForm({
           <p className="muted">
             <Link
               to="/games"
-              search={gamesListSearchDefault as never}
+              search={gamesListSearchDefault}
               className="text-link"
             >
               Browse catalog

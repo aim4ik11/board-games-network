@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthApplicationService } from './application/auth.application.service';
+import { WsSocketAuthService } from './application/ws-socket-auth.service';
 import { BcryptPasswordHasher } from './infrastructure/crypto/bcrypt-password-hasher';
 import { JwtAccessTokenIssuer } from './infrastructure/jwt/jwt-access-token-issuer';
 import { JwtStrategy } from './infrastructure/passport/jwt.strategy';
@@ -31,11 +32,17 @@ import { UsersController } from './presentation/http/users.controller';
   controllers: [AuthController, UsersController],
   providers: [
     AuthApplicationService,
+    WsSocketAuthService,
     JwtStrategy,
     PrismaAuthUsersRepository,
     BcryptPasswordHasher,
     JwtAccessTokenIssuer,
   ],
-  exports: [AuthApplicationService, PrismaAuthUsersRepository, JwtModule],
+  exports: [
+    AuthApplicationService,
+    PrismaAuthUsersRepository,
+    JwtModule,
+    WsSocketAuthService,
+  ],
 })
 export class AuthModule {}

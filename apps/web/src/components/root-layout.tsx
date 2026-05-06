@@ -19,6 +19,11 @@ import { queryKeys } from '../lib/query-keys';
 
 const collectionSearchDefault = { status: 'OWNED' as const };
 
+function isAuthModalEvent(event: Event): event is CustomEvent<AuthModalMode> {
+  const detail = (event as CustomEvent<unknown>).detail;
+  return detail === 'login' || detail === 'register';
+}
+
 function conversationTitle(
   c: Awaited<ReturnType<typeof fetchConversations>>[number],
 ) {
@@ -40,12 +45,12 @@ export function RootLayout() {
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const me = useAuthMe();
   const sidebarMeetups = useQuery({
-    queryKey: [...queryKeys.meetups.all, 'sidebar-upcoming'],
+    queryKey: queryKeys.meetups.sidebarUpcoming(),
     queryFn: () => fetchMeetups({ page: 1, limit: 5, upcoming: 'true' }),
     enabled: Boolean(token),
   });
   const sidebarConversations = useQuery({
-    queryKey: [...queryKeys.chat.all, 'sidebar-recent'],
+    queryKey: queryKeys.chat.sidebarRecent(),
     queryFn: fetchConversations,
     enabled: Boolean(token),
   });
@@ -66,9 +71,8 @@ export function RootLayout() {
 
   useEffect(() => {
     const onOpenAuthModal = (event: Event) => {
-      const mode = (event as CustomEvent<AuthModalMode>).detail;
-      if (mode === 'register' || mode === 'login') {
-        setAuthModalMode(mode);
+      if (isAuthModalEvent(event)) {
+        setAuthModalMode(event.detail);
       }
     };
 
@@ -83,7 +87,7 @@ export function RootLayout() {
       return;
     }
     const onPointerDown = (event: MouseEvent) => {
-      if (!userMenuRef.current?.contains(event.target as Node)) {
+      if (event.target instanceof Node && !userMenuRef.current?.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
     };
@@ -249,6 +253,9 @@ export function RootLayout() {
             {token && sidebarMeetups.isLoading && (
               <p className="muted">Loading…</p>
             )}
+            {token && sidebarMeetups.isError && (
+              <p className="muted">Could not load meetups right now.</p>
+            )}
             {token &&
               sidebarMeetups.data &&
               sidebarMeetups.data.data.length === 0 && (
@@ -285,6 +292,9 @@ export function RootLayout() {
             )}
             {token && sidebarConversations.isLoading && (
               <p className="muted">Loading…</p>
+            )}
+            {token && sidebarConversations.isError && (
+              <p className="muted">Could not load chats right now.</p>
             )}
             {token &&
               sidebarConversations.data &&

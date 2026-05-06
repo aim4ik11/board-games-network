@@ -17,6 +17,7 @@ export const queryKeys = {
   },
   users: {
     public: (id: string) => ['users', 'public', id] as const,
+    summary: (id: string) => [...queryKeys.users.public(id), 'summary'] as const,
   },
   friends: {
     all: ['friends'] as const,
@@ -31,11 +32,13 @@ export const queryKeys = {
     list: (q: { page: number; upcoming: string }) =>
       [...queryKeys.meetups.all, 'list', q] as const,
     detail: (id: string) => [...queryKeys.meetups.all, 'detail', id] as const,
+    sidebarUpcoming: () => [...queryKeys.meetups.all, 'sidebar-upcoming'] as const,
   },
   chat: {
     all: ['chat'] as const,
     conversations: () => [...queryKeys.chat.all, 'conversations'] as const,
     messages: (conversationId: string, page: number) =>
       [...queryKeys.chat.all, 'messages', conversationId, page] as const,
+    sidebarRecent: () => [...queryKeys.chat.all, 'sidebar-recent'] as const,
   },
 } as const;

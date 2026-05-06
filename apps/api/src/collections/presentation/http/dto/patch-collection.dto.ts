@@ -1,11 +1,11 @@
-import { CollectionStatus } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { COLLECTION_STATUSES, type CollectionStatus } from '@boardgame/shared';
+import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class PatchCollectionDto {
-  @ApiPropertyOptional({ enum: CollectionStatus })
+  @ApiPropertyOptional({ enum: COLLECTION_STATUSES })
   @IsOptional()
-  @IsEnum(CollectionStatus)
+  @IsIn([...COLLECTION_STATUSES])
   status?: CollectionStatus;
 
   @ApiPropertyOptional({ maxLength: 2000 })

@@ -1,6 +1,6 @@
-import { CollectionStatus } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import { COLLECTION_STATUSES, type CollectionStatus } from '@boardgame/shared';
+import { IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class AddToCollectionDto {
   @ApiProperty({ example: 'wingspan' })
@@ -9,10 +9,10 @@ export class AddToCollectionDto {
   slug!: string;
 
   @ApiPropertyOptional({
-    enum: CollectionStatus,
-    default: CollectionStatus.OWNED,
+    enum: COLLECTION_STATUSES,
+    default: 'OWNED',
   })
   @IsOptional()
-  @IsEnum(CollectionStatus)
+  @IsIn([...COLLECTION_STATUSES])
   status?: CollectionStatus;
 }

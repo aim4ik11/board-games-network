@@ -18,19 +18,21 @@ export function ProfilePage() {
     onSuccess: (user) => {
       queryClient.setQueryData(queryKeys.auth.me, user);
       void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.users.public(user.id), 'summary'],
+        queryKey: queryKeys.users.summary(user.id),
       });
       setIsEditing(false);
     },
   });
 
   const profileSummaryQuery = useQuery({
-    queryKey:
-      me.data != null
-        ? ([...queryKeys.users.public(me.data.id), 'summary'] as const)
-        : ['users', 'public', 'me', 'summary'],
-    queryFn: () => fetchPublicProfileSummary(me.data!.id),
-    enabled: me.data !== undefined,
+    queryKey: queryKeys.users.summary(me.data?.id ?? 'me'),
+    queryFn: async () => {
+      if (!me.data?.id) {
+        throw new Error('User is not loaded');
+      }
+      return fetchPublicProfileSummary(me.data.id);
+    },
+    enabled: Boolean(me.data?.id),
   });
 
   if (me.isLoading || me.data === undefined) {

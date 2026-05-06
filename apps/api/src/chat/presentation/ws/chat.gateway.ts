@@ -1,6 +1,4 @@
 import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
@@ -11,16 +9,14 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import type { AuthUser } from '@boardgame/shared';
-import { PrismaAuthUsersRepository } from '../../../auth/infrastructure/persistence/prisma-auth-users.repository';
+import { WsSocketAuthService } from '../../../auth/application/ws-socket-auth.service';
 import { ChatApplicationService } from '../../application/chat.application.service';
 import { ChatBroadcastService } from '../../infrastructure/realtime/chat-broadcast.service';
+import { ChatRoomDto } from './dto/chat-room.dto';
 
 const webOrigins = (process.env.WEB_ORIGIN ?? 'http://localhost:5173').split(
   ',',
 );
-
-type SocketData = { user?: AuthUser };
 
 @WebSocketGateway({
   namespace: '/chat',
@@ -35,9 +31,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(ChatGateway.name);
 
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-    private readonly authUsersRepository: PrismaAuthUsersRepository,
+    private readonly wsSocketAuthService: WsSocketAuthService,
     private readonly chatApplicationService: ChatApplicationService,
     private readonly chatBroadcastService: ChatBroadcastService,
   ) {}
@@ -47,7 +41,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   async handleConnection(client: Socket): Promise<void> {
-    const user = await this.resolveUser(client);
+    const user = await this.wsSocketAuthService.authenticate(client);
     if (!user) {
       this.logger.warn('Socket connection rejected: no token');
       client.disconnect();
@@ -57,10 +51,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage('join')
   async join(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: { conversationId?: string },
+    @MessageBody() body: ChatRoomDto,
   ): Promise<{ ok: boolean; error?: string }> {
-    const user = await this.resolveUser(client);
-    if (!user?.id || !body?.conversationId) {
+    const user = await this.wsSocketAuthService.authenticate(client);
+    if (!user?.id) {
       return { ok: false, error: 'Unauthorized' };
     }
     const ok = await this.chatApplicationService.assertMember(
@@ -77,54 +71,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage('leave')
   async leave(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: { conversationId?: string },
+    @MessageBody() body: ChatRoomDto,
   ): Promise<{ ok: boolean }> {
-    if (!body?.conversationId) {
+    const user = await this.wsSocketAuthService.authenticate(client);
+    if (!user?.id) {
       return { ok: false };
     }
     await client.leave(`conv:${body.conversationId}`);
     return { ok: true };
-  }
-
-  private extractToken(client: Socket): string | null {
-    const rawAuth = client.handshake.auth as { token?: unknown } | undefined;
-    const rawQuery = client.handshake.query as { token?: unknown };
-    if (typeof rawAuth?.token === 'string') {
-      return rawAuth.token;
-    }
-    if (typeof rawQuery?.token === 'string') {
-      return rawQuery.token;
-    }
-    return null;
-  }
-
-  private async resolveUser(client: Socket): Promise<AuthUser | null> {
-    const cached = (client.data as SocketData).user;
-    if (cached) {
-      return cached;
-    }
-    const token = this.extractToken(client);
-    if (!token) {
-      return null;
-    }
-    try {
-      const secret = this.configService.getOrThrow<string>('JWT_SECRET');
-      const payload = await this.jwtService.verifyAsync<{ sub: string }>(
-        token,
-        {
-          secret,
-        },
-      );
-      const user = await this.authUsersRepository.findPublicProfileById(
-        payload.sub,
-      );
-      if (!user) {
-        return null;
-      }
-      (client.data as SocketData).user = user;
-      return user;
-    } catch {
-      return null;
-    }
   }
 }

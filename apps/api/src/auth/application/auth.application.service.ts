@@ -99,6 +99,24 @@ export class AuthApplicationService {
     return summary;
   }
 
+  findPublicProfileById(userId: string): Promise<AuthUser | null> {
+    return this.authUsersRepository.findPublicProfileById(userId);
+  }
+
+  findPublicUserCardById(userId: string): Promise<PublicUserCard | null> {
+    return this.authUsersRepository.findUserCardById(userId);
+  }
+
+  searchPublicUserCards(params: {
+    q: string;
+    city?: string;
+    excludeUserId: string;
+    skip: number;
+    take: number;
+  }): Promise<{ items: PublicUserCard[]; total: number }> {
+    return this.authUsersRepository.searchPublicUserCards(params);
+  }
+
   async updateMyProfile(
     user: AuthUser,
     patch: {

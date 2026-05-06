@@ -144,9 +144,13 @@ export type MessageView = {
   sender: { id: string; displayName: string };
 };
 
+export const CONVERSATION_TYPES = ['DIRECT', 'GROUP', 'SESSION'] as const;
+
+export type ConversationType = (typeof CONVERSATION_TYPES)[number];
+
 export type ConversationListItem = {
   id: string;
-  type: string;
+  type: ConversationType;
   title: string | null;
   playSessionId: string | null;
   updatedAt: string;
@@ -161,7 +165,7 @@ export type ConversationListItem = {
 export type ConversationMessages = {
   conversation: {
     id: string;
-    type: string;
+    type: ConversationType;
     title: string | null;
     playSessionId: string | null;
   };
@@ -180,6 +184,19 @@ export const PLAY_SESSION_VISIBILITIES = [
 
 export type PlaySessionVisibility = (typeof PLAY_SESSION_VISIBILITIES)[number];
 
+export const PLAY_SESSION_STATUSES = ['SCHEDULED', 'CANCELLED', 'DONE'] as const;
+
+export type PlaySessionStatus = (typeof PLAY_SESSION_STATUSES)[number];
+
+export const MEETUP_PARTICIPANT_STATUSES = [
+  'INVITED',
+  'JOINED',
+  'DECLINED',
+] as const;
+
+export type MeetupParticipantStatus =
+  (typeof MEETUP_PARTICIPANT_STATUSES)[number];
+
 export type MeetupHost = {
   id: string;
   displayName: string;
@@ -197,7 +214,7 @@ export type MeetupParticipant = {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
-  status: string;
+  status: MeetupParticipantStatus;
 };
 
 export type MeetupListItem = {
@@ -206,7 +223,7 @@ export type MeetupListItem = {
   scheduledAt: string;
   location: string | null;
   maxPlayers: number | null;
-  status: string;
+  status: PlaySessionStatus;
   visibility: PlaySessionVisibility;
   host: MeetupHost;
   game: MeetupGame | null;
@@ -238,4 +255,29 @@ export type PatchMeetupPayload = {
   maxPlayers?: number;
   description?: string;
   visibility?: PlaySessionVisibility;
+};
+
+export type OkResponse = {
+  ok: true;
+};
+
+export type ConversationIdResponse = {
+  conversationId: string;
+};
+
+export type FriendRequestPayload = {
+  toUserId: string;
+};
+
+export type DirectConversationPayload = {
+  otherUserId: string;
+};
+
+export type GroupConversationPayload = {
+  memberIds: string[];
+  title?: string;
+};
+
+export type InviteConversationMemberPayload = {
+  userId: string;
 };

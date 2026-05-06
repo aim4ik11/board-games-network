@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CollectionStatus, Prisma } from '@prisma/client';
-import type { CollectionEntry } from '@boardgame/shared';
+import { Prisma } from '@prisma/client';
+import type { CollectionEntry, CollectionStatus } from '@boardgame/shared';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type {
   PatchCollectionProps,
   UpsertCollectionProps,
 } from '../../domain/types/collection.types';
 import { prismaCollectionStatusToWire } from './collection-status.mapper';
+import { wireCollectionStatusToPrisma } from './collection-status.mapper';
 import {
   boardGameListSelect,
   boardGameListRowToItem,
@@ -27,7 +28,9 @@ export class PrismaUserGamesRepository {
     const rows = await this.prismaService.userGame.findMany({
       where: {
         userId: params.userId,
-        ...(params.status ? { status: params.status } : {}),
+        ...(params.status
+          ? { status: wireCollectionStatusToPrisma(params.status) }
+          : {}),
       },
       include: { game: { select: boardGameListSelect } },
       orderBy: [{ status: 'asc' }, { game: { title: 'asc' } }],
@@ -50,12 +53,12 @@ export class PrismaUserGamesRepository {
       create: {
         userId: params.userId,
         gameId: params.gameId,
-        status: params.data.status,
+        status: wireCollectionStatusToPrisma(params.data.status),
         notes: params.data.notes ?? null,
         acquiredAt: params.data.acquiredAt ?? null,
       },
       update: {
-        status: params.data.status,
+        status: wireCollectionStatusToPrisma(params.data.status),
         ...(params.data.notes !== undefined && { notes: params.data.notes }),
         ...(params.data.acquiredAt !== undefined && {
           acquiredAt: params.data.acquiredAt,
@@ -88,7 +91,7 @@ export class PrismaUserGamesRepository {
         },
         data: {
           ...(params.patch.status !== undefined && {
-            status: params.patch.status,
+            status: wireCollectionStatusToPrisma(params.patch.status),
           }),
           ...(params.patch.notes !== undefined && {
             notes: params.patch.notes,

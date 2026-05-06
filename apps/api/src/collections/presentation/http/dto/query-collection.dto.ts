@@ -1,10 +1,10 @@
-import { CollectionStatus } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional } from 'class-validator';
+import { COLLECTION_STATUSES, type CollectionStatus } from '@boardgame/shared';
+import { IsIn, IsOptional } from 'class-validator';
 
 export class QueryCollectionDto {
-  @ApiPropertyOptional({ enum: CollectionStatus })
+  @ApiPropertyOptional({ enum: COLLECTION_STATUSES })
   @IsOptional()
-  @IsEnum(CollectionStatus)
+  @IsIn([...COLLECTION_STATUSES])
   status?: CollectionStatus;
 }

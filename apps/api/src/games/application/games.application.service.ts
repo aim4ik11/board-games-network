@@ -3,15 +3,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import type { AuthUser } from '@boardgame/shared';
+import type { AuthUser, OkResponse } from '@boardgame/shared';
 import type {
   CreateGameProps,
   UpdateGamePatch,
 } from '../domain/types/game.types';
 import { PrismaBoardGamesRepository } from '../infrastructure/persistence/prisma-board-games.repository';
 import { PrismaGameRatingsRepository } from '../infrastructure/persistence/prisma-game-ratings.repository';
-import { PrismaGameReviewsRepository } from '../infrastructure/persistence/prisma-game-reviews.repository';
+import {
+  DuplicateGameReviewError,
+  PrismaGameReviewsRepository,
+} from '../infrastructure/persistence/prisma-game-reviews.repository';
 
 export type ListGamesParams = {
   titleSearch?: string;
@@ -68,7 +70,7 @@ export class GamesApplicationService {
     return game;
   }
 
-  async deleteGame(slug: string) {
+  async deleteGame(slug: string): Promise<OkResponse> {
     const ok = await this.boardGamesRepository.deleteGameBySlug(slug);
     if (!ok) {
       throw new NotFoundException('Game not found');
@@ -109,10 +111,7 @@ export class GamesApplicationService {
       }
       return row;
     } catch (e) {
-      if (
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2002'
-      ) {
+      if (e instanceof DuplicateGameReviewError) {
         throw new ConflictException('You already reviewed this game');
       }
       throw e;
@@ -131,7 +130,7 @@ export class GamesApplicationService {
     return row;
   }
 
-  async deleteReview(slug: string, user: AuthUser) {
+  async deleteReview(slug: string, user: AuthUser): Promise<OkResponse> {
     const ok = await this.gameReviewsRepository.deleteReviewByGameSlug({
       slug,
       userId: user.id,
@@ -154,7 +153,7 @@ export class GamesApplicationService {
     return row;
   }
 
-  async deleteRating(slug: string, user: AuthUser) {
+  async deleteRating(slug: string, user: AuthUser): Promise<OkResponse> {
     const result = await this.gameRatingsRepository.deleteRatingByGameSlug({
       slug,
       userId: user.id,

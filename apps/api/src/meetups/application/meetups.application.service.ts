@@ -5,9 +5,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PlaySessionStatus, PlaySessionVisibility } from '@prisma/client';
 import { FriendsApplicationService } from '../../friends/application/friends.application.service';
-import type { MeetupDetail, MeetupListItem } from '@boardgame/shared';
+import type {
+  MeetupDetail,
+  MeetupListItem,
+  PlaySessionStatus,
+  PlaySessionVisibility,
+} from '@boardgame/shared';
 import { PrismaPlaySessionsRepository } from '../infrastructure/persistence/prisma-play-sessions.repository';
 
 @Injectable()
@@ -19,7 +23,7 @@ export class MeetupsApplicationService {
 
   async listMeetups(params: {
     userId?: string;
-    status?: string;
+    status?: PlaySessionStatus;
     upcomingOnly?: boolean;
     page: number;
     limit: number;
@@ -29,7 +33,7 @@ export class MeetupsApplicationService {
   }> {
     const scheduledFrom = params.upcomingOnly ? new Date() : undefined;
     const skip = (params.page - 1) * params.limit;
-    const status = params.status ?? PlaySessionStatus.SCHEDULED;
+    const status = params.status ?? 'SCHEDULED';
     const { items, total } = params.userId
       ? await this.playSessionsRepository.findManyVisibleToUser({
           userId: params.userId,
@@ -40,7 +44,7 @@ export class MeetupsApplicationService {
         })
       : await this.playSessionsRepository.findManyForList({
           status,
-          visibility: PlaySessionVisibility.PUBLIC,
+          visibility: 'PUBLIC',
           ...(scheduledFrom ? { scheduledFrom } : {}),
           skip,
           take: params.limit,
@@ -89,7 +93,7 @@ export class MeetupsApplicationService {
       location: props.location?.trim() || null,
       maxPlayers: props.maxPlayers ?? null,
       description: props.description?.trim() || null,
-      visibility: props.visibility ?? PlaySessionVisibility.PUBLIC,
+      visibility: props.visibility ?? 'PUBLIC',
     });
   }
 
@@ -114,7 +118,7 @@ export class MeetupsApplicationService {
       throw new ForbiddenException('Only the host can update this meetup');
     }
     const meta = await this.playSessionsRepository.getSessionMeta(id);
-    if (!meta || meta.status !== PlaySessionStatus.SCHEDULED) {
+    if (!meta || meta.status !== 'SCHEDULED') {
       throw new ConflictException('This meetup can no longer be edited');
     }
     if (patch.gameId) {
@@ -157,12 +161,12 @@ export class MeetupsApplicationService {
       throw new ForbiddenException('Only the host can cancel this meetup');
     }
     const meta = await this.playSessionsRepository.getSessionMeta(id);
-    if (!meta || meta.status !== PlaySessionStatus.SCHEDULED) {
+    if (!meta || meta.status !== 'SCHEDULED') {
       throw new ConflictException('This meetup is not scheduled');
     }
     const updated = await this.playSessionsRepository.setStatus(
       id,
-      PlaySessionStatus.CANCELLED,
+      'CANCELLED',
     );
     if (!updated) {
       throw new NotFoundException('Meetup not found');
@@ -172,13 +176,13 @@ export class MeetupsApplicationService {
 
   async joinMeetup(userId: string, id: string): Promise<MeetupDetail> {
     const meta = await this.playSessionsRepository.getSessionMeta(id);
-    if (!meta || meta.status !== PlaySessionStatus.SCHEDULED) {
+    if (!meta || meta.status !== 'SCHEDULED') {
       throw new NotFoundException('Meetup not found');
     }
     if (meta.hostId === userId) {
       throw new BadRequestException('You are already hosting this meetup');
     }
-    if (meta.visibility === PlaySessionVisibility.FRIENDS) {
+    if (meta.visibility === 'FRIENDS') {
       const areFriends =
         await this.friendsApplicationService.areAcceptedFriends(
           userId,
@@ -188,7 +192,7 @@ export class MeetupsApplicationService {
         throw new ForbiddenException('This meetup is for friends of the host');
       }
     }
-    if (meta.visibility === PlaySessionVisibility.INVITE_ONLY) {
+    if (meta.visibility === 'INVITE_ONLY') {
       const invited = await this.playSessionsRepository.hasInvitation(
         id,
         userId,
@@ -247,7 +251,7 @@ export class MeetupsApplicationService {
     if (meta.hostId !== hostId) {
       throw new ForbiddenException('Only the host can invite players');
     }
-    if (meta.status !== PlaySessionStatus.SCHEDULED) {
+    if (meta.status !== 'SCHEDULED') {
       throw new ConflictException('This meetup can no longer be updated');
     }
     const alreadyParticipant =
@@ -272,7 +276,7 @@ export class MeetupsApplicationService {
     meetup: MeetupDetail,
     requesterId?: string,
   ): Promise<boolean> {
-    if (meetup.visibility === PlaySessionVisibility.PUBLIC) {
+    if (meetup.visibility === 'PUBLIC') {
       return true;
     }
     if (!requesterId) {
@@ -288,7 +292,7 @@ export class MeetupsApplicationService {
     ) {
       return true;
     }
-    if (meetup.visibility === PlaySessionVisibility.FRIENDS) {
+    if (meetup.visibility === 'FRIENDS') {
       return this.friendsApplicationService.areAcceptedFriends(
         requesterId,
         meetup.host.id,

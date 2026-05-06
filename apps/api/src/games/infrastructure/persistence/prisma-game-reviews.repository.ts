@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type { ReviewWithAuthorView } from '../../domain/types/game.types';
 
@@ -50,24 +51,34 @@ export class PrismaGameReviewsRepository {
     userId: string;
     body: string;
   }): Promise<ReviewWithAuthorView | null> {
-    return this.prismaService.$transaction(async (tx) => {
-      const game = await tx.boardGame.findUnique({
-        where: { slug: params.slug },
-        select: { id: true },
+    return this.prismaService
+      .$transaction(async (tx) => {
+        const game = await tx.boardGame.findUnique({
+          where: { slug: params.slug },
+          select: { id: true },
+        });
+        if (!game) {
+          return null;
+        }
+        const row = await tx.review.create({
+          data: {
+            gameId: game.id,
+            userId: params.userId,
+            body: params.body,
+          },
+          select: reviewWithAuthorSelect,
+        });
+        return row as ReviewWithAuthorView;
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          throw new DuplicateGameReviewError();
+        }
+        throw error;
       });
-      if (!game) {
-        return null;
-      }
-      const row = await tx.review.create({
-        data: {
-          gameId: game.id,
-          userId: params.userId,
-          body: params.body,
-        },
-        select: reviewWithAuthorSelect,
-      });
-      return row as ReviewWithAuthorView;
-    });
   }
 
   async updateReviewByGameSlug(params: {
@@ -127,3 +138,5 @@ export class PrismaGameReviewsRepository {
     });
   }
 }
+
+export class DuplicateGameReviewError extends Error {}

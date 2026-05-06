@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConversationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type {
+  ConversationType as WireConversationType,
   ConversationListItem,
   ConversationMember,
   MessageView,
@@ -193,7 +194,7 @@ export class PrismaChatRepository {
 
   async getConversationSummary(conversationId: string): Promise<{
     id: string;
-    type: string;
+    type: WireConversationType;
     title: string | null;
     playSessionId: string | null;
   } | null> {
@@ -210,7 +211,7 @@ export class PrismaChatRepository {
     return row
       ? {
           id: row.id,
-          type: row.type,
+          type: prismaConversationTypeToWire(row.type),
           title: row.title ?? row.playSession?.title ?? null,
           playSessionId: row.playSessionId,
         }
@@ -250,7 +251,7 @@ export class PrismaChatRepository {
     const last = row.messages[0];
     return {
       id: row.id,
-      type: row.type,
+      type: prismaConversationTypeToWire(row.type),
       title: row.title ?? row.playSession?.title ?? null,
       playSessionId: row.playSessionId,
       updatedAt: row.updatedAt.toISOString(),
@@ -263,5 +264,22 @@ export class PrismaChatRepository {
           }
         : null,
     };
+  }
+}
+
+function prismaConversationTypeToWire(
+  type: ConversationType,
+): WireConversationType {
+  switch (type) {
+    case ConversationType.DIRECT:
+      return 'DIRECT';
+    case ConversationType.GROUP:
+      return 'GROUP';
+    case ConversationType.SESSION:
+      return 'SESSION';
+    default: {
+      const _exhaustive: never = type;
+      throw new Error(`Unexpected conversation type: ${String(_exhaustive)}`);
+    }
   }
 }

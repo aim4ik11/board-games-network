@@ -14,6 +14,9 @@ import type {
   MeetupHost,
   MeetupListItem,
   MeetupParticipant,
+  MeetupParticipantStatus,
+  PlaySessionStatus as MeetupStatus,
+  PlaySessionVisibility as MeetupVisibility,
 } from '@boardgame/shared';
 import type {
   CreateMeetupProps,
@@ -44,21 +47,21 @@ export class PrismaPlaySessionsRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async findManyForList(params: {
-    status?: string;
+    status?: MeetupStatus;
     scheduledFrom?: Date;
-    visibility?: string;
+    visibility?: MeetupVisibility;
     skip: number;
     take: number;
   }): Promise<{ items: MeetupListItem[]; total: number }> {
     const where: Prisma.PlaySessionWhereInput = {};
     if (params.status) {
-      where.status = params.status as PlaySessionStatus;
+      where.status = wireStatusToPrisma(params.status);
     }
     if (params.scheduledFrom) {
       where.scheduledAt = { gte: params.scheduledFrom };
     }
     if (params.visibility) {
-      where.visibility = params.visibility as PlaySessionVisibility;
+      where.visibility = wireVisibilityToPrisma(params.visibility);
     }
     const [rows, total] = await this.queryList(where, params.skip, params.take);
     const items = rows.map((r) => this.toListItem(r));
@@ -67,7 +70,7 @@ export class PrismaPlaySessionsRepository {
 
   async findManyVisibleToUser(params: {
     userId: string;
-    status?: string;
+    status?: MeetupStatus;
     scheduledFrom?: Date;
     skip: number;
     take: number;
@@ -106,7 +109,7 @@ export class PrismaPlaySessionsRepository {
       ],
     };
     if (params.status) {
-      where.status = params.status as PlaySessionStatus;
+      where.status = wireStatusToPrisma(params.status);
     }
     if (params.scheduledFrom) {
       where.scheduledAt = { gte: params.scheduledFrom };
@@ -226,7 +229,10 @@ export class PrismaPlaySessionsRepository {
     return this.findDetailById(id);
   }
 
-  async setStatus(id: string, status: string): Promise<MeetupDetail | null> {
+  async setStatus(
+    id: string,
+    status: MeetupStatus,
+  ): Promise<MeetupDetail | null> {
     const existing = await this.prismaService.playSession.findUnique({
       where: { id },
     });
@@ -235,7 +241,7 @@ export class PrismaPlaySessionsRepository {
     }
     await this.prismaService.playSession.update({
       where: { id },
-      data: { status: status as PlaySessionStatus },
+      data: { status: wireStatusToPrisma(status) },
     });
     return this.findDetailById(id);
   }
@@ -250,8 +256,8 @@ export class PrismaPlaySessionsRepository {
 
   async getSessionMeta(id: string): Promise<{
     hostId: string;
-    status: string;
-    visibility: string;
+    status: MeetupStatus;
+    visibility: MeetupVisibility;
     maxPlayers: number | null;
     scheduledAt: Date;
   } | null> {
@@ -270,8 +276,8 @@ export class PrismaPlaySessionsRepository {
     }
     return {
       hostId: row.hostId,
-      status: row.status,
-      visibility: row.visibility,
+      status: prismaStatusToWire(row.status),
+      visibility: prismaVisibilityToWire(row.visibility),
       maxPlayers: row.maxPlayers,
       scheduledAt: row.scheduledAt,
     };
@@ -289,14 +295,14 @@ export class PrismaPlaySessionsRepository {
   async findParticipantStatus(
     sessionId: string,
     userId: string,
-  ): Promise<string | null> {
+  ): Promise<MeetupParticipantStatus | null> {
     const row = await this.prismaService.playSessionParticipant.findUnique({
       where: {
         sessionId_userId: { sessionId, userId },
       },
       select: { status: true },
     });
-    return row?.status ?? null;
+    return row ? prismaParticipantStatusToWire(row.status) : null;
   }
 
   async addParticipant(sessionId: string, userId: string): Promise<void> {
@@ -409,8 +415,8 @@ export class PrismaPlaySessionsRepository {
       scheduledAt: row.scheduledAt.toISOString(),
       location: row.location,
       maxPlayers: row.maxPlayers,
-      status: row.status,
-      visibility: row.visibility,
+      status: prismaStatusToWire(row.status),
+      visibility: prismaVisibilityToWire(row.visibility),
       host: this.toHost(row.host),
       game: this.toGame(row.game),
       joinedParticipantCount: row.participants.length,
@@ -435,7 +441,7 @@ export class PrismaPlaySessionsRepository {
       userId: p.user.id,
       displayName: p.user.displayName,
       avatarUrl: p.user.avatarUrl,
-      status: p.status,
+      status: prismaParticipantStatusToWire(p.status),
     }));
     return {
       id: row.id,
@@ -443,13 +449,94 @@ export class PrismaPlaySessionsRepository {
       scheduledAt: row.scheduledAt.toISOString(),
       location: row.location,
       maxPlayers: row.maxPlayers,
-      status: row.status,
-      visibility: row.visibility,
+      status: prismaStatusToWire(row.status),
+      visibility: prismaVisibilityToWire(row.visibility),
       host: this.toHost(row.host),
       game: this.toGame(row.game),
       joinedParticipantCount: joinedCount,
       description: row.description,
       participants,
     };
+  }
+}
+
+function prismaStatusToWire(status: PlaySessionStatus): MeetupStatus {
+  switch (status) {
+    case PlaySessionStatus.SCHEDULED:
+      return 'SCHEDULED';
+    case PlaySessionStatus.CANCELLED:
+      return 'CANCELLED';
+    case PlaySessionStatus.DONE:
+      return 'DONE';
+    default: {
+      const _exhaustive: never = status;
+      throw new Error(`Unexpected play session status: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function wireStatusToPrisma(status: MeetupStatus): PlaySessionStatus {
+  switch (status) {
+    case 'SCHEDULED':
+      return PlaySessionStatus.SCHEDULED;
+    case 'CANCELLED':
+      return PlaySessionStatus.CANCELLED;
+    case 'DONE':
+      return PlaySessionStatus.DONE;
+    default: {
+      const _exhaustive: never = status;
+      throw new Error(`Unexpected play session status: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function prismaVisibilityToWire(
+  visibility: PlaySessionVisibility,
+): MeetupVisibility {
+  switch (visibility) {
+    case PlaySessionVisibility.PUBLIC:
+      return 'PUBLIC';
+    case PlaySessionVisibility.FRIENDS:
+      return 'FRIENDS';
+    case PlaySessionVisibility.INVITE_ONLY:
+      return 'INVITE_ONLY';
+    default: {
+      const _exhaustive: never = visibility;
+      throw new Error(`Unexpected visibility: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function wireVisibilityToPrisma(
+  visibility: MeetupVisibility,
+): PlaySessionVisibility {
+  switch (visibility) {
+    case 'PUBLIC':
+      return PlaySessionVisibility.PUBLIC;
+    case 'FRIENDS':
+      return PlaySessionVisibility.FRIENDS;
+    case 'INVITE_ONLY':
+      return PlaySessionVisibility.INVITE_ONLY;
+    default: {
+      const _exhaustive: never = visibility;
+      throw new Error(`Unexpected visibility: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function prismaParticipantStatusToWire(
+  status: ParticipantStatus,
+): MeetupParticipantStatus {
+  switch (status) {
+    case ParticipantStatus.INVITED:
+      return 'INVITED';
+    case ParticipantStatus.JOINED:
+      return 'JOINED';
+    case ParticipantStatus.DECLINED:
+      return 'DECLINED';
+    default: {
+      const _exhaustive: never = status;
+      throw new Error(`Unexpected participant status: ${String(_exhaustive)}`);
+    }
   }
 }

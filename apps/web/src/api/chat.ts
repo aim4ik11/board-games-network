@@ -1,6 +1,10 @@
 import type {
+  ConversationIdResponse,
   ConversationListItem,
   ConversationMessages,
+  DirectConversationPayload,
+  GroupConversationPayload,
+  InviteConversationMemberPayload,
   MessageView,
 } from '@boardgame/shared';
 import { apiFetch } from '../lib/api';
@@ -16,20 +20,20 @@ export function fetchConversations(): Promise<ConversationListItem[]> {
 
 export function createDirectConversation(
   otherUserId: string,
-): Promise<{ conversationId: string }> {
-  return apiFetch<{ conversationId: string }>('/conversations/direct', {
+): Promise<ConversationIdResponse> {
+  return apiFetch<ConversationIdResponse>('/conversations/direct', {
     method: 'POST',
-    body: JSON.stringify({ otherUserId }),
+    body: JSON.stringify({ otherUserId } satisfies DirectConversationPayload),
   });
 }
 
 export function createGroupConversation(params: {
   memberIds: string[];
   title?: string;
-}): Promise<{ conversationId: string }> {
-  return apiFetch<{ conversationId: string }>('/conversations/group', {
+}): Promise<ConversationIdResponse> {
+  return apiFetch<ConversationIdResponse>('/conversations/group', {
     method: 'POST',
-    body: JSON.stringify(params),
+    body: JSON.stringify(params satisfies GroupConversationPayload),
   });
 }
 
@@ -41,7 +45,7 @@ export function inviteConversationMember(
     `/conversations/${encodeURIComponent(conversationId)}/members`,
     {
       method: 'POST',
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ userId } satisfies InviteConversationMemberPayload),
     },
   );
 }

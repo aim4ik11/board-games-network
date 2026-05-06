@@ -4,8 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { FriendshipStatus } from '@prisma/client';
-import { PrismaAuthUsersRepository } from '../../auth/infrastructure/persistence/prisma-auth-users.repository';
+import { AuthApplicationService } from '../../auth/application/auth.application.service';
 import type {
   DiscoverUserRow,
   FriendConnection,
@@ -17,7 +16,7 @@ import { PrismaFriendshipsRepository } from '../infrastructure/persistence/prism
 @Injectable()
 export class FriendsApplicationService {
   constructor(
-    private readonly authUsersRepository: PrismaAuthUsersRepository,
+    private readonly authApplicationService: AuthApplicationService,
     private readonly friendshipsRepository: PrismaFriendshipsRepository,
   ) {}
 
@@ -25,13 +24,13 @@ export class FriendsApplicationService {
     meId: string,
     row: { requesterId: string; addresseeId: string; status: string },
   ): FriendshipRelationship {
-    if (row.status === FriendshipStatus.BLOCKED) {
+    if (row.status === 'BLOCKED') {
       return 'blocked';
     }
-    if (row.status === FriendshipStatus.ACCEPTED) {
+    if (row.status === 'ACCEPTED') {
       return 'friend';
     }
-    if (row.status === FriendshipStatus.PENDING) {
+    if (row.status === 'PENDING') {
       return row.requesterId === meId ? 'outgoing_pending' : 'incoming_pending';
     }
     return 'none';
@@ -48,10 +47,10 @@ export class FriendsApplicationService {
     meta: { total: number; page: number; limit: number };
   }> {
     const skip = (page - 1) * limit;
-    const me = await this.authUsersRepository.findPublicProfileById(meId);
+    const me = await this.authApplicationService.findPublicProfileById(meId);
     const effectiveCity = city?.trim() || me?.city?.trim() || undefined;
     const { items, total } =
-      await this.authUsersRepository.searchPublicUserCards({
+      await this.authApplicationService.searchPublicUserCards({
         q,
         city: effectiveCity,
         excludeUserId: meId,
@@ -113,7 +112,8 @@ export class FriendsApplicationService {
     if (meId === toUserId) {
       throw new BadRequestException('Cannot friend yourself');
     }
-    const target = await this.authUsersRepository.findUserCardById(toUserId);
+    const target =
+      await this.authApplicationService.findPublicUserCardById(toUserId);
     if (!target) {
       throw new NotFoundException('User not found');
     }
@@ -122,13 +122,13 @@ export class FriendsApplicationService {
       await this.friendshipsRepository.createPendingRequest(meId, toUserId);
       return;
     }
-    if (existing.status === FriendshipStatus.BLOCKED) {
+    if (existing.status === 'BLOCKED') {
       throw new ConflictException('Cannot send a friend request');
     }
-    if (existing.status === FriendshipStatus.ACCEPTED) {
+    if (existing.status === 'ACCEPTED') {
       throw new ConflictException('Already friends');
     }
-    if (existing.status === FriendshipStatus.PENDING) {
+    if (existing.status === 'PENDING') {
       if (existing.requesterId === meId) {
         throw new ConflictException('Request already sent');
       }
@@ -146,7 +146,7 @@ export class FriendsApplicationService {
     const row = await this.friendshipsRepository.findPair(meId, fromUserId);
     if (
       !row ||
-      row.status !== FriendshipStatus.PENDING ||
+      row.status !== 'PENDING' ||
       row.requesterId !== fromUserId ||
       row.addresseeId !== meId
     ) {
@@ -193,6 +193,6 @@ export class FriendsApplicationService {
       return false;
     }
     const row = await this.friendshipsRepository.findPair(userIdA, userIdB);
-    return row?.status === FriendshipStatus.ACCEPTED;
+    return row?.status === 'ACCEPTED';
   }
 }

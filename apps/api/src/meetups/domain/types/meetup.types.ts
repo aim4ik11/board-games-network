@@ -1,4 +1,4 @@
-import { PlaySessionVisibility } from '@prisma/client';
+import type { PlaySessionVisibility } from '@boardgame/shared';
 
 export type CreateMeetupProps = {
   hostId: string;

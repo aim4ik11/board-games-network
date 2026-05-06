@@ -10,7 +10,7 @@ export function PublicUserPage() {
   const { userId } = routeApi.useParams();
 
   const profileQuery = useQuery({
-    queryKey: [...queryKeys.users.public(userId), 'summary'] as const,
+    queryKey: queryKeys.users.summary(userId),
     queryFn: () => fetchPublicProfileSummary(userId),
   });
 

@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CollectionStatus } from '@prisma/client';
 import { PrismaBoardGamesRepository } from '../../games/infrastructure/persistence/prisma-board-games.repository';
-import type { CollectionEntry } from '@boardgame/shared';
+import type { CollectionEntry, CollectionStatus } from '@boardgame/shared';
 import { PrismaUserGamesRepository } from '../infrastructure/persistence/prisma-user-games.repository';
 
 @Injectable()
@@ -24,7 +23,7 @@ export class CollectionsApplicationService {
   async addToCollection(
     userId: string,
     slug: string,
-    status: CollectionStatus = CollectionStatus.OWNED,
+    status: CollectionStatus = 'OWNED',
   ): Promise<CollectionEntry> {
     const gameId = await this.boardGamesRepository.findIdBySlug(slug);
     if (!gameId) {

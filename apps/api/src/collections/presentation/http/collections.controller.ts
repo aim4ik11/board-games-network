@@ -23,6 +23,7 @@ import { CollectionsApplicationService } from '../../application/collections.app
 import { AddToCollectionDto } from './dto/add-to-collection.dto';
 import { PatchCollectionDto } from './dto/patch-collection.dto';
 import { QueryCollectionDto } from './dto/query-collection.dto';
+import type { OkResponse } from '@boardgame/shared';
 
 @ApiTags('collections')
 @ApiBearerAuth('access-token')
@@ -88,7 +89,10 @@ export class CollectionsController {
   @Delete(':slug')
   @ApiOperation({ summary: 'Remove a game from my collection' })
   @ApiParam({ name: 'slug' })
-  async remove(@CurrentUser() user: AuthUser, @Param('slug') slug: string) {
+  async remove(
+    @CurrentUser() user: AuthUser,
+    @Param('slug') slug: string,
+  ): Promise<OkResponse> {
     await this.collectionsApplicationService.removeFromCollection(
       user.id,
       slug,

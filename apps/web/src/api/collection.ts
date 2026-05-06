@@ -1,4 +1,8 @@
-import type { CollectionEntry, CollectionStatus } from '@boardgame/shared';
+import type {
+  CollectionEntry,
+  CollectionStatus,
+  OkResponse,
+} from '@boardgame/shared';
 import { apiFetch, ApiError } from '../lib/api';
 
 export async function fetchMyCollection(
@@ -49,8 +53,8 @@ export function patchCollectionItem(
   );
 }
 
-export function removeFromCollection(slug: string): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>(
+export function removeFromCollection(slug: string): Promise<OkResponse> {
+  return apiFetch<OkResponse>(
     `/me/collection/${encodeURIComponent(slug)}`,
     { method: 'DELETE' },
   );

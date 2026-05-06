@@ -270,6 +270,13 @@ export function FriendsPage() {
           <div>
             <h2 className="h-aside">Incoming</h2>
             {incomingQuery.isLoading && <p>Loading…</p>}
+            {incomingQuery.isError && (
+              <p className="error" role="alert">
+                {incomingQuery.error instanceof Error
+                  ? incomingQuery.error.message
+                  : 'Failed to load incoming requests'}
+              </p>
+            )}
             {incomingQuery.data?.length === 0 && (
               <p className="muted">No incoming requests.</p>
             )}
@@ -311,6 +318,13 @@ export function FriendsPage() {
           <div>
             <h2 className="h-aside">Outgoing</h2>
             {outgoingQuery.isLoading && <p>Loading…</p>}
+            {outgoingQuery.isError && (
+              <p className="error" role="alert">
+                {outgoingQuery.error instanceof Error
+                  ? outgoingQuery.error.message
+                  : 'Failed to load outgoing requests'}
+              </p>
+            )}
             {outgoingQuery.data?.length === 0 && (
               <p className="muted">No outgoing requests.</p>
             )}
