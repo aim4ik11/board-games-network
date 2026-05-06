@@ -61,6 +61,15 @@ export type AuthSuccessResponse = {
   user: AuthUser;
 };
 
+export type ForgotPasswordPayload = {
+  email: string;
+};
+
+export type ResetPasswordPayload = {
+  token: string;
+  password: string;
+};
+
 // --- Games ---
 
 export type GameListItem = {

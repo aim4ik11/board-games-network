@@ -6,8 +6,8 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import { RootLayout } from './components/root-layout';
-import { getStoredAccessToken } from './lib/auth-storage';
 import { setPendingAuthModal } from './lib/auth-modal-intent';
+import { getAccessToken, waitForAuthBootstrap } from './lib/auth-session';
 import { gamesListSearchDefault } from './lib/games-route-defaults';
 import { CollectionPage } from './pages/collection-page';
 import { FriendsPage } from './pages/friends-page';
@@ -46,7 +46,11 @@ function parseMeetupsUpcoming(raw: unknown): 'true' | 'false' {
   return raw === 'false' ? 'false' : 'true';
 }
 
-function redirectToLoginModal(): never {
+async function requireAuthOrRedirect(): Promise<void> {
+  await waitForAuthBootstrap();
+  if (getAccessToken()) {
+    return;
+  }
   setPendingAuthModal('login');
   throw redirect({ to: '/games', search: gamesListSearchDefault });
 }
@@ -90,22 +94,14 @@ const collectionRoute = createRoute({
   validateSearch: (raw: Record<string, unknown>) => ({
     status: parseCollectionStatus(raw.status),
   }),
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: CollectionPage,
 });
 
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: ProfilePage,
 });
 
@@ -118,22 +114,14 @@ const publicUserRoute = createRoute({
 const messagesListRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/messages',
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: MessagesListPage,
 });
 
 const messagesThreadRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/messages/$conversationId',
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: MessagesThreadPage,
 });
 
@@ -149,55 +137,35 @@ const meetupsListRoute = createRoute({
           : 1,
     upcoming: parseMeetupsUpcoming(raw.upcoming),
   }),
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: MeetupsListPage,
 });
 
 const meetupsNewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/meetups/new',
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: MeetupNewPage,
 });
 
 const meetupsDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/meetups/$meetupId',
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: MeetupDetailPage,
 });
 
 const meetupsInviteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/meetups/$meetupId/invite',
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: MeetupInvitePage,
 });
 
 const meetupsEditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/meetups/$meetupId/edit',
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: MeetupEditPage,
 });
 
@@ -215,11 +183,7 @@ const friendsRoute = createRoute({
           ? Math.max(1, raw.page)
           : 1,
   }),
-  beforeLoad: () => {
-    if (!getStoredAccessToken()) {
-      redirectToLoginModal();
-    }
-  },
+  beforeLoad: () => requireAuthOrRedirect(),
   component: FriendsPage,
 });
 

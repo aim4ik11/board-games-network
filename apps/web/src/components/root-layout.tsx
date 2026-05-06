@@ -16,6 +16,7 @@ import { friendsSearchDefault } from '../lib/friends-route-defaults';
 import { meetupsSearchDefault } from '../lib/meetups-route-defaults';
 import { gamesListSearchDefault } from '../lib/games-route-defaults';
 import { queryKeys } from '../lib/query-keys';
+import { setPendingAuthModal } from '../lib/auth-modal-intent';
 
 const collectionSearchDefault = { status: 'OWNED' as const };
 
@@ -56,7 +57,7 @@ export function RootLayout() {
   });
 
   useEffect(() => {
-    if (!authModalMode) {
+    if (!authModalMode || token) {
       return;
     }
     const previousOverflow = document.body.style.overflow;
@@ -67,7 +68,7 @@ export function RootLayout() {
       document.body.style.overflow = previousOverflow;
       document.body.style.touchAction = previousTouchAction;
     };
-  }, [authModalMode]);
+  }, [authModalMode, token]);
 
   useEffect(() => {
     const onOpenAuthModal = (event: Event) => {
@@ -81,6 +82,24 @@ export function RootLayout() {
       window.removeEventListener(OPEN_AUTH_MODAL_EVENT, onOpenAuthModal);
     };
   }, []);
+
+  useEffect(() => {
+    if (token) {
+      return;
+    }
+    const protectedPrefixes = [
+      '/friends',
+      '/collection',
+      '/profile',
+      '/messages',
+      '/meetups',
+    ];
+    const path = window.location.pathname;
+    if (protectedPrefixes.some((prefix) => path.startsWith(prefix))) {
+      setPendingAuthModal('login');
+      window.location.assign('/games');
+    }
+  }, [token]);
 
   useEffect(() => {
     if (!isUserMenuOpen) {
@@ -335,7 +354,7 @@ export function RootLayout() {
           )}
         </aside>
       </div>
-      {authModalMode &&
+      {authModalMode && !token &&
         createPortal(
           <div
             className="auth-modal-backdrop"

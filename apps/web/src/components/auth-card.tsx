@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { loginRequest, registerRequest } from '../api/auth';
-import { ApiError } from '../lib/api';
+import { ApiError, getApiBaseUrl } from '../lib/api';
 import { useAuth } from '../lib/use-auth';
 
 export type AuthMode = 'login' | 'register';
@@ -169,6 +169,15 @@ export function AuthCard({
             )}
             <button type="submit" className="button" disabled={login.isPending}>
               {login.isPending ? 'Signing in…' : 'Sign in'}
+            </button>
+            <button
+              type="button"
+              className="button button-ghost"
+              onClick={() => {
+                window.location.href = `${getApiBaseUrl()}/auth/google`;
+              }}
+            >
+              Continue with Google
             </button>
           </form>
         )}

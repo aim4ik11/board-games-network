@@ -46,6 +46,7 @@ enum ParticipantStatus {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
+  googleId     String?  @unique
   passwordHash String
   displayName  String
   avatarUrl    String?
@@ -67,6 +68,44 @@ model User {
   meetupsHosted        PlaySession[]            @relation("MeetupHost")
   meetupParticipations PlaySessionParticipant[]
   meetupInvitations    PlaySessionInvitation[]
+  authSessions         AuthSession[]
+  passwordResetTokens  PasswordResetToken[]
+}
+
+model AuthSession {
+  id                  String    @id @default(cuid())
+  userId              String
+  refreshTokenHash    String
+  tokenFamily         String
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedBySessionId String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  ip                  String?
+  userAgent           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenFamily])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+  requestedIp String?
+  userAgent  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model BoardGame {

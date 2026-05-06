@@ -1,4 +1,4 @@
-import { clearStoredAccessToken, getStoredAccessToken } from './auth-storage';
+import { getAccessToken, setAccessToken } from './auth-session';
 
 export const AUTH_LOGOUT_EVENT = 'boardgame:auth-logout';
 
@@ -28,12 +28,34 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(
   path: string,
-  init?: RequestInit & { skipAuth?: boolean },
+  init?: RequestInit & { skipAuth?: boolean; withCredentials?: boolean },
 ): Promise<T> {
-  const { skipAuth, ...rest } = init ?? {};
+  const response = await doFetch(path, init);
+  if (response.status !== 401 || init?.skipAuth) {
+    return parseResponse<T>(response);
+  }
+
+  const refreshed = await tryRefreshAccessToken();
+  if (!refreshed) {
+    notifyAuthLogout();
+    throw new ApiError('Unauthorized', 401);
+  }
+
+  const retryResponse = await doFetch(path, init);
+  if (retryResponse.status === 401) {
+    notifyAuthLogout();
+  }
+  return parseResponse<T>(retryResponse);
+}
+
+async function doFetch(
+  path: string,
+  init?: RequestInit & { skipAuth?: boolean; withCredentials?: boolean },
+): Promise<Response> {
+  const { skipAuth, withCredentials, ...rest } = init ?? {};
   const headers = new Headers(rest.headers);
   if (!skipAuth) {
-    const token = getStoredAccessToken();
+    const token = getAccessToken();
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -45,12 +67,14 @@ export async function apiFetch<T>(
   ) {
     headers.set('Content-Type', 'application/json');
   }
-
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+  return fetch(`${getApiBaseUrl()}${path}`, {
     ...rest,
     headers,
+    credentials: withCredentials ? 'include' : rest.credentials,
   });
+}
 
+async function parseResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   let data: unknown = undefined;
   if (text) {
@@ -59,11 +83,6 @@ export async function apiFetch<T>(
     } catch {
       data = text;
     }
-  }
-
-  if (res.status === 401) {
-    clearStoredAccessToken();
-    notifyAuthLogout();
   }
 
   if (!res.ok) {
@@ -76,6 +95,35 @@ export async function apiFetch<T>(
         : res.statusText;
     throw new ApiError(msg || 'Request failed', res.status, data);
   }
-
   return data as T;
+}
+
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshAccessToken(): Promise<boolean> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+  refreshPromise = (async () => {
+    try {
+      const response = await doFetch('/auth/refresh', {
+        method: 'POST',
+        skipAuth: true,
+        withCredentials: true,
+      });
+      if (!response.ok) {
+        setAccessToken(null);
+        return false;
+      }
+      const data = await parseResponse<{ accessToken: string }>(response);
+      setAccessToken(data.accessToken);
+      return true;
+    } catch {
+      setAccessToken(null);
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
 }

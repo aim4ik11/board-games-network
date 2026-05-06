@@ -14,7 +14,7 @@ import {
   type SuggestionMultiSelectOption,
 } from '../components/ui';
 import { getSharedChatSocket } from '../lib/chat-socket';
-import { getStoredAccessToken } from '../lib/auth-storage';
+import { getAccessToken } from '../lib/auth-session';
 import { queryKeys } from '../lib/query-keys';
 
 export function MessagesListPage() {
@@ -50,7 +50,7 @@ export function MessagesListPage() {
   });
 
   useEffect(() => {
-    const token = getStoredAccessToken();
+    const token = getAccessToken();
     if (!token) {
       return;
     }

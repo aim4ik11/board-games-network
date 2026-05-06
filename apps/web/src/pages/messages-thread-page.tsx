@@ -10,7 +10,7 @@ import { fetchFriendsList } from '../api/friends';
 import type { MessageView } from '../api/types';
 import { useAuthMe } from '../hooks/use-auth-me';
 import { getSharedChatSocket } from '../lib/chat-socket';
-import { getStoredAccessToken } from '../lib/auth-storage';
+import { getAccessToken } from '../lib/auth-session';
 import { queryKeys } from '../lib/query-keys';
 import {
   Button,
@@ -91,7 +91,7 @@ export function MessagesThreadPage() {
   });
 
   useEffect(() => {
-    const token = getStoredAccessToken();
+    const token = getAccessToken();
     if (!token) {
       return;
     }

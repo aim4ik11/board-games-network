@@ -8,6 +8,7 @@ import type {
 import { CollectionStatus, FriendshipStatus } from '@prisma/client';
 
 type UserCredentialsRecord = AuthUser & {
+  googleId: string | null;
   passwordHash: string;
 };
 
@@ -37,7 +38,7 @@ export class PrismaAuthUsersRepository {
   ): Promise<UserCredentialsRecord | null> {
     const row = await this.prismaService.user.findUnique({
       where: { email },
-      select: { ...publicSelect, passwordHash: true },
+      select: { ...publicSelect, googleId: true, passwordHash: true },
     });
     return row as UserCredentialsRecord | null;
   }
@@ -46,6 +47,20 @@ export class PrismaAuthUsersRepository {
     return this.prismaService.user
       .findUnique({ where: { email }, select: { id: true } })
       .then((r) => r !== null);
+  }
+
+  findIdByEmail(email: string): Promise<{ id: string } | null> {
+    return this.prismaService.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+  }
+
+  findByGoogleId(googleId: string): Promise<AuthUser | null> {
+    return this.prismaService.user.findUnique({
+      where: { googleId },
+      select: publicSelect,
+    }) as Promise<AuthUser | null>;
   }
 
   async createRegisteredUser(data: {
@@ -62,6 +77,49 @@ export class PrismaAuthUsersRepository {
       select: publicSelect,
     });
     return user as AuthUser;
+  }
+
+  async createGoogleUser(data: {
+    email: string;
+    googleId: string;
+    displayName: string;
+    avatarUrl: string | null;
+    passwordHash: string;
+  }): Promise<AuthUser> {
+    const user = await this.prismaService.user.create({
+      data: {
+        email: data.email,
+        googleId: data.googleId,
+        displayName: data.displayName,
+        avatarUrl: data.avatarUrl,
+        passwordHash: data.passwordHash,
+      },
+      select: publicSelect,
+    });
+    return user as AuthUser;
+  }
+
+  async linkGoogleAccountByEmail(params: {
+    email: string;
+    googleId: string;
+    avatarUrl: string | null;
+  }): Promise<AuthUser | null> {
+    const user = await this.prismaService.user.findUnique({
+      where: { email: params.email },
+      select: { id: true, googleId: true },
+    });
+    if (!user) {
+      return null;
+    }
+    const updated = await this.prismaService.user.update({
+      where: { id: user.id },
+      data: {
+        ...(user.googleId === null && { googleId: params.googleId }),
+        ...(params.avatarUrl !== null && { avatarUrl: params.avatarUrl }),
+      },
+      select: publicSelect,
+    });
+    return updated as AuthUser;
   }
 
   async findPublicProfileById(id: string): Promise<AuthUser | null> {
@@ -192,6 +250,16 @@ export class PrismaAuthUsersRepository {
       select: publicSelect,
     });
     return updated as AuthUser;
+  }
+
+  updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    return this.prismaService.user
+      .update({
+        where: { id: userId },
+        data: { passwordHash },
+        select: { id: true },
+      })
+      .then(() => undefined);
   }
 
   async searchPublicUserCards(params: {

@@ -2,4 +2,5 @@
 export type JwtAccessTokenPayload = {
   sub: string;
   email: string;
+  sid?: string;
 };
