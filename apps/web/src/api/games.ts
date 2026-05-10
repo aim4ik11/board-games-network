@@ -14,6 +14,12 @@ export function fetchGamesList(params: {
   q?: string;
   page?: number;
   limit?: number;
+  genres?: string;
+  ptMin?: number;
+  ptMax?: number;
+  complexity?: string;
+  sort?: 'title' | 'year';
+  order?: 'asc' | 'desc';
 }): Promise<GamesListResponse> {
   const sp = new URLSearchParams();
   if (params.q) {
@@ -24,6 +30,24 @@ export function fetchGamesList(params: {
   }
   if (params.limit != null) {
     sp.set('limit', String(params.limit));
+  }
+  if (params.genres?.trim()) {
+    sp.set('genres', params.genres.trim());
+  }
+  if (params.ptMin != null) {
+    sp.set('ptMin', String(params.ptMin));
+  }
+  if (params.ptMax != null) {
+    sp.set('ptMax', String(params.ptMax));
+  }
+  if (params.complexity?.trim()) {
+    sp.set('complexity', params.complexity.trim());
+  }
+  if (params.sort) {
+    sp.set('sort', params.sort);
+  }
+  if (params.order) {
+    sp.set('order', params.order);
   }
   const qs = sp.toString();
   return apiFetch<GamesListResponse>(`/games${qs ? `?${qs}` : ''}`);

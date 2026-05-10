@@ -4,14 +4,33 @@ export const queryKeys = {
   },
   games: {
     all: ['games'] as const,
-    list: (q: { q: string; page: number }) =>
-      [...queryKeys.games.all, 'list', q] as const,
+    list: (q: {
+      q: string;
+      page: number;
+      limit: number;
+      genres: string;
+      ptMin: string;
+      ptMax: string;
+      complexity: string;
+      sort: 'title' | 'year';
+      order: 'asc' | 'desc';
+    }) => [...queryKeys.games.all, 'list', q] as const,
+    /** First page, up to 100 rows — mock-only sorts (bgg, rating, trending). */
+    batch: (q: {
+      q: string;
+      genres: string;
+      ptMin: string;
+      ptMax: string;
+      complexity: string;
+    }) => [...queryKeys.games.all, 'batch', q] as const,
     detail: (slug: string) => [...queryKeys.games.all, 'detail', slug] as const,
     reviews: (slug: string, q: { page: number; limit: number }) =>
       [...queryKeys.games.all, 'reviews', slug, q] as const,
   },
   collection: {
     all: ['collection'] as const,
+    /** All statuses (no query param) — for catalog badges. */
+    allEntries: () => [...queryKeys.collection.all, 'all'] as const,
     list: (status: string) =>
       [...queryKeys.collection.all, 'list', status] as const,
     entry: (slug: string) =>

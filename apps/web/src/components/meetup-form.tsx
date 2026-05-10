@@ -119,11 +119,15 @@ function toSelectedGame(
         id: game.id,
         title: game.title,
         slug: '',
+        description: null,
         imageUrl: null,
         yearPublished: null,
         minPlayers: null,
         maxPlayers: null,
         playTimeMin: null,
+        playTimeMax: null,
+        complexity: null,
+        genres: [],
       }
     : null;
 }
@@ -180,7 +184,17 @@ export function MeetupForm({
   });
 
   const gamesQuery = useQuery({
-    queryKey: queryKeys.games.list({ q: gameSearch, page: 1 }),
+    queryKey: queryKeys.games.list({
+      q: gameSearch,
+      page: 1,
+      limit: 20,
+      genres: '',
+      ptMin: '',
+      ptMax: '',
+      complexity: '',
+      sort: 'title',
+      order: 'asc',
+    }),
     queryFn: () => fetchGamesList({ q: gameSearch, page: 1, limit: 20 }),
     enabled: gameSearch.trim().length >= 2,
   });
