@@ -1,0 +1,119 @@
+.root {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.hero {
+  text-align: center;
+  padding: 48px 24px 40px;
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--color-surface) 90%, transparent),
+    color-mix(in oklab, var(--color-bg) 95%, transparent)
+  );
+  box-shadow: var(--shadow);
+  margin-bottom: 40px;
+}
+
+.heroTitle {
+  font-family: var(--heading);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+  color: var(--color-text);
+}
+
+.heroAccent {
+  color: var(--color-accent);
+}
+
+.lede {
+  max-width: 36rem;
+  margin: 0 auto 24px;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.primaryCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 70%, #000);
+  box-shadow: 0 0 20px color-mix(in oklab, var(--color-accent) 35%, transparent);
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+}
+
+.primaryCta:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.secondaryCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.secondaryCta:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.feature {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 85%, transparent);
+}
+
+.feature h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-family: var(--heading);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.feature p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
