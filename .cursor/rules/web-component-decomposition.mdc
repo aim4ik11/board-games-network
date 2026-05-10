@@ -1,0 +1,39 @@
+---
+description: Keep React components small and composable
+globs: "apps/web/src/**/*.tsx"
+alwaysApply: false
+---
+
+# Web Component Decomposition
+
+## Page file layout (all routes)
+
+Every route page lives under its own directory, not as a loose `*-page.tsx` in `pages/`:
+
+- `apps/web/src/pages/<route-folder>/<name>-page.tsx` — route component (e.g. `home/home-page.tsx`, `game-detail/game-detail-page.tsx`).
+- `apps/web/src/pages/<route-folder>/<name>-page.module.scss` — styles for that page shell.
+- Optional `apps/web/src/pages/<route-folder>/components/<piece>/<piece>.tsx` + `<piece>.module.scss` when the page is split (see games list).
+
+Import app code from the page file with `../../api`, `../../lib`, etc. Router imports use `./pages/<route-folder>/<name>-page`.
+
+Prefer small components scoped to one UI responsibility (for example: `filters-panel`, `game-card`, `pagination`).
+
+When a file starts mixing search/filter logic, card rendering, and toolbar/layout code, extract focused components before adding new behavior.
+
+Aim for composition over deeply nested JSX in one file:
+
+- Keep container/route components focused on data loading, URL state, and orchestration.
+- Move presentational sections into dedicated components with typed props.
+- Extract reusable interactions (dropdowns, sliders, segmented controls) into `components/ui` or feature-level components.
+
+Favor reuse over duplication:
+
+- Reuse existing components and style tokens before creating new variants.
+- When two routes share the same pattern, extract a common component/hook instead of copy-pasting.
+
+Keep extracted components close to feature usage:
+
+- One folder per route under `apps/web/src/pages/<route-name>/`: the page entry file (for example `games-list-page.tsx`), its page shell `*.module.scss` (layout, route chrome), and a `components/` folder for pieces used only on that page.
+- Co-locate styles with each page-local component: one folder per component, for example `components/catalog-game-card/catalog-game-card.tsx` + `catalog-game-card.module.scss` (same basename). Only styles that truly belong to the route shell stay on the page SCSS module.
+- Highly reusable, design-system style pieces belong in `apps/web/src/components/ui/` (or other shared `components/` subtrees when used across multiple features).
+- Promote a page-local component to shared `components/` only when a second feature needs it.
