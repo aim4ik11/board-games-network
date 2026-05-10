@@ -72,21 +72,30 @@ export type ResetPasswordPayload = {
 
 // --- Games ---
 
+export type GameGenreRef = {
+  slug: string;
+  name: string;
+};
+
 export type GameListItem = {
   id: string;
   slug: string;
   title: string;
+  description: string | null;
   yearPublished: number | null;
   minPlayers: number | null;
   maxPlayers: number | null;
   playTimeMin: number | null;
+  playTimeMax: number | null;
+  /** BGG-style weight / complexity (about 1–5). */
+  complexity: number | null;
+  genres: GameGenreRef[];
   imageUrl: string | null;
 };
 
 export type GamesListResponse = PaginatedResponse<GameListItem>;
 
 export type GameDetail = GameListItem & {
-  description: string | null;
   externalId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -104,6 +113,7 @@ export type GameReviewAuthor = {
 export type GameReview = {
   id: string;
   body: string;
+  imageUrls: string[];
   createdAt: string;
   updatedAt: string;
   user: GameReviewAuthor;
@@ -114,16 +124,25 @@ export type GameReviewsListResponse = PaginatedResponse<GameReview>;
 /** JSON body for POST /games/:slug/reviews */
 export type CreateGameReviewPayload = {
   body: string;
+  imageUrls?: string[];
 };
 
 /** JSON body for PATCH /games/:slug/reviews */
 export type UpdateGameReviewPayload = {
   body: string;
+  imageUrls?: string[];
 };
 
 /** JSON body for PUT /games/:slug/ratings (score 1..5) */
 export type UpsertGameRatingPayload = {
   score: number;
+};
+
+export type UploadedMedia = {
+  key: string;
+  url: string;
+  contentType: string;
+  sizeBytes: number;
 };
 
 // --- Collection ---

@@ -108,6 +108,23 @@ model PasswordResetToken {
   @@index([expiresAt])
 }
 
+model GameGenre {
+  id    String @id @default(cuid())
+  slug  String @unique
+  name  String
+  games BoardGameGenre[]
+}
+
+model BoardGameGenre {
+  gameId  String
+  genreId String
+  game    BoardGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  genre   GameGenre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, genreId])
+  @@index([genreId])
+}
+
 model BoardGame {
   id            String   @id @default(cuid())
   slug          String   @unique
@@ -117,11 +134,15 @@ model BoardGame {
   minPlayers    Int?
   maxPlayers    Int?
   playTimeMin   Int?
+  playTimeMax   Int?
+  /// BGG-style weight / complexity, typically 1–5.
+  complexity    Float?
   imageUrl      String?
   externalId    String?  @unique
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  genres       BoardGameGenre[]
   reviews      Review[]
   ratings      Rating[]
   userGames    UserGame[]
@@ -133,6 +154,7 @@ model Review {
   userId    String
   gameId    String
   body      String
+  imageUrls String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

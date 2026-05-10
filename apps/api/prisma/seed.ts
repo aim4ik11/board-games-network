@@ -28,6 +28,35 @@ type DatasetRow = {
   NumUserRatings?: string;
 };
 
+const GAME_GENRES_SEED = [
+  { slug: 'strategy', name: 'Strategy' },
+  { slug: 'thematic', name: 'Thematic' },
+  { slug: 'family', name: 'Family' },
+  { slug: 'scifi', name: 'Sci-Fi' },
+  { slug: 'fantasy', name: 'Fantasy' },
+  { slug: 'engine', name: 'Engine Building' },
+] as const;
+
+/** Matches demo slugs in `games` fallback list — enriches DB for filters. */
+const FALLBACK_GAME_META: Record<
+  string,
+  { genreSlugs: string[]; complexity: number; playTimeMax: number }
+> = {
+  wingspan: { genreSlugs: ['engine', 'family'], complexity: 2.46, playTimeMax: 90 },
+  'terraforming-mars': {
+    genreSlugs: ['strategy', 'scifi'],
+    complexity: 3.24,
+    playTimeMax: 180,
+  },
+  azul: { genreSlugs: ['family'], complexity: 0.96, playTimeMax: 60 },
+  catan: { genreSlugs: ['family', 'strategy'], complexity: 2.3, playTimeMax: 120 },
+  'spirit-island': {
+    genreSlugs: ['thematic', 'strategy'],
+    complexity: 4.06,
+    playTimeMax: 180,
+  },
+};
+
 const games = [
   {
     slug: 'wingspan',
@@ -118,6 +147,48 @@ function truncate(text: string, maxLength: number): string {
     return text;
   }
   return `${text.slice(0, maxLength - 3)}...`;
+}
+
+async function seedGameGenres() {
+  for (const row of GAME_GENRES_SEED) {
+    await prisma.gameGenre.upsert({
+      where: { slug: row.slug },
+      create: { slug: row.slug, name: row.name },
+      update: { name: row.name },
+    });
+  }
+  console.log(`Seeded ${GAME_GENRES_SEED.length} game genres.`);
+}
+
+async function applyFallbackGameMetadata() {
+  for (const [slug, meta] of Object.entries(FALLBACK_GAME_META)) {
+    const game = await prisma.boardGame.findUnique({ where: { slug } });
+    if (!game) {
+      continue;
+    }
+    await prisma.boardGameGenre.deleteMany({ where: { gameId: game.id } });
+    for (const genreSlug of meta.genreSlugs) {
+      const genre = await prisma.gameGenre.findUnique({
+        where: { slug: genreSlug },
+      });
+      if (!genre) {
+        continue;
+      }
+      await prisma.boardGameGenre.create({
+        data: { gameId: game.id, genreId: genre.id },
+      });
+    }
+    await prisma.boardGame.update({
+      where: { id: game.id },
+      data: {
+        complexity: meta.complexity,
+        playTimeMax: meta.playTimeMax,
+      },
+    });
+  }
+  console.log(
+    'Linked genres and complexity for demo games when those slugs exist.',
+  );
 }
 
 async function seedFallbackGames() {
@@ -235,6 +306,12 @@ function buildSeedRows(rows: DatasetRow[]) {
     }
     usedSlugs.add(slug);
 
+    const com = parseNumber(row.ComMinPlaytime);
+    const mfg = parseNumber(row.MfgPlaytime);
+    const playTimeMin = com ?? mfg;
+    const playTimeMax =
+      mfg != null && (playTimeMin == null || mfg !== playTimeMin) ? mfg : null;
+
     return {
       slug,
       title,
@@ -242,8 +319,8 @@ function buildSeedRows(rows: DatasetRow[]) {
       yearPublished: parseNumber(row.YearPublished),
       minPlayers: parseNumber(row.MinPlayers),
       maxPlayers: parseNumber(row.MaxPlayers),
-      playTimeMin:
-        parseNumber(row.ComMinPlaytime) ?? parseNumber(row.MfgPlaytime),
+      playTimeMin,
+      playTimeMax,
       imageUrl: row.ImagePath?.trim() || null,
       externalId,
     };
@@ -259,6 +336,7 @@ async function upsertImportedGames(
     minPlayers: number | null;
     maxPlayers: number | null;
     playTimeMin: number | null;
+    playTimeMax: number | null;
     imageUrl: string | null;
     externalId: string;
   }>,
@@ -275,6 +353,7 @@ async function upsertImportedGames(
         minPlayers: row.minPlayers,
         maxPlayers: row.maxPlayers,
         playTimeMin: row.playTimeMin,
+        playTimeMax: row.playTimeMax,
         imageUrl: row.imageUrl,
         slug: row.slug,
       },
@@ -383,6 +462,7 @@ async function seedPlayers() {
 
 async function main() {
   await seedPlayers();
+  await seedGameGenres();
   const strict = process.env.BOARDGAMES_DATASET_STRICT === '1';
   try {
     const csvText = await readDatasetCsvText();
@@ -405,6 +485,7 @@ async function main() {
     );
     await seedFallbackGames();
   }
+  await applyFallbackGameMetadata();
 }
 
 main()
