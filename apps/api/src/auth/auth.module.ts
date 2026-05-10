@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { MediaModule } from '../media/media.module';
 import { AuthApplicationService } from './application/auth.application.service';
 import { WsSocketAuthService } from './application/ws-socket-auth.service';
 import { BcryptPasswordHasher } from './infrastructure/crypto/bcrypt-password-hasher';
@@ -18,6 +19,7 @@ import { UsersController } from './presentation/http/users.controller';
 
 @Module({
   imports: [
+    MediaModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

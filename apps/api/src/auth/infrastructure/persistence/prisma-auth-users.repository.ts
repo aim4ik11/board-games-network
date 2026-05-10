@@ -67,12 +67,14 @@ export class PrismaAuthUsersRepository {
     email: string;
     passwordHash: string;
     displayName: string;
+    avatarUrl?: string | null;
   }): Promise<AuthUser> {
     const user = await this.prismaService.user.create({
       data: {
         email: data.email,
         passwordHash: data.passwordHash,
         displayName: data.displayName,
+        ...(data.avatarUrl !== undefined && { avatarUrl: data.avatarUrl }),
       },
       select: publicSelect,
     });

@@ -15,6 +15,7 @@ import { JwtAccessTokenIssuer } from '../infrastructure/jwt/jwt-access-token-iss
 import { PrismaAuthSessionsRepository } from '../infrastructure/persistence/prisma-auth-sessions.repository';
 import { PrismaAuthUsersRepository } from '../infrastructure/persistence/prisma-auth-users.repository';
 import { RefreshTokenService } from '../infrastructure/tokens/refresh-token.service';
+import { MediaApplicationService } from '../../media/application/media.application.service';
 
 export type RegisterUserProps = {
   email: string;
@@ -49,6 +50,7 @@ export class AuthApplicationService {
     private readonly passwordHasher: BcryptPasswordHasher,
     private readonly accessTokenIssuer: JwtAccessTokenIssuer,
     private readonly refreshTokenService: RefreshTokenService,
+    private readonly mediaApplicationService: MediaApplicationService,
   ) {}
 
   async register(props: RegisterUserProps, requestMeta: AuthRequestMeta) {
@@ -58,10 +60,12 @@ export class AuthApplicationService {
       throw new ConflictException('Email already registered');
     }
     const passwordHash = await this.passwordHasher.hash(props.password);
+    const avatarUrl = this.mediaApplicationService.getDefaultAvatarUrl(email);
     const user = await this.authUsersRepository.createRegisteredUser({
       email,
       passwordHash,
       displayName: props.displayName.trim(),
+      avatarUrl,
     });
     return this.createLoginResponse(user, requestMeta);
   }
@@ -93,17 +97,24 @@ export class AuthApplicationService {
     requestMeta: AuthRequestMeta,
   ) {
     const email = props.email.toLowerCase();
+    const normalizedGoogleAvatarUrl = this.normalizeGoogleAvatarUrl(
+      props.avatarUrl,
+    );
     let user = await this.authUsersRepository.findByGoogleId(props.googleId);
-    if (user && props.avatarUrl && user.avatarUrl !== props.avatarUrl) {
+    if (
+      user &&
+      normalizedGoogleAvatarUrl &&
+      user.avatarUrl !== normalizedGoogleAvatarUrl
+    ) {
       user = await this.authUsersRepository.updateProfile(user.id, {
-        avatarUrl: props.avatarUrl,
+        avatarUrl: normalizedGoogleAvatarUrl,
       });
     }
     if (!user) {
       user = await this.authUsersRepository.linkGoogleAccountByEmail({
         email,
         googleId: props.googleId,
-        avatarUrl: props.avatarUrl,
+        avatarUrl: normalizedGoogleAvatarUrl,
       });
     }
     if (!user) {
@@ -114,7 +125,9 @@ export class AuthApplicationService {
         email,
         googleId: props.googleId,
         displayName: props.displayName.trim() || 'Player',
-        avatarUrl: props.avatarUrl,
+        avatarUrl:
+          normalizedGoogleAvatarUrl ??
+          this.mediaApplicationService.getDefaultAvatarUrl(email),
         passwordHash,
       });
     }
@@ -336,5 +349,31 @@ export class AuthApplicationService {
       return null;
     }
     return { tokenId, tokenSecret };
+  }
+
+  private normalizeGoogleAvatarUrl(url: string | null): string | null {
+    if (!url) {
+      return null;
+    }
+    const trimmed = url.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+    const withProtocol = trimmed.startsWith('//')
+      ? `https:${trimmed}`
+      : trimmed;
+    try {
+      const parsed = new URL(withProtocol);
+      const isGoogleHost =
+        parsed.hostname.endsWith('googleusercontent.com') ||
+        parsed.hostname.endsWith('ggpht.com');
+      if (!isGoogleHost) {
+        return withProtocol;
+      }
+      parsed.protocol = 'https:';
+      return parsed.toString();
+    } catch {
+      return null;
+    }
   }
 }
