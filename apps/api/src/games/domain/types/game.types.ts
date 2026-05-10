@@ -22,6 +22,10 @@ export type CreateGameProps = {
   minPlayers?: number;
   maxPlayers?: number;
   playTimeMin?: number;
+  playTimeMax?: number;
+  complexity?: number;
+  /** Connect genres by stable slug (must exist). */
+  genreSlugs?: string[];
   imageUrl?: string;
   externalId?: string;
 };
@@ -37,6 +41,7 @@ export type ReviewAuthorSummary = {
 export type ReviewWithAuthorView = {
   id: string;
   body: string;
+  imageUrls: string[];
   createdAt: Date;
   updatedAt: Date;
   user: ReviewAuthorSummary;

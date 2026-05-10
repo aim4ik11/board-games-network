@@ -21,6 +21,15 @@ export function updateGameDtoToPatch(dto: UpdateGameDto): UpdateGamePatch {
   if (dto.playTimeMin !== undefined) {
     patch.playTimeMin = dto.playTimeMin;
   }
+  if (dto.playTimeMax !== undefined) {
+    patch.playTimeMax = dto.playTimeMax;
+  }
+  if (dto.complexity !== undefined) {
+    patch.complexity = dto.complexity;
+  }
+  if (dto.genreSlugs !== undefined) {
+    patch.genreSlugs = dto.genreSlugs.map((s) => s.trim().toLowerCase());
+  }
   if (dto.imageUrl !== undefined) {
     patch.imageUrl = dto.imageUrl;
   }

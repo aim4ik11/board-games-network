@@ -6,6 +6,7 @@ import type { ReviewWithAuthorView } from '../../domain/types/game.types';
 const reviewWithAuthorSelect = {
   id: true,
   body: true,
+  imageUrls: true,
   createdAt: true,
   updatedAt: true,
   user: {
@@ -50,6 +51,7 @@ export class PrismaGameReviewsRepository {
     slug: string;
     userId: string;
     body: string;
+    imageUrls: string[];
   }): Promise<ReviewWithAuthorView | null> {
     return this.prismaService
       .$transaction(async (tx) => {
@@ -65,6 +67,7 @@ export class PrismaGameReviewsRepository {
             gameId: game.id,
             userId: params.userId,
             body: params.body,
+            imageUrls: params.imageUrls,
           },
           select: reviewWithAuthorSelect,
         });
@@ -85,6 +88,7 @@ export class PrismaGameReviewsRepository {
     slug: string;
     userId: string;
     body: string;
+    imageUrls: string[];
   }): Promise<ReviewWithAuthorView | null> {
     return this.prismaService.$transaction(async (tx) => {
       const game = await tx.boardGame.findUnique({
@@ -105,7 +109,7 @@ export class PrismaGameReviewsRepository {
       }
       const row = await tx.review.update({
         where: { id: review.id },
-        data: { body: params.body },
+        data: { body: params.body, imageUrls: params.imageUrls },
         select: reviewWithAuthorSelect,
       });
       return row as ReviewWithAuthorView;

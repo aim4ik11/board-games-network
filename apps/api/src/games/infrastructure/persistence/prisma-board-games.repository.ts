@@ -14,29 +14,73 @@ import {
   boardGameListRowToItem,
 } from './board-game-list.mapper';
 import { prismaBoardGameToRecord } from './board-game-record.mapper';
+import type { ComplexityBandId } from './games-list-query.util';
+import {
+  complexityBandWhere,
+  listGamesOrderBy,
+  playtimeOverlapWhere,
+} from './games-list-query.util';
+
+export type ListGamesRepositoryParams = {
+  titleSearch?: string;
+  genreSlugs?: string[];
+  filterPlayTimeMin?: number;
+  filterPlayTimeMax?: number;
+  complexityBands?: ComplexityBandId[];
+  sort?: 'title' | 'year';
+  sortOrder?: 'asc' | 'desc';
+  skip: number;
+  take: number;
+};
 
 @Injectable()
 export class PrismaBoardGamesRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findPaginatedForList(params: {
-    titleSearch?: string;
-    skip: number;
-    take: number;
-  }): Promise<{ items: GameListItem[]; total: number }> {
-    const where: Prisma.BoardGameWhereInput = params.titleSearch?.trim()
-      ? {
-          title: {
-            contains: params.titleSearch.trim(),
-            mode: 'insensitive',
-          },
-        }
-      : {};
+  async findPaginatedForList(params: ListGamesRepositoryParams): Promise<{
+    items: GameListItem[];
+    total: number;
+  }> {
+    const and: Prisma.BoardGameWhereInput[] = [];
+    if (params.titleSearch?.trim()) {
+      and.push({
+        title: {
+          contains: params.titleSearch.trim(),
+          mode: 'insensitive',
+        },
+      });
+    }
+    if (params.genreSlugs && params.genreSlugs.length > 0) {
+      and.push({
+        genres: {
+          some: { genre: { slug: { in: params.genreSlugs } } },
+        },
+      });
+    }
+    const ptWhere = playtimeOverlapWhere(
+      params.filterPlayTimeMin,
+      params.filterPlayTimeMax,
+    );
+    if (ptWhere) {
+      and.push(ptWhere);
+    }
+    const cxWhere = complexityBandWhere(params.complexityBands ?? []);
+    if (cxWhere) {
+      and.push(cxWhere);
+    }
+
+    const where: Prisma.BoardGameWhereInput =
+      and.length > 0 ? { AND: and } : {};
+
+    const orderBy = listGamesOrderBy(
+      params.sort ?? 'title',
+      params.sortOrder ?? 'asc',
+    );
 
     const [rows, total] = await Promise.all([
       this.prismaService.boardGame.findMany({
         where,
-        orderBy: { title: 'asc' },
+        orderBy,
         skip: params.skip,
         take: params.take,
         select: boardGameListSelect,
@@ -52,6 +96,9 @@ export class PrismaBoardGamesRepository {
   ): Promise<GameDetailWithStats | null> {
     const game = await this.prismaService.boardGame.findUnique({
       where: { slug },
+      include: {
+        genres: { include: { genre: true } },
+      },
     });
     if (!game) {
       return null;
@@ -85,8 +132,21 @@ export class PrismaBoardGamesRepository {
         minPlayers: data.minPlayers,
         maxPlayers: data.maxPlayers,
         playTimeMin: data.playTimeMin,
+        playTimeMax: data.playTimeMax,
+        complexity: data.complexity,
         imageUrl: data.imageUrl,
         externalId: data.externalId,
+        ...(data.genreSlugs &&
+          data.genreSlugs.length > 0 && {
+            genres: {
+              create: data.genreSlugs.map((genreSlug) => ({
+                genre: { connect: { slug: genreSlug } },
+              })),
+            },
+          }),
+      },
+      include: {
+        genres: { include: { genre: true } },
       },
     });
     return prismaBoardGameToRecord(created);
@@ -109,32 +169,54 @@ export class PrismaBoardGamesRepository {
       nextSlug = await this.allocateUniqueSlug(base, existing.id);
     }
 
+    const data: Prisma.BoardGameUpdateInput = {
+      ...(patch.title !== undefined && {
+        title: patch.title,
+        slug: nextSlug,
+      }),
+      ...(patch.description !== undefined && {
+        description: patch.description,
+      }),
+      ...(patch.yearPublished !== undefined && {
+        yearPublished: patch.yearPublished,
+      }),
+      ...(patch.minPlayers !== undefined && {
+        minPlayers: patch.minPlayers,
+      }),
+      ...(patch.maxPlayers !== undefined && {
+        maxPlayers: patch.maxPlayers,
+      }),
+      ...(patch.playTimeMin !== undefined && {
+        playTimeMin: patch.playTimeMin,
+      }),
+      ...(patch.playTimeMax !== undefined && {
+        playTimeMax: patch.playTimeMax,
+      }),
+      ...(patch.complexity !== undefined && {
+        complexity: patch.complexity,
+      }),
+      ...(patch.imageUrl !== undefined && { imageUrl: patch.imageUrl }),
+      ...(patch.externalId !== undefined && {
+        externalId: patch.externalId,
+      }),
+    };
+
+    if (patch.genreSlugs !== undefined) {
+      data.genres = {
+        deleteMany: {},
+        ...(patch.genreSlugs.length > 0 && {
+          create: patch.genreSlugs.map((genreSlug) => ({
+            genre: { connect: { slug: genreSlug } },
+          })),
+        }),
+      };
+    }
+
     const updated = await this.prismaService.boardGame.update({
       where: { id: existing.id },
-      data: {
-        ...(patch.title !== undefined && {
-          title: patch.title,
-          slug: nextSlug,
-        }),
-        ...(patch.description !== undefined && {
-          description: patch.description,
-        }),
-        ...(patch.yearPublished !== undefined && {
-          yearPublished: patch.yearPublished,
-        }),
-        ...(patch.minPlayers !== undefined && {
-          minPlayers: patch.minPlayers,
-        }),
-        ...(patch.maxPlayers !== undefined && {
-          maxPlayers: patch.maxPlayers,
-        }),
-        ...(patch.playTimeMin !== undefined && {
-          playTimeMin: patch.playTimeMin,
-        }),
-        ...(patch.imageUrl !== undefined && { imageUrl: patch.imageUrl }),
-        ...(patch.externalId !== undefined && {
-          externalId: patch.externalId,
-        }),
+      data,
+      include: {
+        genres: { include: { genre: true } },
       },
     });
     return prismaBoardGameToRecord(updated);

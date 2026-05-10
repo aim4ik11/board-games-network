@@ -1,7 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   IsUrl,
@@ -55,6 +57,34 @@ export class CreateGameDto {
   @Min(1)
   @Max(10000)
   playTimeMin?: number;
+
+  @ApiPropertyOptional({ description: 'Upper typical play time in minutes' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  playTimeMax?: number;
+
+  @ApiPropertyOptional({
+    description: 'BGG-style complexity / weight (about 1–5)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(5)
+  complexity?: number;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Genre slugs to attach (must exist)',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(64, { each: true })
+  genreSlugs?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()

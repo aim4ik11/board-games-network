@@ -14,11 +14,23 @@ import {
   DuplicateGameReviewError,
   PrismaGameReviewsRepository,
 } from '../infrastructure/persistence/prisma-game-reviews.repository';
+import {
+  parseComplexityBands,
+  parseGenreSlugs,
+} from '../infrastructure/persistence/games-list-query.util';
 
 export type ListGamesParams = {
   titleSearch?: string;
   page: number;
   limit: number;
+  /** Raw comma-separated genre slugs from query string. */
+  genres?: string;
+  filterPlayTimeMin?: number;
+  filterPlayTimeMax?: number;
+  /** Raw comma-separated complexity band ids (light, medium, heavy, expert). */
+  complexity?: string;
+  sort?: 'title' | 'year';
+  sortOrder?: 'asc' | 'desc';
 };
 
 export type ListReviewsParams = {
@@ -37,9 +49,18 @@ export class GamesApplicationService {
 
   async listGames(query: ListGamesParams) {
     const skip = (query.page - 1) * query.limit;
+    const genreSlugs = parseGenreSlugs(query.genres);
+    const complexityBands = parseComplexityBands(query.complexity);
     const { items, total } =
       await this.boardGamesRepository.findPaginatedForList({
         titleSearch: query.titleSearch,
+        genreSlugs: genreSlugs.length > 0 ? genreSlugs : undefined,
+        filterPlayTimeMin: query.filterPlayTimeMin,
+        filterPlayTimeMax: query.filterPlayTimeMax,
+        complexityBands:
+          complexityBands.length > 0 ? complexityBands : undefined,
+        sort: query.sort,
+        sortOrder: query.sortOrder ?? 'asc',
         skip,
         take: query.limit,
       });
@@ -99,12 +120,18 @@ export class GamesApplicationService {
     };
   }
 
-  async createReview(slug: string, user: AuthUser, body: string) {
+  async createReview(
+    slug: string,
+    user: AuthUser,
+    body: string,
+    imageUrls: string[],
+  ) {
     try {
       const row = await this.gameReviewsRepository.createReviewByGameSlug({
         slug,
         userId: user.id,
         body,
+        imageUrls,
       });
       if (!row) {
         throw new NotFoundException('Game not found');
@@ -118,11 +145,17 @@ export class GamesApplicationService {
     }
   }
 
-  async updateReview(slug: string, user: AuthUser, body: string) {
+  async updateReview(
+    slug: string,
+    user: AuthUser,
+    body: string,
+    imageUrls: string[],
+  ) {
     const row = await this.gameReviewsRepository.updateReviewByGameSlug({
       slug,
       userId: user.id,
       body,
+      imageUrls,
     });
     if (!row) {
       throw new NotFoundException('Game or review not found');

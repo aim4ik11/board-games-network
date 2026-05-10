@@ -36,6 +36,12 @@ export class GamesController {
       titleSearch: query.q,
       page: query.page ?? 1,
       limit: query.limit ?? 20,
+      genres: query.genres,
+      filterPlayTimeMin: query.ptMin,
+      filterPlayTimeMax: query.ptMax,
+      complexity: query.complexity,
+      sort: query.sort,
+      sortOrder: query.order ?? 'asc',
     });
   }
 
@@ -58,6 +64,9 @@ export class GamesController {
       minPlayers: dto.minPlayers,
       maxPlayers: dto.maxPlayers,
       playTimeMin: dto.playTimeMin,
+      playTimeMax: dto.playTimeMax,
+      complexity: dto.complexity,
+      genreSlugs: dto.genreSlugs?.map((s) => s.trim().toLowerCase()),
       imageUrl: dto.imageUrl,
       externalId: dto.externalId,
     });

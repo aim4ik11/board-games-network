@@ -54,6 +54,7 @@ export class GameReviewsController {
       slug,
       user,
       dto.body.trim(),
+      (dto.imageUrls ?? []).map((url) => url.trim()),
     );
   }
 
@@ -70,6 +71,7 @@ export class GameReviewsController {
       slug,
       user,
       dto.body.trim(),
+      (dto.imageUrls ?? []).map((url) => url.trim()),
     );
   }
 
