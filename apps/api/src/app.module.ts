@@ -11,6 +11,7 @@ import { CollectionsModule } from './collections/collections.module';
 import { FriendsModule } from './friends/friends.module';
 import { GamesModule } from './games/games.module';
 import { MeetupsModule } from './meetups/meetups.module';
+import { MediaModule } from './media/media.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -29,6 +30,7 @@ import { PrismaModule } from './prisma/prisma.module';
     FriendsModule,
     ChatModule,
     MeetupsModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [
