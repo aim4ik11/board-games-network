@@ -1,3 +1,5 @@
+import styles from './button.module.scss';
+
 export type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'icon';
 export type ButtonSize = 'md' | 'sm';
 
@@ -10,9 +12,18 @@ export function buttonClassName({
   variant = 'primary',
   size = 'md',
 }: ButtonClassOptions = {}): string {
-  const classes = ['ui-button', `ui-button--${variant}`];
-  if (size !== 'md') {
-    classes.push(`ui-button--${size}`);
+  const parts = [styles.root];
+  if (variant === 'ghost') {
+    parts.push(styles.ghost);
   }
-  return classes.join(' ');
+  if (variant === 'danger') {
+    parts.push(styles.danger);
+  }
+  if (variant === 'icon') {
+    parts.push(styles.icon);
+  }
+  if (size === 'sm') {
+    parts.push(styles.sm);
+  }
+  return parts.join(' ');
 }

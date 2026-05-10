@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './button';
+import styles from './modal.module.scss';
 
 type ModalProps = {
   isOpen: boolean;
@@ -30,20 +31,20 @@ export function Modal({ isOpen, title, onClose, children }: ModalProps) {
   }
 
   return (
-    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+    <div className={styles.backdrop} role="presentation" onClick={onClose}>
       <div
-        className="modal-panel"
+        className={styles.panel}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2>{title}</h2>
+        <div className={styles.header}>
+          <h2 className={styles.title}>{title}</h2>
           <Button
             type="button"
             variant="icon"
-            className="modal-close"
+            className={styles.close}
             onClick={onClose}
             aria-label="Close"
           >

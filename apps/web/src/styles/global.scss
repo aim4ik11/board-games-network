@@ -1,0 +1,135 @@
+@use './themes';
+
+html {
+  font: 16px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background:
+    radial-gradient(
+      1200px 600px at 20% -10%,
+      rgba(255, 139, 61, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px 500px at 50% 0%,
+      rgba(67, 164, 255, 0.06),
+      transparent 55%
+    ),
+    var(--bg);
+}
+
+#root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+body.chat-route-active {
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+// --- Shared utilities (until fully moved into route modules) ---
+
+.page h1 {
+  font-family: var(--heading);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--text-h);
+}
+
+h2 {
+  font-family: var(--heading);
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  margin: 0 0 8px;
+}
+
+.page.narrow {
+  max-width: 420px;
+}
+
+.lede {
+  font-size: 1.05rem;
+  margin-bottom: 16px;
+  max-width: 42rem;
+}
+
+.muted {
+  color: var(--text);
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.text-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: var(--text-h);
+}

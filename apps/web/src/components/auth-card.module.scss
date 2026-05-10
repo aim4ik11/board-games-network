@@ -1,0 +1,36 @@
+.card {
+  width: min(100%, 520px);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+  padding: 22px 22px 20px;
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  margin-top: 0;
+  text-align: center;
+  font-family: var(--heading);
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+}
+
+.formSlot {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  min-height: 260px;
+}
+
+.formSlot :global(.stack-form) {
+  width: 100%;
+}
+
+.tabsNav {
+  margin-bottom: 18px;
+}

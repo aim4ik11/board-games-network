@@ -1,0 +1,90 @@
+.root {
+  font: inherit;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  cursor: pointer;
+  transition:
+    filter 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1;
+  text-align: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.root:hover:not(:disabled) {
+  filter: brightness(1.08);
+  background: color-mix(
+    in oklab,
+    var(--accent-bg) 82%,
+    rgba(255, 255, 255, 0.18)
+  );
+  border-color: color-mix(in oklab, var(--accent-border) 85%, var(--accent));
+}
+
+.root:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ghost {
+  background: transparent;
+}
+
+.ghost:hover:not(:disabled) {
+  background: color-mix(
+    in oklab,
+    var(--accent-bg) 92%,
+    rgba(255, 255, 255, 0.08)
+  );
+}
+
+.danger {
+  border-color: rgba(185, 28, 28, 0.45);
+  background: rgba(185, 28, 28, 0.08);
+}
+
+.danger:hover:not(:disabled) {
+  background: rgba(185, 28, 28, 0.18);
+  border-color: rgba(185, 28, 28, 0.6);
+}
+
+.sm {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+.icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  padding: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.icon:hover:not(:disabled) {
+  filter: none;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+html[data-theme='light'] .danger {
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+html[data-theme='light'] .danger:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: rgba(220, 38, 38, 0.55);
+}

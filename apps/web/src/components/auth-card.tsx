@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { loginRequest, registerRequest } from '../api/auth';
 import { ApiError, getApiBaseUrl } from '../lib/api';
 import { useAuth } from '../lib/use-auth';
+import styles from './auth-card.module.scss';
+import seg from './ui/segmented.module.scss';
 
 export type AuthMode = 'login' | 'register';
 
@@ -36,26 +38,31 @@ export function AuthCard({
   });
 
   return (
-    <div className="auth-card">
-      <h1>{isRegister ? 'Create an account' : 'Sign in'}</h1>
-      <nav className="segmented auth-tabs">
+    <div className={`auth-card ${styles.card}`}>
+      <h1 className={styles.title}>
+        {isRegister ? 'Create an account' : 'Sign in'}
+      </h1>
+      <nav
+        className={`${seg.root} ${seg.centered} ${styles.tabsNav}`}
+        aria-label="Authentication mode"
+      >
         <button
           type="button"
-          className={!isRegister ? 'active' : undefined}
+          className={!isRegister ? seg.tabActive : seg.tab}
           onClick={() => onModeChange('login')}
         >
           Sign in
         </button>
         <button
           type="button"
-          className={isRegister ? 'active' : undefined}
+          className={isRegister ? seg.tabActive : seg.tab}
           onClick={() => onModeChange('register')}
         >
           Register
         </button>
       </nav>
 
-      <div className="auth-form-slot">
+      <div className={`auth-form-slot ${styles.formSlot}`}>
         {isRegister ? (
           <form
             key="register-form"
@@ -172,7 +179,7 @@ export function AuthCard({
             </button>
             <button
               type="button"
-              className="button button-ghost"
+              className="button ghost"
               onClick={() => {
                 window.location.href = `${getApiBaseUrl()}/auth/google`;
               }}

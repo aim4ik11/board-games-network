@@ -8,20 +8,25 @@ import {
 import { RootLayout } from './components/root-layout';
 import { setPendingAuthModal } from './lib/auth-modal-intent';
 import { getAccessToken, waitForAuthBootstrap } from './lib/auth-session';
-import { gamesListSearchDefault } from './lib/games-route-defaults';
-import { CollectionPage } from './pages/collection-page';
-import { FriendsPage } from './pages/friends-page';
-import { MessagesListPage } from './pages/messages-list-page';
-import { MessagesThreadPage } from './pages/messages-thread-page';
-import { GameDetailPage } from './pages/game-detail-page';
-import { GamesListPage } from './pages/games-list-page';
-import { MeetupDetailPage } from './pages/meetup-detail-page';
-import { MeetupEditPage } from './pages/meetup-edit-page';
-import { MeetupInvitePage } from './pages/meetup-invite-page';
-import { MeetupNewPage } from './pages/meetup-new-page';
-import { MeetupsListPage } from './pages/meetups-list-page';
-import { ProfilePage } from './pages/profile-page';
-import { PublicUserPage } from './pages/public-user-page';
+import {
+  gamesListSearchDefault,
+  parseGamesListSearch,
+} from './lib/games-route-defaults';
+import { CollectionPage } from './pages/collection/collection-page';
+import { FriendsPage } from './pages/friends/friends-page';
+import { MessagesListPage } from './pages/messages-list/messages-list-page';
+import { MessagesThreadPage } from './pages/messages-thread/messages-thread-page';
+import { GameDetailPage } from './pages/game-detail/game-detail-page';
+import { GamesListPage } from './pages/games-list/games-list-page';
+import { MeetupDetailPage } from './pages/meetup-detail/meetup-detail-page';
+import { MeetupEditPage } from './pages/meetup-edit/meetup-edit-page';
+import { MeetupInvitePage } from './pages/meetup-invite/meetup-invite-page';
+import { MeetupNewPage } from './pages/meetup-new/meetup-new-page';
+import { MeetupsListPage } from './pages/meetups-list/meetups-list-page';
+import { HomePage } from './pages/home/home-page';
+import { ProfilePage } from './pages/profile/profile-page';
+import { PublicUserPage } from './pages/public-user/public-user-page';
+import { SettingsPage } from './pages/settings/settings-page';
 
 type CollectionTab = (typeof COLLECTION_STATUSES)[number];
 
@@ -67,18 +72,17 @@ const indexRoute = createRoute({
   },
 });
 
+const homeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/home',
+  component: HomePage,
+});
+
 const gamesListRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/games',
-  validateSearch: (raw: Record<string, unknown>) => ({
-    q: typeof raw.q === 'string' ? raw.q : '',
-    page:
-      typeof raw.page === 'string'
-        ? Math.max(1, Number.parseInt(raw.page, 10) || 1)
-        : typeof raw.page === 'number' && Number.isFinite(raw.page)
-          ? Math.max(1, raw.page)
-          : 1,
-  }),
+  validateSearch: (raw: Record<string, unknown>) =>
+    parseGamesListSearch(raw),
   component: GamesListPage,
 });
 
@@ -103,6 +107,13 @@ const profileRoute = createRoute({
   path: '/profile',
   beforeLoad: () => requireAuthOrRedirect(),
   component: ProfilePage,
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  beforeLoad: () => requireAuthOrRedirect(),
+  component: SettingsPage,
 });
 
 const publicUserRoute = createRoute({
@@ -189,10 +200,12 @@ const friendsRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  homeRoute,
   gamesListRoute,
   gameDetailRoute,
   collectionRoute,
   profileRoute,
+  settingsRoute,
   publicUserRoute,
   friendsRoute,
   meetupsListRoute,

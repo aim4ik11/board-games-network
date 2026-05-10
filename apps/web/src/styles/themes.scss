@@ -1,0 +1,69 @@
+// Theme tokens: hub dark (UX Pilot) default; light namespace for future toggle.
+
+html {
+  color-scheme: dark;
+}
+
+html,
+html[data-theme='dark'],
+html:not([data-theme]) {
+  // Canonical palette — Game Hub
+  --color-bg: #0c0e15;
+  --color-surface: #1b1f29;
+  --color-surface-hover: #2a303c;
+  --color-accent: #ff8b3d;
+  --color-accent-hover: #ff9b57;
+  --color-text: #ffffff;
+  --color-text-muted: #8a92a6;
+  --color-border: #2a303c;
+  --color-success: #22c55e;
+  --color-warning: #ffcd00;
+  --color-danger: #ff5733;
+
+  // Legacy aliases (existing app + gradual migration)
+  --text: var(--color-text-muted);
+  --text-h: var(--color-text);
+  --bg: var(--color-bg);
+  --surface: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  --border: var(--color-border);
+  --code-bg: #141820;
+  --accent: var(--color-accent);
+  --accent-bg: rgba(255, 139, 61, 0.12);
+  --accent-border: rgba(255, 139, 61, 0.45);
+  --social-bg: rgba(27, 31, 41, 0.72);
+  --shadow:
+    rgba(0, 0, 0, 0.35) 0 10px 15px -3px,
+    rgba(0, 0, 0, 0.22) 0 4px 6px -2px;
+
+  --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Oswald', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #16a34a;
+  --color-warning: #ca8a04;
+  --color-danger: #dc2626;
+
+  --text: var(--color-text-muted);
+  --text-h: var(--color-text);
+  --bg: var(--color-bg);
+  --surface: rgba(255, 255, 255, 0.94);
+  --code-bg: #f1f5f9;
+  --accent: var(--color-accent);
+  --accent-bg: rgba(37, 99, 235, 0.1);
+  --accent-border: rgba(37, 99, 235, 0.45);
+  --social-bg: rgba(248, 250, 252, 0.95);
+  --shadow:
+    rgba(15, 23, 42, 0.08) 0 10px 15px -3px,
+    rgba(15, 23, 42, 0.05) 0 4px 6px -2px;
+}

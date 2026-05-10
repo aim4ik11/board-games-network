@@ -1,9 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  CalendarDays,
+  Home,
+  Layers,
+  Library,
+  LogOut,
+  MessageCircle,
+  Settings,
+  User,
+  Users,
+} from 'lucide-react';
 import { fetchConversations } from '../api/chat';
-import { fetchMeetups } from '../api/meetups';
 import { AuthCard } from './auth-card';
 import { useAuthMe } from '../hooks/use-auth-me';
 import {
@@ -11,12 +21,13 @@ import {
   OPEN_AUTH_MODAL_EVENT,
   type AuthModalMode,
 } from '../lib/auth-modal-intent';
-import { useAuth } from '../lib/use-auth';
 import { friendsSearchDefault } from '../lib/friends-route-defaults';
-import { meetupsSearchDefault } from '../lib/meetups-route-defaults';
 import { gamesListSearchDefault } from '../lib/games-route-defaults';
+import { meetupsSearchDefault } from '../lib/meetups-route-defaults';
 import { queryKeys } from '../lib/query-keys';
 import { setPendingAuthModal } from '../lib/auth-modal-intent';
+import { useAuth } from '../lib/use-auth';
+import styles from './root-layout.module.scss';
 
 const collectionSearchDefault = { status: 'OWNED' as const };
 
@@ -25,16 +36,36 @@ function isAuthModalEvent(event: Event): event is CustomEvent<AuthModalMode> {
   return detail === 'login' || detail === 'register';
 }
 
-function conversationTitle(
-  c: Awaited<ReturnType<typeof fetchConversations>>[number],
-) {
-  if (c.type === 'DIRECT') {
-    return c.otherUser?.displayName ?? 'Direct chat';
+const navInactive = { className: styles.navItem };
+const navActive = {
+  className: `${styles.navItem} ${styles.navItemActive}`,
+};
+
+function SidebarUserAvatar({
+  avatarUrl,
+  userName,
+}: {
+  avatarUrl: string | null | undefined;
+  userName: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const initial = userName.trim().charAt(0).toUpperCase() || 'P';
+  if (avatarUrl && !failed) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={userName}
+        className={styles.avatar}
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+      />
+    );
   }
-  if (c.type === 'SESSION') {
-    return c.title?.trim() || 'Meetup chat';
-  }
-  return c.title?.trim() || 'Group chat';
+  return (
+    <span className={styles.avatarPlaceholder} aria-hidden>
+      {initial}
+    </span>
+  );
 }
 
 export function RootLayout() {
@@ -42,14 +73,7 @@ export function RootLayout() {
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode | null>(() =>
     consumePendingAuthModal(),
   );
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement | null>(null);
   const me = useAuthMe();
-  const sidebarMeetups = useQuery({
-    queryKey: queryKeys.meetups.sidebarUpcoming(),
-    queryFn: () => fetchMeetups({ page: 1, limit: 5, upcoming: 'true' }),
-    enabled: Boolean(token),
-  });
   const sidebarConversations = useQuery({
     queryKey: queryKeys.chat.sidebarRecent(),
     queryFn: fetchConversations,
@@ -93,6 +117,7 @@ export function RootLayout() {
       '/profile',
       '/messages',
       '/meetups',
+      '/settings',
     ];
     const path = window.location.pathname;
     if (protectedPrefixes.some((prefix) => path.startsWith(prefix))) {
@@ -101,268 +126,198 @@ export function RootLayout() {
     }
   }, [token]);
 
-  useEffect(() => {
-    if (!isUserMenuOpen) {
-      return;
-    }
-    const onPointerDown = (event: MouseEvent) => {
-      if (event.target instanceof Node && !userMenuRef.current?.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsUserMenuOpen(false);
-      }
-    };
-    window.addEventListener('mousedown', onPointerDown);
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('mousedown', onPointerDown);
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [isUserMenuOpen]);
-
   const userName = me.data?.displayName ?? 'Player';
-  const avatarInitial = userName.trim().charAt(0).toUpperCase() || 'P';
+  const chatBadgeCount = token
+    ? (sidebarConversations.data?.length ?? 0)
+    : 0;
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <Link to="/" className="app-brand">
-          Board games
-        </Link>
-        <nav className="app-nav">
-          <Link
-            to="/games"
-            search={gamesListSearchDefault}
-            activeProps={{ className: 'active' }}
-          >
-            Catalog
-          </Link>
-          {token ? (
-            <>
-              <Link
-                to="/meetups"
-                search={meetupsSearchDefault}
-                activeProps={{ className: 'active' }}
-              >
-                Meetups
-              </Link>
-              <Link
-                to="/friends"
-                search={friendsSearchDefault}
-                activeProps={{ className: 'active' }}
-              >
-                Friends
-              </Link>
-              <div className="user-menu" ref={userMenuRef}>
-                <button
-                  type="button"
-                  className="user-menu-trigger"
-                  aria-haspopup="menu"
-                  aria-expanded={isUserMenuOpen}
-                  aria-label="Open user menu"
-                  onClick={() => setIsUserMenuOpen((current) => !current)}
+    <div className={styles.shell}>
+      <aside className={styles.sidebar} aria-label="Main navigation">
+        <div className={styles.brandRow}>
+          <div className={styles.logoMark} aria-hidden>
+            G
+          </div>
+          <span className={styles.brandText}>GAME HUB</span>
+        </div>
+
+        <div className={styles.navScroll}>
+          <div>
+            <h2 className={styles.navSectionLabel}>Menu</h2>
+            <ul className={styles.navList}>
+              <li>
+                <Link
+                  to="/games"
+                  search={gamesListSearchDefault}
+                  inactiveProps={navInactive}
+                  activeProps={navActive}
                 >
-                  {me.data?.avatarUrl ? (
-                    <img
-                      src={me.data.avatarUrl}
-                      alt={userName}
-                      className="user-avatar"
-                    />
-                  ) : (
-                    <span className="user-avatar user-avatar-placeholder">
-                      {avatarInitial}
-                    </span>
-                  )}
-                </button>
-                {isUserMenuOpen && (
-                  <div className="user-menu-panel" role="menu">
-                    <div className="user-menu-head">
-                      <span className="user-menu-name">
-                        {me.isLoading ? 'Loading…' : userName}
-                      </span>
-                      <span className="muted">{me.data?.email}</span>
-                    </div>
-                    <Link
-                      to="/profile"
-                      role="menuitem"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Profile
-                    </Link>
+                  <Library className={styles.navIcon} strokeWidth={2} />
+                  Catalog
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/home"
+                  inactiveProps={navInactive}
+                  activeProps={navActive}
+                >
+                  <Home className={styles.navIcon} strokeWidth={2} />
+                  Home
+                </Link>
+              </li>
+              {token ? (
+                <>
+                  <li>
                     <Link
                       to="/collection"
                       search={collectionSearchDefault}
-                      role="menuitem"
-                      onClick={() => setIsUserMenuOpen(false)}
+                      inactiveProps={navInactive}
+                      activeProps={navActive}
                     >
-                      Collection
+                      <Layers className={styles.navIcon} strokeWidth={2} />
+                      My Collection
                     </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/friends"
+                      search={friendsSearchDefault}
+                      inactiveProps={navInactive}
+                      activeProps={navActive}
+                    >
+                      <Users className={styles.navIcon} strokeWidth={2} />
+                      Friends
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/meetups"
+                      search={meetupsSearchDefault}
+                      inactiveProps={navInactive}
+                      activeProps={navActive}
+                    >
+                      <CalendarDays className={styles.navIcon} strokeWidth={2} />
+                      Meetups
+                    </Link>
+                  </li>
+                  <li>
                     <Link
                       to="/messages"
-                      role="menuitem"
-                      onClick={() => setIsUserMenuOpen(false)}
+                      inactiveProps={navInactive}
+                      activeProps={navActive}
                     >
-                      Messages
+                      <MessageCircle className={styles.navIcon} strokeWidth={2} />
+                      Chat
+                      {chatBadgeCount > 0 ? (
+                        <span className={styles.badge}>{chatBadgeCount}</span>
+                      ) : null}
                     </Link>
-                    <button
-                      type="button"
-                      className="user-menu-signout"
-                      role="menuitem"
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        signOut();
-                      }}
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="link-button"
-              onClick={() => setAuthModalMode('login')}
-            >
-              Sign in
-            </button>
-          )}
-        </nav>
-      </header>
-      <div className="app-body">
-        <aside className="app-aside app-aside-left">
-          <section className="side-card">
-            <h3>Quick links</h3>
-            <nav className="side-list">
-              <Link to="/games" search={gamesListSearchDefault}>
-                Browse catalog
-              </Link>
-              {token ? (
-                <>
-                  <Link to="/meetups" search={meetupsSearchDefault}>
-                    Find meetups
-                  </Link>
-                  <Link to="/friends" search={friendsSearchDefault}>
-                    Discover players
-                  </Link>
-                  <Link to="/messages">Open inbox</Link>
+                  </li>
                 </>
-              ) : (
-                <button
-                  type="button"
-                  className="link-button"
-                  onClick={() => setAuthModalMode('register')}
-                >
-                  Create account
-                </button>
-              )}
-            </nav>
-          </section>
-          <section className="side-card">
-            <h3>Upcoming meetups</h3>
-            {!token && (
-              <p className="muted">
-                Sign in to see meetups relevant to your network.
-              </p>
-            )}
-            {token && sidebarMeetups.isLoading && (
-              <p className="muted">Loading…</p>
-            )}
-            {token && sidebarMeetups.isError && (
-              <p className="muted">Could not load meetups right now.</p>
-            )}
-            {token &&
-              sidebarMeetups.data &&
-              sidebarMeetups.data.data.length === 0 && (
-                <p className="muted">No upcoming meetups yet.</p>
-              )}
-            {token &&
-              sidebarMeetups.data &&
-              sidebarMeetups.data.data.length > 0 && (
-                <ul className="side-feed">
-                  {sidebarMeetups.data.data.map((m) => (
-                    <li key={m.id}>
-                      <Link to="/meetups/$meetupId" params={{ meetupId: m.id }}>
-                        <span className="side-feed-title">{m.title}</span>
-                        <span className="muted">
-                          {new Date(m.scheduledAt).toLocaleDateString()}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-          </section>
-        </aside>
-        <main className="app-main">
+              ) : null}
+            </ul>
+          </div>
+
+          {token ? (
+            <div>
+              <h2 className={styles.navSectionLabel}>Account</h2>
+              <ul className={styles.navList}>
+                <li>
+                  <Link
+                    to="/profile"
+                    inactiveProps={navInactive}
+                    activeProps={navActive}
+                  >
+                    <User className={styles.navIcon} strokeWidth={2} />
+                    User Profile
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/settings"
+                    inactiveProps={navInactive}
+                    activeProps={navActive}
+                  >
+                    <Settings className={styles.navIcon} strokeWidth={2} />
+                    Settings
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          ) : null}
+
+        </div>
+
+        <div className={styles.sidebarFooter}>
+          {token ? (
+            <div className={styles.userRow}>
+              <SidebarUserAvatar
+                key={me.data?.avatarUrl ?? ''}
+                avatarUrl={me.data?.avatarUrl}
+                userName={userName}
+              />
+              <div className={styles.userMeta}>
+                <div className={styles.userName}>
+                  {me.isLoading ? 'Loading…' : userName}
+                </div>
+                <div className={styles.userSub}>
+                  {me.data?.email ?? 'Member'}
+                </div>
+              </div>
+              <button
+                type="button"
+                className={styles.signOut}
+                aria-label="Sign out"
+                onClick={() => signOut()}
+              >
+                <LogOut size={18} strokeWidth={2} />
+              </button>
+            </div>
+          ) : (
+            <div className={styles.guestFooter}>
+              <button
+                type="button"
+                className={styles.signInBtn}
+                onClick={() => setAuthModalMode('login')}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                className={`${styles.navItem} link-button`}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  justifyContent: 'center',
+                }}
+                onClick={() => setAuthModalMode('register')}
+              >
+                Create account
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      <div className={styles.mainColumn}>
+        <div className={styles.ambient} aria-hidden />
+        <main className={styles.main}>
           <Outlet />
         </main>
-        <aside className="app-aside app-aside-right">
-          <section className="side-card">
-            <h3>Recent chats</h3>
-            {!token && (
-              <p className="muted">
-                Sign in to keep your conversations in sync.
-              </p>
-            )}
-            {token && sidebarConversations.isLoading && (
-              <p className="muted">Loading…</p>
-            )}
-            {token && sidebarConversations.isError && (
-              <p className="muted">Could not load chats right now.</p>
-            )}
-            {token &&
-              sidebarConversations.data &&
-              sidebarConversations.data.length === 0 && (
-                <p className="muted">No conversations yet.</p>
-              )}
-            {token &&
-              sidebarConversations.data &&
-              sidebarConversations.data.length > 0 && (
-                <ul className="side-feed">
-                  {sidebarConversations.data.slice(0, 6).map((c) => (
-                    <li key={c.id}>
-                      <Link
-                        to="/messages/$conversationId"
-                        params={{ conversationId: c.id }}
-                      >
-                        <span className="side-feed-title">
-                          {conversationTitle(c)}
-                        </span>
-                        <span className="muted">
-                          {c.lastMessage?.body
-                            ? c.lastMessage.body.slice(0, 48)
-                            : 'No messages yet'}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-          </section>
-          {token && (
-            <section className="side-card">
-              <h3>Your status</h3>
-              <p className="muted">
-                Signed in as <strong>{me.data?.displayName ?? 'player'}</strong>
-              </p>
-            </section>
-          )}
-        </aside>
       </div>
-      {authModalMode && !token &&
+
+      {authModalMode &&
+        !token &&
         createPortal(
           <div
-            className="auth-modal-backdrop"
+            className={styles.authBackdrop}
             role="presentation"
             onClick={() => setAuthModalMode(null)}
           >
             <div
-              className="auth-modal-panel"
+              className={styles.authPanel}
               role="dialog"
               aria-modal="true"
               aria-label="Authentication"
@@ -370,7 +325,7 @@ export function RootLayout() {
             >
               <button
                 type="button"
-                className="auth-modal-close"
+                className={styles.authClose}
                 onClick={() => setAuthModalMode(null)}
                 aria-label="Close authentication modal"
               >

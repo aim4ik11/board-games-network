@@ -1,0 +1,7 @@
+// Compile-time design constants (runtime colors live in themes.scss as CSS variables).
+
+$breakpoint-lg: 1024px;
+$breakpoint-md: 768px;
+$sidebar-width: 240px;
+$z-modal: 80;
+$z-auth-modal: 70;

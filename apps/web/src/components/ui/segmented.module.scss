@@ -1,0 +1,43 @@
+.root {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 80%, transparent);
+}
+
+.tab {
+  font: inherit;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+
+.tab:hover {
+  color: var(--color-text);
+}
+
+.tabActive {
+  font: inherit;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-accent) 16%, transparent);
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.centered {
+  width: fit-content;
+  margin-inline: auto;
+}
