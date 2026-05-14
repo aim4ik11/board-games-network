@@ -1,0 +1,31 @@
+{
+  "titles": [
+    "{gameTitle} open table",
+    "Saturday {gameTitle} night",
+    "Learning {gameTitle} — beginners welcome",
+    "Weekly strategy session",
+    "Friends-only {gameTitle}",
+    "Café game afternoon",
+    "Late-night heavy euro",
+    "Co-op campaign kickoff",
+    "Tournament prep for {gameTitle}",
+    "Bring-your-own-favorite night"
+  ],
+  "locations": [
+    "Tabletop Café — {city}",
+    "Community center room B — {city}",
+    "Host apartment — {city}",
+    "Public library event space — {city}",
+    "Game store play area — {city}",
+    "University board game club — {city}",
+    "Brewpub back room — {city}",
+    "Coworking lounge — {city}"
+  ],
+  "descriptions": [
+    "Casual session with teaching available. Please arrive on time so we can start together.",
+    "Experienced players preferred; we will use the advanced rules where noted.",
+    "Open table — drop in if you are curious about the game.",
+    "Friends meetup with room for one or two more if we know you.",
+    "Long session planned — bring snacks and patience."
+  ]
+}
