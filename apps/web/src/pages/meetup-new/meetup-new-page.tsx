@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { createMeetup, type PlaySessionVisibility } from '../../api/meetups';
 import { MeetupForm } from '../../components/meetup-form';
 import { toDatetimeLocalValue } from '../../lib/datetime-local';
+import { meetupsSearchDefault } from '../../lib/meetups-route-defaults';
 import { queryKeys } from '../../lib/query-keys';
 import styles from './meetup-new-page.module.scss';
 
@@ -32,7 +33,7 @@ export function MeetupNewPage() {
       <p className="back">
         <Link
           to="/meetups"
-          search={{ page: 1, upcoming: 'true' }}
+          search={meetupsSearchDefault}
           className="text-link"
         >
           ← Meetups

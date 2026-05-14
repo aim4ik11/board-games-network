@@ -50,7 +50,7 @@ export const queryKeys = {
   },
   meetups: {
     all: ['meetups'] as const,
-    list: (q: { page: number; upcoming: string }) =>
+    list: (q: Record<string, string | number>) =>
       [...queryKeys.meetups.all, 'list', q] as const,
     detail: (id: string) => [...queryKeys.meetups.all, 'detail', id] as const,
     sidebarUpcoming: () => [...queryKeys.meetups.all, 'sidebar-upcoming'] as const,

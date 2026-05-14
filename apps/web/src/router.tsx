@@ -51,6 +51,30 @@ function parseMeetupsUpcoming(raw: unknown): 'true' | 'false' {
   return raw === 'false' ? 'false' : 'true';
 }
 
+function parseMeetupsView(raw: unknown): 'calendar' | 'list' {
+  return raw === 'list' ? 'list' : 'calendar';
+}
+
+function parseMeetupsWeek(raw: unknown): string {
+  if (typeof raw !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return '';
+  }
+  return raw;
+}
+
+function parseMeetupsVisibility(
+  raw: unknown,
+): 'ALL' | 'PUBLIC' | 'FRIENDS' {
+  if (raw === 'PUBLIC' || raw === 'FRIENDS') {
+    return raw;
+  }
+  return 'ALL';
+}
+
+function parseMeetupsJoined(raw: unknown): '' | 'me' {
+  return raw === 'me' ? 'me' : '';
+}
+
 async function requireAuthOrRedirect(): Promise<void> {
   await waitForAuthBootstrap();
   if (getAccessToken()) {
@@ -147,6 +171,12 @@ const meetupsListRoute = createRoute({
           ? Math.max(1, raw.page)
           : 1,
     upcoming: parseMeetupsUpcoming(raw.upcoming),
+    view: parseMeetupsView(raw.view),
+    week: parseMeetupsWeek(raw.week),
+    gameId: typeof raw.gameId === 'string' ? raw.gameId : '',
+    visibility: parseMeetupsVisibility(raw.visibility),
+    q: typeof raw.q === 'string' ? raw.q.slice(0, 120) : '',
+    joined: parseMeetupsJoined(raw.joined),
   }),
   beforeLoad: () => requireAuthOrRedirect(),
   component: MeetupsListPage,

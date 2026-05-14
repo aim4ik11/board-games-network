@@ -11,6 +11,7 @@ import { UserIdentity } from '../../components/user-identity';
 import { Button, buttonClassName } from '../../components/ui';
 import { useAuthMe } from '../../hooks/use-auth-me';
 import { requestAuthModal } from '../../lib/auth-modal-intent';
+import { meetupsSearchDefault } from '../../lib/meetups-route-defaults';
 import { queryKeys } from '../../lib/query-keys';
 import { useAuth } from '../../lib/use-auth';
 import styles from './meetup-detail-page.module.scss';
@@ -62,7 +63,7 @@ export function MeetupDetailPage() {
         </p>
         <Link
           to="/meetups"
-          search={{ page: 1, upcoming: 'true' }}
+          search={meetupsSearchDefault}
           className="text-link"
         >
           ← Meetups
@@ -85,7 +86,7 @@ export function MeetupDetailPage() {
       <p className="back">
         <Link
           to="/meetups"
-          search={{ page: 1, upcoming: 'true' }}
+          search={meetupsSearchDefault}
           className="text-link"
         >
           ← Meetups

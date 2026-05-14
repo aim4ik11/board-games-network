@@ -1,14 +1,647 @@
+@use '../../styles/tokens' as t;
+
 .page {
-  max-width: 960px;
+  max-width: none;
 }
 
-.head {
+.meetupsRoot {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin: -28px -32px -40px;
+  padding: 0;
+  width: auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .meetupsRoot {
+    margin: -20px -18px -32px;
+  }
+}
+
+.meetupsHeader {
+  position: fixed;
+  top: 0;
+  left: t.$sidebar-width;
+  right: 0;
+  z-index: 30;
+  box-sizing: border-box;
+  height: t.$shell-brand-row-height;
+  min-height: t.$shell-brand-row-height;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 58%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow-x: auto;
+}
+
+@media (max-width: 1024px) {
+  .meetupsHeader {
+    padding: 0 18px;
+  }
+}
+
+.meetupsHeaderSpacer {
+  flex-shrink: 0;
+  height: t.$shell-brand-row-height;
+}
+
+.meetupsBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 32px 40px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .meetupsBody {
+    padding: 0 18px 32px;
+  }
+}
+
+.meetupsHeaderLeft {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.meetupsHeaderKicker {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.headerRule {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.viewToggle {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 85%, transparent);
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.viewToggleBtn,
+.viewToggleActive {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  background: transparent;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+
+.viewToggleBtn:hover {
+  color: var(--color-text);
+}
+
+.viewToggleActive {
+  background: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.meetupsHeaderRight {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.searchPill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  min-width: 200px;
+}
+
+.searchPillIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.searchPill input {
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.875rem;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 12px 7px 36px;
+  border-radius: 10px;
+}
+
+.searchPill input:focus {
+  outline: none;
+}
+
+.searchPill:focus-within {
+  border-color: color-mix(in oklab, var(--color-accent) 55%, var(--color-border));
+}
+
+.createMeetupCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-bg);
+  background: var(--color-accent);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 80%, #000);
+  box-shadow:
+    0 4px 14px color-mix(in oklab, var(--color-accent) 35%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--color-accent) 25%, transparent);
+  transition:
+    filter 0.12s ease,
+    transform 0.12s ease;
+}
+
+.createMeetupCta:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.headerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: border-color 0.12s ease;
+}
+
+.headerAvatar:hover {
+  border-color: var(--color-accent);
+}
+
+.headerAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.headerAvatarPh {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-accent) 22%, var(--color-surface));
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signInHint {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+}
+
+.hub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: 28px;
+  align-items: start;
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 980px) {
+  .hub {
+    grid-template-columns: 1fr;
+  }
+
+  .aside {
+    order: -1;
+    margin: 0;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 981px) {
+  .aside {
+    margin-right: -18px;
+  }
+}
+
+.main {
+  min-width: 0;
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--color-border) 18%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-border) 18%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 40px 40px;
+}
+
+.filtersBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  box-sizing: border-box;
+  width: calc(100% + 64px);
+  margin: 0 -32px 4px;
+  padding: 14px 32px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 52%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+  .filtersBar {
+    width: calc(100% + 36px);
+    margin-left: -18px;
+    margin-right: -18px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
+.filtersIcon {
+  display: flex;
+  color: var(--color-text-muted);
+}
+
+.filtersLabel {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-right: 4px;
+}
+
+.filterSelect {
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  color: var(--color-text);
+}
+
+.timeSeg {
+  display: inline-flex;
+}
+
+.clearLink {
+  margin-left: auto;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--color-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .clearLink {
+    margin-left: 0;
+  }
+}
+
+.calendarToolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
+  padding: 12px 0 14px;
+}
+
+.calendarToolbarPrimary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.calendarToolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.calToolbarBtn {
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.calToolbarBtn:hover {
+  background: color-mix(in oklab, var(--color-surface) 100%, transparent);
+  border-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-border));
+}
+
+.calNavIcon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.calNavIcon:hover {
+  color: var(--color-text);
+  border-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-border));
+}
+
+.calMonthTitle {
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: none;
+  margin: 0;
+  padding-right: 4px;
+}
+
+.calendarScroll {
+  overflow-x: auto;
+  padding-bottom: 12px;
   margin-bottom: 8px;
+}
+
+.calendarShell {
+  min-width: 760px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  background: color-mix(in oklab, var(--color-surface) 55%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.calHeaderGrid {
+  display: grid;
+  grid-template-columns: 56px repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 40%, transparent);
+}
+
+.calCorner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-right: 1px solid var(--color-border);
+}
+
+.calHeaderCell {
+  padding: 10px 6px 12px;
+  text-align: center;
+  border-right: 1px solid var(--color-border);
+}
+
+.calHeaderCell:last-child {
+  border-right: none;
+}
+
+.calHeaderCellToday {
+  background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.calHeaderDow {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.calHeaderCellToday .calHeaderDow {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.calHeaderDateNum {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.calHeaderDateCircle {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.calBody {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.timeGutter {
+  flex-shrink: 0;
+  width: 56px;
+  border-right: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.timeGutterCell {
+  height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 2px 8px 0 0;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+}
+
+.timeGutterCell:last-child {
+  border-bottom: none;
+}
+
+.dayTracks {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.dayTrack {
+  position: relative;
+  border-right: 1px solid var(--color-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 47px,
+    color-mix(in oklab, var(--color-border) 75%, transparent) 47px,
+    color-mix(in oklab, var(--color-border) 75%, transparent) 48px
+  );
+  background-size: 100% 48px;
+}
+
+.dayTrack:last-child {
+  border-right: none;
+}
+
+.dayTrackToday {
+  background-color: color-mix(in oklab, var(--color-accent) 6%, transparent);
+}
+
+.calEvent {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--color-accent) 45%, var(--color-border));
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.calEvent:hover {
+  border-color: color-mix(in oklab, var(--color-accent) 75%, var(--color-border));
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.calEventHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.calEventDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  margin-top: 4px;
+  flex-shrink: 0;
+  background: var(--color-accent);
+}
+
+.calEventTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.calEventTime {
+  font-size: 0.62rem;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+.calEventMeta {
+  margin-top: auto;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-accent);
 }
 
 .meetupCards {
@@ -56,4 +689,263 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-accent);
+}
+
+.aside {
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0;
+  /* Flush under fixed header row: cancel filters strip bottom gap + body right inset. */
+  margin: -4px -32px 0 0;
+  padding: 16px 16px 20px;
+  background: color-mix(in oklab, var(--color-surface) 58%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.miniCal {
+  margin-bottom: 22px;
+}
+
+.miniCalHeadRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.miniCalTitle {
+  font-family: var(--heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  color: var(--color-text);
+  min-width: 0;
+}
+
+.miniCalNav {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.miniCalNavBtn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+
+.miniCalNavBtn:hover {
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-surface-hover) 80%, transparent);
+}
+
+.miniDow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.miniCells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.miniEmpty {
+  min-height: 30px;
+}
+
+.miniDay {
+  border: none;
+  border-radius: 10px;
+  padding: 6px 0;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  background: transparent;
+  color: color-mix(in oklab, var(--color-text) 72%, var(--color-text-muted));
+}
+
+.miniDay:hover {
+  background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  color: var(--color-text);
+}
+
+.miniDayInWeek {
+  background: color-mix(in oklab, var(--color-accent) 14%, transparent);
+  color: var(--color-text);
+}
+
+.miniDayToday {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-accent) 50%, transparent);
+}
+
+.miniDayToday:hover {
+  background: color-mix(in oklab, var(--color-accent) 92%, #fff);
+  color: var(--color-bg);
+}
+
+.upcomingHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.upcomingTitle {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.viewAll {
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--color-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.upcomingList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.upcomingCard {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0;
+  background: color-mix(in oklab, var(--color-bg) 55%, var(--color-surface));
+}
+
+.upcomingCardInner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 12px 14px;
+}
+
+.upcomingDateBadge {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: color-mix(in oklab, #5c3d2e 35%, var(--color-surface));
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, #000);
+}
+
+.upcomingDateBadgeMonth {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--color-text) 75%, var(--color-text-muted));
+  line-height: 1.1;
+}
+
+.upcomingDateBadgeDay {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.upcomingCardMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.upcomingCardTitle {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: var(--color-text);
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.upcomingCardTitle:hover {
+  color: var(--color-accent);
+}
+
+.upcomingMetaRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.upcomingMetaIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  opacity: 0.9;
+}
+
+.upcomingFoot {
+  margin-top: 12px;
+}
+
+.rsvpSecondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-bg) 40%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-text) 28%, var(--color-border));
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease,
+    background 0.12s ease;
+}
+
+.rsvpSecondaryBtn:hover {
+  border-color: color-mix(in oklab, var(--color-accent) 55%, var(--color-border));
+  color: var(--color-accent);
+}
+
+.fine {
+  font-size: 0.82rem;
 }
