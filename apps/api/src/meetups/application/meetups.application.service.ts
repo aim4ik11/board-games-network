@@ -25,20 +25,42 @@ export class MeetupsApplicationService {
     userId?: string;
     status?: PlaySessionStatus;
     upcomingOnly?: boolean;
+    scheduledFrom?: Date;
+    scheduledTo?: Date;
+    gameId?: string;
+    visibilityScope?: 'ALL' | 'PUBLIC' | 'FRIENDS';
+    joinedByUserId?: string;
+    titleContains?: string;
     page: number;
     limit: number;
   }): Promise<{
     data: MeetupListItem[];
     meta: { total: number; page: number; limit: number };
   }> {
-    const scheduledFrom = params.upcomingOnly ? new Date() : undefined;
+    let scheduledFrom: Date | undefined;
+    let scheduledTo: Date | undefined;
+    if (params.scheduledFrom || params.scheduledTo) {
+      scheduledFrom = params.scheduledFrom;
+      scheduledTo = params.scheduledTo;
+    } else if (params.upcomingOnly) {
+      scheduledFrom = new Date();
+    }
     const skip = (params.page - 1) * params.limit;
     const status = params.status ?? 'SCHEDULED';
+    const visibilityScope = params.visibilityScope ?? 'ALL';
+    const titleContains = params.titleContains?.trim() || undefined;
     const { items, total } = params.userId
       ? await this.playSessionsRepository.findManyVisibleToUser({
           userId: params.userId,
           status,
           ...(scheduledFrom ? { scheduledFrom } : {}),
+          ...(scheduledTo ? { scheduledTo } : {}),
+          ...(params.gameId?.trim() ? { gameId: params.gameId.trim() } : {}),
+          visibilityScope,
+          ...(params.joinedByUserId
+            ? { joinedByUserId: params.joinedByUserId }
+            : {}),
+          ...(titleContains ? { titleContains } : {}),
           skip,
           take: params.limit,
         })
@@ -46,6 +68,9 @@ export class MeetupsApplicationService {
           status,
           visibility: 'PUBLIC',
           ...(scheduledFrom ? { scheduledFrom } : {}),
+          ...(scheduledTo ? { scheduledTo } : {}),
+          ...(params.gameId?.trim() ? { gameId: params.gameId.trim() } : {}),
+          ...(titleContains ? { titleContains } : {}),
           skip,
           take: params.limit,
         });

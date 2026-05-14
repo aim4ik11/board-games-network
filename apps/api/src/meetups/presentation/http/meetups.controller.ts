@@ -36,10 +36,20 @@ export class MeetupsController {
   @ApiOperation({ summary: 'List meetups visible to current user' })
   list(@CurrentUser() user: AuthUser, @Query() query: QueryMeetupsDto) {
     const upcomingOnly = query.upcoming !== 'false';
+    const scheduledFrom = query.from ? new Date(query.from) : undefined;
+    const scheduledTo = query.to ? new Date(query.to) : undefined;
     return this.meetupsApplicationService.listMeetups({
       userId: user.id,
       ...(query.status !== undefined ? { status: query.status } : {}),
       upcomingOnly,
+      ...(scheduledFrom ? { scheduledFrom } : {}),
+      ...(scheduledTo ? { scheduledTo } : {}),
+      ...(query.gameId !== undefined ? { gameId: query.gameId } : {}),
+      ...(query.visibility !== undefined
+        ? { visibilityScope: query.visibility }
+        : {}),
+      ...(query.joined === 'me' ? { joinedByUserId: user.id } : {}),
+      ...(query.q !== undefined ? { titleContains: query.q } : {}),
       page: query.page ?? 1,
       limit: query.limit ?? 20,
     });
@@ -50,9 +60,15 @@ export class MeetupsController {
   @ApiOperation({ summary: 'List public meetups only' })
   listPublic(@Query() query: QueryMeetupsDto) {
     const upcomingOnly = query.upcoming !== 'false';
+    const scheduledFrom = query.from ? new Date(query.from) : undefined;
+    const scheduledTo = query.to ? new Date(query.to) : undefined;
     return this.meetupsApplicationService.listMeetups({
       ...(query.status !== undefined ? { status: query.status } : {}),
       upcomingOnly,
+      ...(scheduledFrom ? { scheduledFrom } : {}),
+      ...(scheduledTo ? { scheduledTo } : {}),
+      ...(query.gameId !== undefined ? { gameId: query.gameId } : {}),
+      ...(query.q !== undefined ? { titleContains: query.q } : {}),
       page: query.page ?? 1,
       limit: query.limit ?? 20,
     });

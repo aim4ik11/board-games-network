@@ -49,7 +49,10 @@ export class PrismaPlaySessionsRepository {
   async findManyForList(params: {
     status?: MeetupStatus;
     scheduledFrom?: Date;
+    scheduledTo?: Date;
+    gameId?: string;
     visibility?: MeetupVisibility;
+    titleContains?: string | null;
     skip: number;
     take: number;
   }): Promise<{ items: MeetupListItem[]; total: number }> {
@@ -57,11 +60,27 @@ export class PrismaPlaySessionsRepository {
     if (params.status) {
       where.status = wireStatusToPrisma(params.status);
     }
+    const range: Prisma.DateTimeFilter = {};
     if (params.scheduledFrom) {
-      where.scheduledAt = { gte: params.scheduledFrom };
+      range.gte = params.scheduledFrom;
+    }
+    if (params.scheduledTo) {
+      range.lte = params.scheduledTo;
+    }
+    if (Object.keys(range).length > 0) {
+      where.scheduledAt = range;
     }
     if (params.visibility) {
       where.visibility = wireVisibilityToPrisma(params.visibility);
+    }
+    if (params.gameId) {
+      where.gameId = params.gameId;
+    }
+    if (params.titleContains?.trim()) {
+      where.title = {
+        contains: params.titleContains.trim(),
+        mode: 'insensitive',
+      };
     }
     const [rows, total] = await this.queryList(where, params.skip, params.take);
     const items = rows.map((r) => this.toListItem(r));
@@ -72,10 +91,15 @@ export class PrismaPlaySessionsRepository {
     userId: string;
     status?: MeetupStatus;
     scheduledFrom?: Date;
+    scheduledTo?: Date;
+    gameId?: string;
+    visibilityScope?: 'ALL' | 'PUBLIC' | 'FRIENDS';
+    joinedByUserId?: string;
+    titleContains?: string | null;
     skip: number;
     take: number;
   }): Promise<{ items: MeetupListItem[]; total: number }> {
-    const where: Prisma.PlaySessionWhereInput = {
+    const visibilityOr: Prisma.PlaySessionWhereInput = {
       OR: [
         { visibility: PlaySessionVisibility.PUBLIC },
         { hostId: params.userId },
@@ -108,12 +132,51 @@ export class PrismaPlaySessionsRepository {
         },
       ],
     };
+
+    const andParts: Prisma.PlaySessionWhereInput[] = [visibilityOr];
+
     if (params.status) {
-      where.status = wireStatusToPrisma(params.status);
+      andParts.push({ status: wireStatusToPrisma(params.status) });
     }
+    const range: Prisma.DateTimeFilter = {};
     if (params.scheduledFrom) {
-      where.scheduledAt = { gte: params.scheduledFrom };
+      range.gte = params.scheduledFrom;
     }
+    if (params.scheduledTo) {
+      range.lte = params.scheduledTo;
+    }
+    if (Object.keys(range).length > 0) {
+      andParts.push({ scheduledAt: range });
+    }
+    if (params.gameId) {
+      andParts.push({ gameId: params.gameId });
+    }
+    const scope = params.visibilityScope ?? 'ALL';
+    if (scope === 'PUBLIC') {
+      andParts.push({ visibility: PlaySessionVisibility.PUBLIC });
+    } else if (scope === 'FRIENDS') {
+      andParts.push({ visibility: PlaySessionVisibility.FRIENDS });
+    }
+    if (params.joinedByUserId) {
+      andParts.push({
+        participants: {
+          some: {
+            userId: params.joinedByUserId,
+            status: ParticipantStatus.JOINED,
+          },
+        },
+      });
+    }
+    if (params.titleContains?.trim()) {
+      andParts.push({
+        title: {
+          contains: params.titleContains.trim(),
+          mode: 'insensitive',
+        },
+      });
+    }
+
+    const where: Prisma.PlaySessionWhereInput = { AND: andParts };
     const [rows, total] = await this.queryList(where, params.skip, params.take);
     const items = rows.map((r) => this.toListItem(r));
     return { items, total };
