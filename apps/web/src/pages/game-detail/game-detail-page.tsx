@@ -1,28 +1,29 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRouteApi } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getRouteApi, Link } from '@tanstack/react-router';
+import type { GameDetail } from '@boardgame/shared';
 import {
-  createGameReview,
-  deleteGameReview,
-  fetchGameBySlug,
-  fetchGameReviews,
-  upsertGameRating,
-  updateGameReview,
-} from '../../api/games';
-import { uploadReviewImage } from '../../api/media';
+  Clock,
+  Share2,
+  Star,
+  Users,
+  Weight,
+  ChevronLeft,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { fetchGameBySlug } from '../../api/games';
+import { fetchMeetups } from '../../api/meetups';
 import { GameCollectionActions } from '../../components/game-collection-actions';
 import { Button } from '../../components/ui';
-import { useAuthMe } from '../../hooks/use-auth-me';
-import { requestAuthModal } from '../../lib/auth-modal-intent';
+import { gameBannerGradient } from '../../lib/game-banner-gradient';
 import { queryKeys } from '../../lib/query-keys';
-import { useAuth } from '../../lib/use-auth';
 import modalStyles from '../../components/ui/modal.module.scss';
+import { GameDetailEventsPanel } from './components/game-detail-events-panel/game-detail-events-panel';
+import { GameDetailReviewsPanel } from './components/game-detail-reviews-panel/game-detail-reviews-panel';
 import styles from './game-detail-page.module.scss';
 
 const routeApi = getRouteApi('/games/$slug');
 const MAX_STARS = 5;
-const MAX_REVIEW_IMAGES = 3;
-const MAX_REVIEW_IMAGE_BYTES = 5 * 1024 * 1024;
+type DetailTab = 'overview' | 'reviews' | 'events';
 
 function toFiveStarAverage(score: number | null): number | null {
   if (score == null) {
@@ -31,66 +32,70 @@ function toFiveStarAverage(score: number | null): number | null {
   return Math.min(MAX_STARS, Math.max(0, score));
 }
 
+function formatPlayers(game: GameDetail): string | null {
+  if (game.minPlayers == null && game.maxPlayers == null) {
+    return null;
+  }
+  return `${game.minPlayers ?? '?'}–${game.maxPlayers ?? '?'}`;
+}
+
+function formatPlayTime(game: GameDetail): string | null {
+  if (game.playTimeMin == null && game.playTimeMax == null) {
+    return null;
+  }
+  if (game.playTimeMin != null && game.playTimeMax != null) {
+    return `${game.playTimeMin}–${game.playTimeMax} min`;
+  }
+  if (game.playTimeMax != null) {
+    return `${game.playTimeMax} min`;
+  }
+  return `${game.playTimeMin}+ min`;
+}
+
+function leadDescription(description: string | null): string {
+  if (!description?.trim()) {
+    return 'Discover players, reviews, and meetups for this title.';
+  }
+  const first = description.trim().split(/\n+/)[0] ?? '';
+  if (first.length <= 180) {
+    return first;
+  }
+  return `${first.slice(0, 177).trimEnd()}…`;
+}
+
 export function GameDetailPage() {
   const { slug } = routeApi.useParams();
-  const { token } = useAuth();
-  const me = useAuthMe();
-  const queryClient = useQueryClient();
-  const [draftBody, setDraftBody] = useState('');
-  const [draftReviewImageUrls, setDraftReviewImageUrls] = useState<string[] | null>(
-    null,
-  );
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [draftScore, setDraftScore] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<DetailTab>('overview');
   const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
 
   const gameQuery = useQuery({
     queryKey: queryKeys.games.detail(slug),
     queryFn: () => fetchGameBySlug(slug),
   });
-  const reviewsQuery = useQuery({
-    queryKey: queryKeys.games.reviews(slug, { page: 1, limit: 20 }),
-    queryFn: () => fetchGameReviews({ slug, page: 1, limit: 20 }),
+
+  const eventsQuery = useQuery({
+    queryKey: queryKeys.meetups.list({
+      page: 1,
+      upcoming: 'true',
+      gameId: gameQuery.data?.id ?? '',
+      visibility: 'ALL',
+      q: '',
+      joined: '',
+    }),
+    queryFn: () =>
+      fetchMeetups({
+        page: 1,
+        limit: 20,
+        upcoming: 'true',
+        gameId: gameQuery.data!.id,
+      }),
+    enabled: Boolean(gameQuery.data?.id),
   });
 
-  const invalidateGameReviews = () => {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.games.all });
-  };
-
-  const createReview = useMutation({
-    mutationFn: (payload: { body: string; imageUrls: string[] }) =>
-      createGameReview(slug, payload),
-    onSuccess: () => {
-      setDraftBody('');
-      setDraftReviewImageUrls([]);
-      invalidateGameReviews();
-    },
-  });
-
-  const updateReview = useMutation({
-    mutationFn: (payload: { body: string; imageUrls: string[] }) =>
-      updateGameReview(slug, payload),
-    onSuccess: () => {
-      setDraftBody('');
-      setDraftReviewImageUrls([]);
-      invalidateGameReviews();
-    },
-  });
-
-  const deleteReview = useMutation({
-    mutationFn: () => deleteGameReview(slug),
-    onSuccess: () => {
-      setDraftBody('');
-      invalidateGameReviews();
-    },
-  });
-  const upsertRating = useMutation({
-    mutationFn: (score: number) => upsertGameRating(slug, { score }),
-    onSuccess: invalidateGameReviews,
-  });
-  const uploadImageMutation = useMutation({
-    mutationFn: (file: File) => uploadReviewImage(file),
-  });
+  const bannerStyle = useMemo(
+    () => ({ background: gameBannerGradient(slug) }),
+    [slug],
+  );
 
   if (gameQuery.isLoading) {
     return (
@@ -109,9 +114,9 @@ export function GameDetailPage() {
             : 'Game not found'}
         </p>
         <p>
-          <a href="/games" className="text-link">
+          <Link to="/games" className="text-link">
             ← Back to catalog
-          </a>
+          </Link>
         </p>
       </section>
     );
@@ -122,346 +127,178 @@ export function GameDetailPage() {
   }
 
   const game = gameQuery.data;
-  const myUserId = me.data?.id;
-  const myReview = reviewsQuery.data?.data.find((item) => item.user.id === myUserId);
-  const currentDraft = draftBody || myReview?.body || '';
-  const currentReviewImageUrls = draftReviewImageUrls ?? myReview?.imageUrls ?? [];
-  const trimmedDraft = currentDraft.trim();
-  const hasReviewText = trimmedDraft.length > 0;
-  const invalidReviewLength = hasReviewText && trimmedDraft.length < 10;
   const averageStars = toFiveStarAverage(game.averageRating);
-  const submitDisabled =
-    draftScore == null ||
-    invalidReviewLength ||
-    createReview.isPending ||
-    updateReview.isPending ||
-    deleteReview.isPending ||
-    upsertRating.isPending;
-  const reviewActionError =
-    createReview.error ??
-    updateReview.error ??
-    deleteReview.error ??
-    upsertRating.error;
+  const players = formatPlayers(game);
+  const playTime = formatPlayTime(game);
+  const eventCount = eventsQuery.data?.data.length ?? 0;
 
   return (
     <>
-      <article className={`page game-detail ${styles.root}`}>
-      <p className="back">
-        <a href="/games" className="text-link">
-          ← Catalog
-        </a>
-      </p>
-      <div className="game-detail-head">
-        {game.imageUrl ? (
-          <img src={game.imageUrl} alt="" className="game-hero" />
-        ) : (
-          <div className="game-hero placeholder" aria-hidden />
-        )}
-        <div>
-          <h1>{game.title}</h1>
-          <dl className="game-meta">
-            {game.yearPublished != null && (
-              <>
-                <dt>Year</dt>
-                <dd>{game.yearPublished}</dd>
-              </>
-            )}
-            {(game.minPlayers != null || game.maxPlayers != null) && (
-              <>
-                <dt>Players</dt>
-                <dd>
-                  {game.minPlayers ?? '?'}–{game.maxPlayers ?? '?'}
-                </dd>
-              </>
-            )}
-            {(game.playTimeMin != null || game.playTimeMax != null) && (
-              <>
-                <dt>Play time</dt>
-                <dd>
-                  {game.playTimeMin != null && game.playTimeMax != null
-                    ? `${game.playTimeMin}–${game.playTimeMax} min`
-                    : game.playTimeMax != null
-                      ? `${game.playTimeMax} min`
-                      : `${game.playTimeMin}+ min`}
-                </dd>
-              </>
-            )}
-            {game.complexity != null && (
-              <>
-                <dt>Complexity</dt>
-                <dd>{game.complexity.toFixed(2)} / 5</dd>
-              </>
-            )}
-            {game.genres.length > 0 && (
-              <>
-                <dt>Genres</dt>
-                <dd>{game.genres.map((g) => g.name).join(', ')}</dd>
-              </>
-            )}
-          </dl>
-          <p className="muted">
-            {game.ratingCount > 0 && game.averageRating != null ? (
-              <>
-                Avg rating{' '}
-                <strong>
-                  {averageStars?.toFixed(1)} / {MAX_STARS}
-                </strong>{' '}
-                <span aria-hidden>{'★'.repeat(Math.round(averageStars ?? 0))}</span>
-                ({game.ratingCount}{' '}
-                {game.ratingCount === 1 ? 'rating' : 'ratings'})
-              </>
-            ) : (
-              <>No ratings yet</>
-            )}
-            {' · '}
-            {game.reviewCount} {game.reviewCount === 1 ? 'review' : 'reviews'}
-          </p>
-          <div className="game-collection-block">
-            <h2 className="h-aside">Collection</h2>
-            <GameCollectionActions slug={game.slug} />
+      <article className={`page ${styles.root}`}>
+        <header className={styles.pageHeader}>
+          <div className={styles.headerLeft}>
+            <Link to="/games" className={styles.backBtn} aria-label="Back to catalog">
+              <ChevronLeft size={18} aria-hidden />
+            </Link>
+            <span className={styles.headerRule} aria-hidden />
+            <span className={styles.headerKicker}>Game Details</span>
           </div>
-        </div>
-      </div>
-      {game.description && (
-        <div className="prose">
-          {game.description.split('\n').map((para, i) => (
-            <p key={i}>{para}</p>
-          ))}
-        </div>
-      )}
-      <section className="game-reviews">
-        <h2 className="h-aside">Reviews</h2>
-        {token ? (
-          <form
-            className="stack-form game-review-form"
-            onSubmit={async (event) => {
-              event.preventDefault();
-              if (draftScore == null || invalidReviewLength) {
-                return;
-              }
+          <button type="button" className={styles.backBtn} aria-label="Share game">
+            <Share2 size={16} aria-hidden />
+          </button>
+        </header>
 
-              await upsertRating.mutateAsync(draftScore);
+        <div className={styles.headerSpacer} aria-hidden />
 
-              if (hasReviewText) {
-                if (myReview) {
-                  await updateReview.mutateAsync({
-                    body: trimmedDraft,
-                    imageUrls: currentReviewImageUrls,
-                  });
-                } else {
-                  await createReview.mutateAsync({
-                    body: trimmedDraft,
-                    imageUrls: currentReviewImageUrls,
-                  });
-                }
-              }
-            }}
-          >
-            <label className="field">
-              <span>
-                {myReview
-                  ? 'Edit your review (optional)'
-                  : 'Leave a review (optional)'}
-              </span>
-              <textarea
-                className="input textarea"
-                value={currentDraft}
-                onChange={(event) => setDraftBody(event.target.value)}
-                minLength={10}
-                maxLength={8000}
-                placeholder="Share what you liked, disliked, and who this game is for."
-              />
-            </label>
-            <label className="field">
-              <span>Rating (required)</span>
-              <div className="star-rating-input" role="radiogroup" aria-label="Rating">
-                {Array.from({ length: MAX_STARS }, (_, index) => index + 1).map(
-                  (value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      role="radio"
-                      aria-checked={draftScore === value}
-                      className={
-                        draftScore != null && value <= draftScore
-                          ? 'star-rating-star is-selected'
-                          : 'star-rating-star'
-                      }
-                      onClick={() => setDraftScore(value)}
-                    >
-                      ★
-                    </button>
-                  ),
+        <div className={styles.scrollBody}>
+          <section className={styles.hero}>
+            <div className={styles.heroBanner} style={bannerStyle}>
+              <div className={styles.heroOverlay} aria-hidden />
+            </div>
+            <div className={styles.heroContent}>
+              <div className={styles.coverWrap}>
+                {game.imageUrl ? (
+                  <img src={game.imageUrl} alt="" className={styles.coverImg} />
+                ) : (
+                  <div className={styles.coverPlaceholder} aria-hidden />
+                )}
+                {averageStars != null && (
+                  <span className={styles.ratingBadge}>
+                    <Star size={12} aria-hidden fill="currentColor" />
+                    {averageStars.toFixed(1)}
+                  </span>
                 )}
               </div>
-              <span className="muted">
-                {draftScore == null ? 'Choose 1 to 5 stars.' : `${draftScore} / 5`}
-              </span>
-            </label>
-            <label className="field">
-              <span>Review images (up to 3, max 5MB each)</span>
-              <input
-                type="file"
-                className="input"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                multiple
-                onChange={async (event) => {
-                  const files = Array.from(event.target.files ?? []);
-                  event.currentTarget.value = '';
-                  if (files.length === 0) {
-                    return;
-                  }
-                  setUploadError(null);
-                  const existing = currentReviewImageUrls;
-                  const availableSlots = MAX_REVIEW_IMAGES - existing.length;
-                  if (availableSlots <= 0) {
-                    setUploadError(`Only ${MAX_REVIEW_IMAGES} images are allowed.`);
-                    return;
-                  }
-                  const toUpload = files.slice(0, availableSlots);
-                  for (const file of toUpload) {
-                    if (file.size > MAX_REVIEW_IMAGE_BYTES) {
-                      setUploadError('Each image must be 5MB or smaller.');
-                      continue;
-                    }
-                    try {
-                      const uploaded = await uploadImageMutation.mutateAsync(file);
-                      setDraftReviewImageUrls((current) => {
-                        const base = current ?? myReview?.imageUrls ?? [];
-                        if (base.length >= MAX_REVIEW_IMAGES) {
-                          return base;
-                        }
-                        return [...base, uploaded.url];
-                      });
-                    } catch (error) {
-                      setUploadError(
-                        error instanceof Error ? error.message : 'Image upload failed',
-                      );
-                    }
-                  }
-                }}
-              />
-              {uploadImageMutation.isPending && (
-                <span className="muted">Uploading image...</span>
-              )}
-              {uploadError && (
-                <span className="error" role="alert">
-                  {uploadError}
-                </span>
-              )}
-              {currentReviewImageUrls.length > 0 && (
-                <div className="review-image-grid">
-                  {currentReviewImageUrls.map((url) => (
-                    <div key={url} className="review-image-card">
-                      <button
-                        type="button"
-                        className="review-image-button"
-                        onClick={() => setExpandedImageUrl(url)}
-                      >
-                        <img src={url} alt="" className="review-image-thumb" />
-                      </button>
-                      <button
-                        type="button"
-                        className="button ghost danger"
-                        onClick={() =>
-                          setDraftReviewImageUrls((current) => {
-                            const base = current ?? myReview?.imageUrls ?? [];
-                            return base.filter((item) => item !== url);
-                          })
-                        }
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </label>
-            {invalidReviewLength && (
-              <p className="error" role="alert">
-                Review text must be at least 10 characters when provided.
-              </p>
-            )}
-            <div className="button-row">
-              <button type="submit" className="button" disabled={submitDisabled}>
-                {upsertRating.isPending ||
-                createReview.isPending ||
-                updateReview.isPending
-                  ? 'Saving...'
-                  : 'Save rating'}
-              </button>
-              {myReview && (
-                <button
-                  type="button"
-                  className="button ghost danger"
-                  onClick={() => deleteReview.mutate()}
-                  disabled={deleteReview.isPending}
-                >
-                  {deleteReview.isPending ? 'Deleting...' : 'Delete review'}
-                </button>
-              )}
-            </div>
-          </form>
-        ) : (
-          <p className="muted">
-            <button
-              type="button"
-              className="link-button text-link"
-              onClick={() => requestAuthModal('login')}
-            >
-              Sign in
-            </button>{' '}
-            to leave a review.
-          </p>
-        )}
-        {reviewActionError instanceof Error && (
-          <p className="error" role="alert">
-            {reviewActionError.message}
-          </p>
-        )}
-        {reviewsQuery.isLoading && <p className="muted">Loading reviews…</p>}
-        {reviewsQuery.isError && (
-          <p className="error" role="alert">
-            {reviewsQuery.error instanceof Error
-              ? reviewsQuery.error.message
-              : 'Failed to load reviews'}
-          </p>
-        )}
-        {reviewsQuery.data && (
-          <ul className="game-review-list">
-            {reviewsQuery.data.data.length === 0 ? (
-              <li className="muted">No reviews yet. Be the first to share one.</li>
-            ) : (
-              reviewsQuery.data.data.map((review) => (
-                <li key={review.id} className="game-review-item">
-                  <div className="game-review-head">
-                    <strong>{review.user.displayName}</strong>
-                    <span className="muted">
-                      {new Date(review.updatedAt).toLocaleDateString()}
+              <div className={styles.heroMain}>
+                <div className={styles.tagRow}>
+                  {game.genres.map((genre) => (
+                    <span key={genre.id} className={styles.tag}>
+                      {genre.name}
                     </span>
-                  </div>
-                  <p>{review.body}</p>
-                  {review.imageUrls.length > 0 && (
-                    <div className="review-image-grid">
-                      {review.imageUrls.map((url) => (
-                        <button
-                          key={url}
-                          type="button"
-                          className="review-image-button"
-                          onClick={() => setExpandedImageUrl(url)}
-                        >
-                          <img src={url} alt="" className="review-image-thumb" />
-                        </button>
+                  ))}
+                  {players && <span className={styles.tag}>{players} Players</span>}
+                  {playTime && <span className={styles.tag}>{playTime}</span>}
+                </div>
+                <h1 className={styles.title}>{game.title}</h1>
+                <p className={styles.lead}>{leadDescription(game.description)}</p>
+                <GameCollectionActions slug={game.slug} appearance="hero" />
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.tabsSection}>
+            <div role="tablist" aria-label="Game detail sections" className={styles.tabList}>
+              {(
+                [
+                  ['overview', 'Overview'],
+                  ['reviews', 'Reviews'],
+                  ['events', 'Events'],
+                ] as const
+              ).map(([tab, label]) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab}
+                  className={
+                    activeTab === tab
+                      ? `${styles.tabBtn} ${styles.tabBtnActive}`
+                      : styles.tabBtn
+                  }
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {label}
+                  {tab === 'events' && eventCount > 0 && (
+                    <span className={styles.tabCount}>{eventCount}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === 'overview' && (
+              <div role="tabpanel" className={styles.overviewGrid}>
+                <section className={styles.glassPanel}>
+                  <h2 className={styles.panelTitle}>About the Game</h2>
+                  {game.description ? (
+                    <div className={styles.aboutText}>
+                      {game.description.split('\n').map((para, index) => (
+                        <p key={index}>{para}</p>
                       ))}
                     </div>
+                  ) : (
+                    <p className={styles.aboutText}>No description available yet.</p>
                   )}
-                </li>
-              ))
+                </section>
+
+                <aside className={styles.glassPanel}>
+                  <h3 className={styles.panelTitleMuted}>Game Stats</h3>
+                  <dl className={styles.statList}>
+                    {players && (
+                      <div className={styles.statRow}>
+                        <dt className={styles.statLabel}>
+                          <Users size={16} aria-hidden /> Players
+                        </dt>
+                        <dd className={styles.statValue}>{players}</dd>
+                      </div>
+                    )}
+                    {playTime && (
+                      <div className={styles.statRow}>
+                        <dt className={styles.statLabel}>
+                          <Clock size={16} aria-hidden /> Playtime
+                        </dt>
+                        <dd className={styles.statValue}>{playTime}</dd>
+                      </div>
+                    )}
+                    {game.yearPublished != null && (
+                      <div className={styles.statRow}>
+                        <dt className={styles.statLabel}>Year</dt>
+                        <dd className={styles.statValue}>{game.yearPublished}</dd>
+                      </div>
+                    )}
+                    {game.complexity != null && (
+                      <div className={styles.statRow}>
+                        <dt className={styles.statLabel}>
+                          <Weight size={16} aria-hidden /> Weight
+                        </dt>
+                        <dd className={styles.statValueAccent}>
+                          {game.complexity.toFixed(2)} / 5
+                        </dd>
+                      </div>
+                    )}
+                    {averageStars != null && (
+                      <div className={styles.statRow}>
+                        <dt className={styles.statLabel}>
+                          <Star size={16} aria-hidden /> Rating
+                        </dt>
+                        <dd className={styles.statValueAccent}>
+                          {averageStars.toFixed(1)} / {MAX_STARS}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </aside>
+              </div>
             )}
-          </ul>
-        )}
-      </section>
+
+            {activeTab === 'reviews' && (
+              <div role="tabpanel">
+                <GameDetailReviewsPanel
+                  slug={slug}
+                  game={game}
+                  onExpandImage={setExpandedImageUrl}
+                />
+              </div>
+            )}
+
+            {activeTab === 'events' && (
+              <div role="tabpanel">
+                <GameDetailEventsPanel gameId={game.id} />
+              </div>
+            )}
+          </section>
+        </div>
       </article>
+
       {expandedImageUrl && (
         <div
           className={modalStyles.backdrop}
@@ -485,11 +322,7 @@ export function GameDetailPage() {
                 ×
               </Button>
             </div>
-            <img
-              src={expandedImageUrl}
-              alt=""
-              className="review-image-expanded"
-            />
+            <img src={expandedImageUrl} alt="" className="review-image-expanded" />
           </div>
         </div>
       )}

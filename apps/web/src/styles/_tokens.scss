@@ -3,5 +3,7 @@
 $breakpoint-lg: 1024px;
 $breakpoint-md: 768px;
 $sidebar-width: 240px;
+/// Matches sidebar `.brandRow`: logo 32px + horizontal padding + bottom border.
+$shell-brand-row-height: 81px;
 $z-modal: 80;
 $z-auth-modal: 70;

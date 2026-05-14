@@ -1,0 +1,284 @@
+.heroMenuWrap,
+.defaultMenuWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+// Sized for longest label: "ADD TO COLLECTION" (hero, uppercase) / "Add to collection" (default).
+.heroTrigger {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15.875rem;
+  height: 3.25rem;
+  padding: 0 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-family: var(--heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 15px color-mix(in oklab, var(--color-accent) 30%, transparent);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.heroTrigger:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.heroTriggerActive {
+  background: color-mix(in oklab, var(--color-surface) 82%, transparent);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+.heroTriggerActive:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.heroTrigger_OWNED {
+  border-color: color-mix(in oklab, var(--color-success) 35%, var(--color-border));
+}
+
+.heroTrigger_WISHLIST {
+  border-color: color-mix(in oklab, var(--color-warning) 35%, var(--color-border));
+}
+
+.heroTrigger_PREVIOUSLY_OWNED {
+  border-color: color-mix(in oklab, var(--color-accent) 28%, var(--color-border));
+}
+
+.defaultTrigger {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13.125rem;
+  height: 2.5rem;
+  padding: 0 2rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.defaultTrigger:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.defaultTriggerAdd {
+  color: var(--color-accent);
+  border-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-border));
+}
+
+.defaultTrigger_OWNED {
+  border-color: color-mix(in oklab, var(--color-success) 35%, var(--color-border));
+}
+
+.defaultTrigger_WISHLIST {
+  border-color: color-mix(in oklab, var(--color-warning) 35%, var(--color-border));
+}
+
+.defaultTrigger_PREVIOUSLY_OWNED {
+  border-color: color-mix(in oklab, var(--color-accent) 28%, var(--color-border));
+}
+
+.heroTrigger:disabled,
+.defaultTrigger:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.triggerIconSlot {
+  position: absolute;
+  left: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.triggerAddIcon {
+  flex-shrink: 0;
+}
+
+.triggerLabel {
+  max-width: calc(100% - 1rem);
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.triggerLeadIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-bg) 55%, transparent);
+  flex-shrink: 0;
+}
+
+.triggerLeadIcon_OWNED {
+  color: var(--color-success);
+  background: color-mix(in oklab, var(--color-success) 12%, transparent);
+}
+
+.triggerLeadIcon_WISHLIST {
+  color: var(--color-warning);
+  background: color-mix(in oklab, var(--color-warning) 12%, transparent);
+}
+
+.triggerLeadIcon_PREVIOUSLY_OWNED {
+  color: var(--color-accent);
+  background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+}
+
+.chevron {
+  position: absolute;
+  right: 0.85rem;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  position: absolute;
+  right: 0.85rem;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transform: rotate(180deg);
+  transition: transform 0.15s ease;
+}
+
+.menuPanel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
+  min-width: 15rem;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 12px 32px color-mix(in oklab, #000 24%, transparent);
+}
+
+.defaultMenuWrap .menuPanel {
+  min-width: 13rem;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.menuItem:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.menuItemActive {
+  background: color-mix(in oklab, var(--color-accent) 10%, transparent);
+}
+
+.menuItemActive:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--color-accent) 14%, transparent);
+}
+
+.menuItemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-bg) 55%, transparent);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.menuItemActive .menuItemIcon {
+  color: var(--color-accent);
+}
+
+.menuItemText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.menuItemLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.menuItemDesc {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+.menuItemCheck {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.menuDivider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--color-border);
+}
+
+.menuItemDanger .menuItemIcon {
+  color: var(--color-danger);
+}
+
+.menuItemDanger .menuItemLabel {
+  color: var(--color-danger);
+}
+
+.signInText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
