@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getRouteApi, Link } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
@@ -18,7 +19,10 @@ import { getAccessToken } from '../../lib/auth-session';
 import { queryKeys } from '../../lib/query-keys';
 import styles from './messages-list-page.module.scss';
 
+const routeApi = getRouteApi('/messages');
+
 export function MessagesListPage() {
+  const navigate = routeApi.useNavigate();
   const queryClient = useQueryClient();
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [groupTitle, setGroupTitle] = useState('');
@@ -44,9 +48,10 @@ export function MessagesListPage() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.chat.conversations(),
       });
-      window.location.assign(
-        `/messages/${encodeURIComponent(result.conversationId)}`,
-      );
+      void navigate({
+        to: '/messages/$conversationId',
+        params: { conversationId: result.conversationId },
+      });
     },
   });
 
@@ -190,8 +195,9 @@ export function MessagesListPage() {
           ) : (
             listQuery.data.map((c) => (
               <li key={c.id}>
-                <a
-                  href={`/messages/${encodeURIComponent(c.id)}`}
+                <Link
+                  to="/messages/$conversationId"
+                  params={{ conversationId: c.id }}
                   className="conversation-row"
                 >
                   <div className="conversation-row-head">
@@ -229,7 +235,7 @@ export function MessagesListPage() {
                         : c.lastMessage.body}
                     </div>
                   )}
-                </a>
+                </Link>
               </li>
             ))
           )}

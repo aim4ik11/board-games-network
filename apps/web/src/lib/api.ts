@@ -1,4 +1,5 @@
 import { getAccessToken, setAccessToken } from './auth-session';
+import { toast } from './toast';
 
 export const AUTH_LOGOUT_EVENT = 'boardgame:auth-logout';
 
@@ -38,12 +39,14 @@ export async function apiFetch<T>(
   const refreshed = await tryRefreshAccessToken();
   if (!refreshed) {
     notifyAuthLogout();
+    toast.error('Your session has expired. Please sign in again.');
     throw new ApiError('Unauthorized', 401);
   }
 
   const retryResponse = await doFetch(path, init);
   if (retryResponse.status === 401) {
     notifyAuthLogout();
+    toast.error('Your session has expired. Please sign in again.');
   }
   return parseResponse<T>(retryResponse);
 }
@@ -93,9 +96,19 @@ async function parseResponse<T>(res: Response): Promise<T> {
       typeof (data as { message: unknown }).message === 'string'
         ? (data as { message: string }).message
         : res.statusText;
-    throw new ApiError(msg || 'Request failed', res.status, data);
+    const error = new ApiError(msg || 'Request failed', res.status, data);
+    notifyApiError(error);
+    throw error;
   }
   return data as T;
+}
+
+function notifyApiError(error: ApiError): void {
+  // 401 is handled with a dedicated session toast; 404 is often expected (e.g. not in collection).
+  if (error.status === 401 || error.status === 404) {
+    return;
+  }
+  toast.error(error.message);
 }
 
 let refreshPromise: Promise<boolean> | null = null;

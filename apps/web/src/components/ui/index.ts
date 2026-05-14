@@ -5,3 +5,5 @@ export {
   SuggestionMultiSelect,
   type SuggestionMultiSelectOption,
 } from './suggestion-multi-select';
+export { ToastProvider } from './toast-provider';
+export { toast, showToast, type ToastVariant } from '../../lib/toast';
